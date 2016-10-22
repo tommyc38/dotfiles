@@ -4,12 +4,12 @@
 [submodule "config/base16-shell"]
 	path = config/base16-shell
 	url = https://github.com/chriskempson/base16-shell.git
-[submodule "tmux/tmux.d/tpm"]
-	path = tmux/tmux.d/plugins/tpm
-	url = https://github.com/tmux-plugins/tpm
-[submodule "tmux/tmux.d/tmux-battery"]
-	path = tmux/tmux.d/plugins/tmux-battery
-	url = https://github.com/tmux-plugins/tmux-battery.git
-[submodule "tmux/tmux.d/tmux-prefix-highlight"]
+[submodule "tmux/tmux.d/plugins/tmux-prefix-highlight"]
 	path = tmux/tmux.d/plugins/tmux-prefix-highlight
 	url = https://github.com/tmux-plugins/tmux-prefix-highlight.git
+[submodule "tmux/tmux.d/plugins/tmux-battery"]
+	path = tmux/tmux.d/plugins/tmux-battery
+	url = https://github.com/tmux-plugins/tmux-battery.git
+[submodule "tmux/tmux.d/plugins/tpm"]
+	path = tmux/tmux.d/plugins/tpm
+	url = https://github.com/tmux-plugins/tpm
