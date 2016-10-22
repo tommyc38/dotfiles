@@ -113,20 +113,26 @@ function dark() {
     export BACKGROUND="dark" && source ~/.zshrc 
 }
 function changez(){
-    line1=$(grep -nE '^#?\s?BASE16*' $HOME/.zshrc)
-    line2=$(grep -nE '^#?\s?\[ -n \"\$PS.*BASE16*' $HOME/.zshrc)
-    if [[ ! -z  $line1 ]] && [[ ! -z $line2 ]]; then
-        num1=${line1%\:*}
-        num2=${line2%\:*}
-        if [[ ${line1:3:1} = '#' ]] && [[ ${line2:3:1} = '#' ]]; then
-            sed -n --follow-symlinks "$num1s/# BASE/BASE/" $HOME/.zshrc
-            sed -n --follow-symlinks "${num2}s/# \[ -n \"\$PS/\[ -n \"\$PS/" $HOME/.zshrc
-            source ~/.zshrc
-        else
-            sed -n --follow-symlinks "$num1s/BASE/# BASE/p" $HOME/.zshrc
-            sed -n --follow-symlinks "${num2}s/\[ -n \"\$PS/# \[ -n \"\$PS/p" $HOME/.zshrc
-            source ~/.zshrc
-        fi
+    if grep -inE '^#\sbase16*|^#\s\[ -n "\$PS1*' $HOME/.zshrc &> /dev/null; then
+        sed -i --follow-symlinks "s/# BASE/BASE/" $HOME/.zshrc
+        sed -i --follow-symlinks "s/# \[ -n \"\$PS/\[ -n \"\$PS/" $HOME/.zshrc
+    elif grep -inE '^base16*|^\[ -n "\$PS1*' $HOME/.zshrc &> /dev/null; then
+        sed -i --follow-symlinks "s/BASE/# BASE/" $HOME/.zshrc
+        sed -i --follow-symlinks "s/\[ -n \"\$PS/# \[ -n \"\$PS/" $HOME/.zshrc
+    else
+        echo "Check you .zshrc file, something is wrong."
     fi
 }
-
+function changeu(){
+    #TODO remove autojump from dotfiles
+    #TODO change zsh-sytax-highlight path in .zshrc
+    if grep -inE '^#\sbase16*|^#\s\[ -n "\$PS1*' $HOME/.zshrc &> /dev/null; then
+        sed -i --follow-symlinks "s/# BASE/BASE/" $HOME/.zshrc
+        sed -i --follow-symlinks "s/# \[ -n \"\$PS/\[ -n \"\$PS/" $HOME/.zshrc
+    elif grep -inE '^base16*|^\[ -n "\$PS1*' $HOME/.zshrc &> /dev/null; then
+        sed -i --follow-symlinks "s/BASE/# BASE/" $HOME/.zshrc
+        sed -i --follow-symlinks "s/\[ -n \"\$PS/# \[ -n \"\$PS/" $HOME/.zshrc
+    else
+        echo "Check you .zshrc file, something is wrong."
+    fi
+}
