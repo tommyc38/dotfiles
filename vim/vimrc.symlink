@@ -1,0 +1,514 @@
+    "Launch Config {{{
+    set nocompatible
+    source ~/.vim/plugins.vim "run plugins script; install plugins
+
+    filetype plugin indent on
+    " set omnifunc=YouCompleteMe#Complete
+
+    set backspace=indent,eol,start
+    "Allow backspacing while in insert mode.
+
+    set nrformats=
+    "This will cause Vim to treat all numerals as decimals.
+    "Only matters when using <C-a> or <C-x> on numbers padded
+    "with zeros (e.g. 007)
+
+    set clipboard=unnamed
+    "This allows you to paste from your system clipboard
+    "in normal mode.
+
+    set autochdir
+    "Change directory to the current buffer when opening fies.
+
+    set tags=./tags;
+    "let vim know that your tags files will always be called tags
+
+    :set hidden
+    "This will allow you to switch buffers that have been
+    "modified (keeping its changes) without needing '!'
+    "e.g.(:buffer2! assuming your window is buffer 1 and
+    "you havemade changes to it.)
+
+    set timeoutlen=1000
+    set ttimeoutlen=10
+    " http://vi.stackexchange.com/questions/3964/timeoutlen-breaks-leader-and-vim-commentary
+    "Link explians why none of your leader keys work.
+    "without these settings.Also,
+    "Makes Airline faster when leaving insert mode but
+    "may cause issues.
+
+    set encoding=utf-8             "The encoding displayed.
+    set fileencoding=utf-8         "The encoding written to file.
+    set ttyfast                    "Redraw the screen quicker
+
+    "}}}
+"UI Config {{{
+
+set wildmenu
+set number                     "Show line numbers.
+
+match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
+" highlight conflicts
+
+"set showmode                   "Show paste mode
+set noshowmode                  "Disabled for PowerLine
+
+set ruler                      "Show the cursor position in command line
+" set showcmd                    "Display incomplete commands
+set laststatus=2               "Show the satus line all the time
+set cmdheight=1                "Make the command prompt bigger
+set showmatch                  "Show matching ",],etc.
+set invlist
+set listchars=tab:▸\ ,eol:¬,trail:⋅,extends:❯,precedes:❮
+set showbreak=↪
+
+"}}}
+"Colors {{{
+
+syntax on
+"turns on syntax highlighting
+
+let base16colorspace=256  " Access colors present in 256 colorspace
+set t_Co=256  " the terminal supports 256 colors; see iTerm docs
+
+if filereadable(expand("~/.vimrc_background"))
+  let base16colorspace=256
+  source ~/.vimrc_background
+endif
+
+" colorscheme base16-github
+
+"}}}
+"Space and Tabs {{{
+
+set smarttab " tab respects 'tabstop', 'shiftwidth', and 'softtabstop'
+set tabstop=4 " the visible width of tabs
+set softtabstop=4 " edit as if the tabs are 4 characters wide
+set shiftwidth=4 " number of spaces to use for indent and unindent
+set shiftround " round indent to a multiple of 'shiftwidth'
+set autoindent  " automatically set indent of new line?
+set smartindent
+
+set pastetoggle=<F2>
+"Allows you to preserve indentation when pasting
+"during insert/normal mode (e.g.<C-r> 0).
+
+set expandtab
+"This will expand tabs into equivalent spaces.
+"The default is noexpandtab, so just comment this
+"setting out to turn it off.
+
+    " Python {{{
+" USING SIMPLYFOLD PLUGIN FOR PYTHON - BELOW IS A FALL BACK
+    " au BufNewFile,BufRead *.py
+    "     \ set tabstop=4
+    "     \ set softtabstop=4
+    "     \ set shiftwidth=4
+    "     \ set textwidth=79
+    "     \ set expandtab
+    "     \ set autoindent
+    "     \ set fileformat=unix
+
+    " }}}
+    " HTML, CSS, JS {{{
+autocmd BufRead .jscsrc set filetype=json
+autocmd BufRead .jshintrc set filetype=json
+autocmd BufRead .bowerrc set filetype=json
+autocmd BufRead .babelrc set filetype=json
+autocmd BufRead .eslintrc set filetype=json
+autocmd BufRead .tslintrc set filetype=json
+
+
+    " }}}
+
+"}}}
+"Searching {{{
+
+set hls
+"This will highlight all searches
+
+set ignorecase " case insensitive searching
+set smartcase " case-sensitive if expresson contains a capital letter
+set hlsearch  " highlight searchs
+set incsearch " view searches as you type 
+set nolazyredraw " don't redraw while executing macros
+
+"}}}
+"Folding {{{
+
+set modelines=1
+" file specific settings; see bottom line below
+set foldlevel=10
+"prevents all folds from expanding when opening a file
+set foldmethod=indent
+set foldnestmax=10
+set foldenable
+"}}}
+"Custom Movements {{{
+
+map <C-j> <C-W>j
+map <C-k> <C-W>k
+map <C-h> <C-W>h
+map <C-l> <C-W>l
+" make it easier to jump to open windows
+
+nnoremap <C-e> 3<C-e>
+nnoremap <C-y> 3<C-y>
+" scroll the viewport faster
+
+nnoremap j gj
+nnoremap k gk
+"move through lines that wrap without skipping
+
+"}}}
+"Custom Leader {{{
+
+
+let mapleader = "\<Space>" "Sets spacebar as leader
+
+if exists(":Tabularize")
+    nmap <Leader>t= :Tabularize /=<CR>
+    vmap <Leader>t= :Tabularize /=<CR>
+    nmap <Leader>t: :Tabularize /:\zs<CR>
+    vmap <Leader>t: :Tabularize /:\zs<CR>
+endif
+"easily format on common characters '=' and ':'
+
+inoremap <silent> <Bar>   <Bar><Esc>:call <SID>align()<CR>a
+"insert a '|' and the columns will align
+
+nnoremap gV `[v`]
+" highlight last inserted text
+
+noremap <leader>s :set hlsearch! hlsearch?<cr>
+" clear highlighted search
+
+vnoremap . :normal .<cr>
+" enable . command in visual mode
+
+map <silent> <C-h> :call WinMove('h')<cr>
+map <silent> <C-j> :call WinMove('j')<cr>
+map <silent> <C-k> :call WinMove('k')<cr>
+map <silent> <C-l> :call WinMove('l')<cr>
+" make it easier to jump to open windows
+
+nmap <leader>i :set list!<cr>
+"Toggle invisible characters.
+
+nnoremap <leader>l :set cursorline!<cr>
+" toggle cursor line
+
+nnoremap <leader>ev  :vsp $MYVIMRC<CR>
+nnoremap <leader>ez  :vsp ~/.zshrc<CR>
+nnoremap <leader>sv  :source $MYVIMRC<CR>
+nnoremap <leader>eb  :vsp ~/.bashrc<CR>
+nnoremap <leader>ebb :vsp ~/.bash_profile<CR>
+nnoremap <leader>ep  :vsp ~/.vim/plugins.vim<CR>
+
+nnoremap <leader>a za  
+"expand folds
+
+map <leader>ss :setlocal spell!<cr>
+"enable spellcheck
+
+nmap <leader>w :w!<cr>
+"make it easier to save
+
+vmap <leader>[ <gv
+vmap <leader>] >gv
+nmap <leader>[ <<
+nmap <leader>] >>
+" Textmate style indentation
+
+:noremap <F4> :call TrimWhitespace()<CR>
+"delete all trailing whitespace off of every line by
+"hitting the <F4> key
+
+nnoremap <leader>r :mksession<CR>
+" save session
+
+nmap <Leader>n :NERDTreeToggle<CR>
+
+map  <Leader>j <Plug>(easymotion-j)
+map  <Leader>k <Plug>(easymotion-k)
+nmap <Leader>f <Plug>(easymotion-s)
+
+" nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
+" nnoremap <silent> <F5> :!clear;python %<CR>
+
+map <leader>g  :YcmCompleter GoToDefinitionElseDeclaration<CR>
+nnoremap <Leader>\ :YcmCompleter GoTo<CR>
+" jump to function definitions
+
+" nmap <F5> :call VimuxRunCommand("clear;~/.virtualenvs/py3/bin/ipython  . bufname("%"))<CR>
+nmap <silent> <F5> :call VimuxRunCommand("clear;[ -z $VIRTUAL_ENV ] && workon py3; ipython " . bufname("%"))<CR>
+
+"}}}
+"Custom Functions{{{
+
+if has("autocmd") && exists("+omnifunc")
+	autocmd Filetype *
+        \	if &omnifunc == "" |
+        \		setlocal omnifunc=syntaxcomplete#Complete |
+        \	endif
+endif
+" if no plugins support the file type then use as default
+
+function! WinMove(key)
+    let t:curwin = winnr()
+    exec "wincmd ".a:key
+    if (t:curwin == winnr())
+        if (match(a:key,'[jk]'))
+            wincmd v
+        else
+            wincmd s
+        endif
+        exec "wincmd ".a:key
+    endif
+endfunction
+" Window movement shortcuts
+" move to the window in the direction shown, or create a new window
+
+fun! TrimWhitespace()
+    let l:save = winsaveview()
+    %s/\s\+$//e
+    call winrestview(l:save)
+endfun
+command! TrimWhitespace call TrimWhitespace()
+"This allows you to run a command that will trim
+"all whitespace off the end of every line and file.
+
+if !exists(":DiffOrig")
+  command DiffOrig vert new | set bt=nofile | r ++edit # | 0d_ | diffthis
+		  \ | wincmd p | diffthis
+endif
+"run the command to compare buffer with original file
+"to end this command type 'windo diffoff'
+
+function! VimuxSlime()
+    call VimuxSendText("clear")
+    call VimuxSendKeys("Enter")
+    call VimuxSendText(@v)
+endfunction
+
+function! VimuxPython()
+    let a:file = "%run " . expand("%:p")
+    if &filetype != "python"
+        echom "Not a python file!"
+        return
+    endif
+    write
+    call VimuxOpenRunner()
+    call VimuxSendText("clear")
+    call VimuxSendKeys("Enter")
+    call VimuxSendText( a:file )
+    call VimuxSendKeys("Enter")
+endfunction
+
+nmap <F3> :call VimuxPython()<CR>
+" If text is selected, save it in the v buffer and send that buffer it to tmux
+vmap <Leader>vs "vy :call VimuxSlime()<CR>
+
+" Select current paragraph and send it to tmux
+nmap <Leader>vs vip<LocalLeader>vs<CR>
+
+function! s:align()
+  let p = '^\s*|\s.*\s|\s*$'
+  if exists(':Tabularize') && getline('.') =~# '^\s*|' && (getline(line('.')-1) =~# p || getline(line('.')+1) =~# p)
+    let column = strlen(substitute(getline('.')[0:col('.')],'[^|]','','g'))
+    let position = strlen(matchstr(getline('.')[0:col('.')],'.*|\s*\zs.*'))
+    Tabularize/|/l1
+    normal! 0
+    call search(repeat('[^|]*|',column).'\s\{-\}'.repeat('.',position),'ce',line('.'))
+  endif
+endfunction
+"every time a | is inserted while in insertmode Tabularize will autoformat the
+"width
+
+command! -bar -nargs=1 -bang -complete=file Rename :
+  \ let s:file = expand('%:p') |
+  \ setlocal modified |
+  \ keepalt saveas<bang> <args> |
+  \ if s:file !=# expand('%:p') |
+  \   call delete(s:file) |
+  \ endif |
+  \ unlet s:file
+"rename a file
+
+"}}}
+"Autogroups {{{
+
+autocmd BufWinEnter *.py setlocal foldexpr=SimpylFold(v:lnum) foldmethod=expr
+autocmd BufWinLeave *.py setlocal foldexpr< foldmethod<
+" per the SimplyFold documentation
+
+augroup reload_vimrc " {
+    autocmd!
+    autocmd BufWritePost $MYVIMRC source $MYVIMRC | AirlineRefresh
+augroup END " }
+" resource vim when reloaded
+
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+" if NERDTree is the only window open when you want to close Vim this will help
+
+"}}}
+"Backups {{{
+
+set writebackup
+set backup
+set backupdir=~/.vim/_backups " store backups here
+set directory=~/.vim/_swaps   " store swap files here
+
+"}}}
+
+" PLUGINS
+"YouCompleteMe{{{
+
+" http://www.alexeyshmalko.com/2014/youcompleteme-ultimate-autocomplete-plugin-for-vim/
+" http://valloric.github.io/YouCompleteMe/
+
+let g:ycm_filetype_blacklist = {}
+"this will allow YCM to work for all filetypes
+
+let g:ycm_global_ycm_extra_conf = "~/.vim/.ycm_extra_conf.py"
+
+let g:ycm_autoclose_preview_window_after_completion=1
+" let g:ycm_collect_identifiers_from_tags_files = 1
+let g:ycm_key_list_select_completion   = ['<C-n>']
+let g:ycm_key_list_previous_completion = ['<C-p>']
+" key bindings; similiar to those for Ultisnips
+
+"}}}
+"Airline {{{
+let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#whitespace#enabled = 0
+let g:airline#extensions#virtualenv#enabled = 1
+let g:airline#extensions#syntastic#enabled = 1
+let g:airline#extensions#branch#enabled = 1
+let g:airline#extensions#obsession#enabled = 1
+let g:airline#extensions#obsession#indicator_text = '●'
+let g:airline#extensions#ycm#enabled = 1
+let g:airline#extensions#tagbar#enabled = 1
+
+let g:airline_left_sep=''
+let g:airline_right_sep=''
+let g:airline_theme='base16'
+let g:airline_powerline_fonts = 1
+
+"}}}
+"CtrlP {{{
+
+"  include dotfiles and dotdirs in search
+let g:ctrlp_show_hidden = 1
+"  Set the directory to store the cache files: >
+"let g:ctrlp_cache_dir = $HOME.'/.cache/ctrlp'
+
+let g:ctrlp_match_window = 'bottom,order:ttb'
+"order results 
+
+let g:ctrlp_switch_buffer = 0
+" always open file in a new buffers
+
+let g:ctrlp_working_path_mode = 0
+"lets us change working directory and 
+"ctrlp respects that change during a 
+"vim session.
+
+"}}}
+"NERDTree{{{
+:let g:NERDTreeWinSize=30
+
+
+"}}}
+"Devicons {{{
+
+let g:WebDevIconsUnicodeDecorateFolderNodes=1
+" this will make folder icons in NERDTree
+
+let g:WebDevIconsNerdTreeGitPluginForceVAlign = 1
+
+if exists("g:loaded_webdevicons")
+    call webdevicons#refresh()
+endif
+" This will help refresh devicons when you source .vimrc
+
+"}}}
+"Easy Motion {{{
+
+let g:EasyMotion_smartcase = 1
+
+"}}}
+" Syntastic {{{
+
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list            = 1
+let g:syntastic_check_on_open            = 1
+let g:syntastic_check_on_wq              = 0
+let g:syntastic_javascript_checkers = ['jshint']
+" }}}
+"Tabular{{{
+
+
+
+" }}}
+"Ultisnips{{{
+let g:UltiSnipsEnableSnipMate = 0
+"this won't check 'snippet' directories
+"
+let g:UltiSnipsSnippetDirectories=["UltiSnips", "MySnips"]
+"only check search directories with these names to 
+"find snippets
+"
+let g:UltiSnipsSnippetsDir = "~/.vim/MySnips"
+"define where personal snippets are stored
+let g:UltiSnipsListSnippets        = "<C-l>"
+let g:UltiSnipsExpandTrigger       = "<C-j>"
+let g:UltiSnipsJumpForwardTrigger  = "<C-j>"
+let g:UltiSnipsJumpBackwardTrigger = "<C-k>"
+
+" }}}
+" SuperTab {{{
+
+" let g:SuperTabDefaultCompletetype= context"
+" let g:SuperTabContextDefaultCompletionType ="<C-o>"
+" }}}
+" Golden Ratio {{{
+
+" let g:golden_ratio_autocommand = 0
+" disable when autocommands are called
+
+let g:golden_ratio_exclude_nonmodifiable = 1
+"disables plugin on nonmodifiable windows
+" }}}
+"Plug{{{
+    let g:plug_timeout = 1000
+    "60 seconds is default but more is needed for YCM
+"}}}
+" Tagbar {{{
+
+nmap <F8> :TagbarToggle<CR>
+let g:tagbar_autofocus = 1
+
+"}}}
+
+" PLUGINS - LANGUAGE SPECIFIC
+" Python {{{
+    " Simply Fold{{{
+
+    " https://github.com/tmhedberg/SimpylFold
+
+    let g:SimpylFold_docstring_preview = 1
+    "allows you to view doctring in fold
+
+    let g:SimpylFold_fold_import = 0
+    " don't fold imports
+    " }}}
+
+" }}}
+" Markdown {{{
+
+
+
+" }}}
+
+" vim:foldmethod=marker:foldlevel=0

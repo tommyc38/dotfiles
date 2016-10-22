@@ -1,0 +1,119 @@
+
+" ============================================================================
+" Editor Settings
+" ============================================================================
+set history=10000 " Number of commands that are remembered.
+set hlsearch      " Highlight search pattern results.
+set ignorecase    " Ignore case of normal letters in a pattern.
+set showmode      " Show current mode on the last line.
+set smartcase     " Override ignorecase if pattern contains upper case.
+set visualbell    " Turn off the annoying bell
+set scrolloff=5   " Keep a few lines always visable
+set clipboard=unnamed
+
+" Open one fold under the cursor.
+nnoremap zo :action ExpandRegion<CR>
+
+
+" Close one fold under the cursor.
+nnoremap zc :action CollapseRegion<CR>
+
+" Copy until the end of the line
+noremap Y y$
+
+let mapleader = "," "Sets spacebar as leader
+let mapleader = "," "Sets spacebar as leader
+nnoremap gV `[v`]
+" highlight last inserted text
+
+vnoremap . :normal .<cr>
+" enable dot command in visual mode
+
+nnoremap cow :action EditorToggleUseSoftWraps<CR>
+
+vmap <space>[ <gv
+vmap <space>] >gv
+nmap <space>[ <<
+nmap <space>] >>
+" Textmate style indentation
+
+" ============================================================================
+" Plugins
+" ============================================================================
+set surround
+
+nnoremap <space>cg :action CodeGlance.toggle<cr>
+
+" ============================================================================
+" Movement
+" ============================================================================
+" Left / right
+nnoremap <c-l> <c-w>l
+nnoremap <c-j> <c-w>j
+nnoremap <c-h> <c-w>h
+nnoremap <c-k> <c-w>k
+nnoremap <a-h> gT                " Navigate between tabs
+nnoremap <a-l> gt                " Navigate between tabs
+
+" ============================================================================
+" Editor control
+" ============================================================================
+
+nmap <c-z> :action VimEmulator
+" toggle vim emulation
+
+" preserve IDE shortcutkey
+
+nmap <c-t> :action Switcher<CR>
+nmap <c-z><c-tab> :action Switcher<CR>
+" access all tools and file tabs - must hold tab
+
+" Enter the command-line mode
+" noremap <CR> :
+
+nnoremap <space>vs :source ~/.ideavimrc<CR>
+" source settings
+
+nmap gcc :action CommentByLineComment<CR>
+" comment out lines
+" Won't work in visual mode (with vmap) for some reason.
+" Use default map of <c-/> for that.
+" ============================================================================
+" IDE actions
+" ============================================================================
+nnoremap <space>fu :action FindUsages<cr>
+nnoremap <space>su :action ShowUsages<cr>
+nnoremap <space>cv :action ChangeView<cr>
+nnoremap <space>bb :action ToggleLineBreakpoint<cr>
+nnoremap <space>br :action ViewBreakpoints<cr>
+nnoremap <space>ic :action InspectCode<cr>
+nnoremap <space>oi :action OptimizeImports<cr>
+nnoremap <space>re :action RenameElement<cr>
+nnoremap <space>dc :action ChooseDebugConfiguration<cr>
+nnoremap <space>rc :action ChooseRunConfiguration<cr>
+nnoremap <space>q  :action CloseActiveTab<cr>
+nnoremap <space>gi :action GotoImplementation<cr>
+nnoremap <space>gs :action GotoSuperMethod<cr>
+nnoremap <space>gd :action GotoDeclaration<cr>
+nnoremap ]e :action GotoNextError<cr>
+nnoremap [e :action GotoPreviousError<cr>
+nnoremap / :action Find<CR>
+nnoremap n :action FindNext<CR>
+nnoremap N :action FindPrevious<CR>
+nnoremap U :action $Redo<CR>
+nnoremap <space>o :action GotoClass<CR>
+nnoremap <space>O :action GotoFile<CR>
+nnoremap <space>d :action CloseContent<CR>
+nnoremap <space>j :action RecentFiles<CR>
+nnoremap <space>k :action FileStructurePopup<CR>
+nnoremap <space>h :action QuickJavaDoc<CR>
+
+" Show all possible Live Templates (code snippets) :  Command + J
+" Intentions (the light bulb)                      :  Alt + Enter
+" Return focus back to editor from IDE component   :  Esc
+" Hide all tool windows                            :  Shift + Command + F12
+"       also restores windows
+" Hide Active tool window                          :  Shift + Esc
+" Expand & Close folds                             :  Command +  ||  Command -
+" New file                                         :  Command + n
+" AceJump                                          :  Command + ;

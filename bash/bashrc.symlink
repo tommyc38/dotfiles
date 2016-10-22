@@ -1,0 +1,19 @@
+#THIS IS HOW TO CHANGE LS COLORS
+#Visit http://linux-sxs.org/housekeeping/lscolors.html for more details
+
+# To set custom colors see http://linux-sxs.org/housekeeping/lscolors.html
+# LS_COLORS='di=34:fi=0:ln=36:pi=5:so=5:bd=5:cd=5:or=31:mi=5;31:ex=32:*.rpm=90'
+# export LS_COLORS
+alias ls='ls --color'
+
+#this will allow vi when using info command
+alias info='info --vi-keys'
+
+#enable vi keybindings in the command prompt
+set -o vi
+
+# pip should only run if there is a virtualenv currently activated
+export PIP_REQUIRE_VIRTUALENV=true
+
+# this is the bash script to run use virtualenvwrapper
+source /usr/local/bin/virtualenvwrapper.sh

@@ -1,0 +1,77 @@
+export DOTFILES=$HOME/dotfiles
+export ZSH=$DOTFILES/zsh
+
+# source all .zsh files inside of the zsh/ directory
+for config ($ZSH/**/*.zsh) source $config
+
+
+# check for custom bin directory and add to path
+if [[ -d ~/bin ]]; then
+    export PATH=~/bin:$PATH
+fi
+
+# adding path directory for custom scripts
+export PATH=$DOTFILES/bin:$PATH
+
+# add /usr/local/sbin
+if [[ -d /usr/local/sbin ]]; then
+    export PATH=/usr/local/sbin:$PATH
+fi
+
+# homebrew software location
+export PATH="/usr/local/bin:$PATH"
+
+# allow use of corutiles without the prefix g
+export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
+
+
+export HOMEBREW_GITHUB_API_TOKEN=1819020ea53fba39c23d075f2405818cdd0f9936
+
+# make vim your default editor
+export EDITOR="vim"
+
+# aliases for tmux
+alias ta='tmux attach'
+alias tls='tmux ls'
+alias tat='tmux attach -t'
+alias tns='tmux new-session -s'
+
+# make output of ls color code file/dir types
+alias ls="ls --color"
+export LS_COLORS='or=5;31:mi=5:ow=01;91'
+
+alias info='info --vi-keys'
+#this will allow vi navigation when using the info command
+
+# initialize autocomplete
+autoload -U compinit add-zsh-hook
+compinit -i
+
+for config ($ZSH/**/*completion.sh) source $config
+
+# This will disable the activate prompt script so you
+# can customize the venv prompt
+VIRTUAL_ENV_DISABLE_PROMPT="1"
+
+# this is the bash script to run virtualenvwrapper
+source /usr/local/bin/virtualenvwrapper.sh
+
+# enable themes
+# BASE16_SHELL=$HOME/.config/base16-shell/
+# [ -n "$PS1" ] && [ -s $BASE16_SHELL/profile_helper.sh ] && eval "$($BASE16_SHELL/profile_helper.sh)"
+
+# THIS IS THE POST INSTALL TO ENABLE AUTOJUMP
+[[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+
+if [ -z ${DOTFILES_LOADED+x} ]; then
+    # install zsh-syntax-highlighting
+    source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+    # install zsh autosuggestions
+    source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+fi
+
+DOTFILES_LOADED=1
+# change the shell login 
+# example: sudo dscl . change /users/$USER UserShell /bin/bash /opt/local/bin/zsh
+# http://superuser.com/questions/362372/how-to-change-the-login-shell-on-mac-os-x-from-bash-to-zsh
