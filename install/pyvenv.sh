@@ -18,7 +18,7 @@ else
 fi
 
 echo "Setting up python2 virtualenvs..."
-mkvirtualenv py2
+mkvirtualenv -p /usr/local/bin/python py2
 workon py2
 if test $VIRTUAL_ENV; then
     pip install --upgrade setuptools
@@ -35,7 +35,7 @@ else
 fi
 deactivate
 echo "Setting up python3 virtualenvs..."
-mkvirtualenv py3
+mkvirtualenv -p /usr/local/binpython3 py3
 workon py3
 if test $VIRTUAL_ENV; then
     pip install --upgrade setuptools
