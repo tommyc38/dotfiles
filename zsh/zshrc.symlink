@@ -26,7 +26,7 @@ export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
 export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
 
 
-export HOMEBREW_GITHUB_API_TOKEN=1819020ea53fba39c23d075f2405818cdd0f9936
+export HOMEBREW_GITHUB_API_TOKEN=4f5c12a8cbe6f8732370e2ae4916a4b4c630e8e5
 
 # make vim your default editor
 export EDITOR="vim"
@@ -54,6 +54,8 @@ for config ($ZSH/**/*completion.sh) source $config
 # can customize the venv prompt
 VIRTUAL_ENV_DISABLE_PROMPT="1"
 
+# this solves https://bitbucket.org/virtualenvwrapper/virtualenvwrapper/issues/300/problem-running-initialization-hooks
+VIRTUALENVWRAPPER_PYTHON=$(which python2)
 # this is the bash script to run virtualenvwrapper
 source /usr/local/bin/virtualenvwrapper.sh
 
