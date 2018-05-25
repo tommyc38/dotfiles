@@ -1,47 +1,47 @@
-    "Launch Config {{{
-    set nocompatible
-    source ~/.vim/plugins.vim "run plugins script; install plugins
+"Launch Config {{{
+set nocompatible
+source ~/.vim/plugins.vim "run plugins script; install plugins
 
-    filetype plugin indent on
-    " set omnifunc=YouCompleteMe#Complete
+filetype plugin indent on
+set omnifunc=YouCompleteMe#Complete
 
-    set backspace=indent,eol,start
-    "Allow backspacing while in insert mode.
+set backspace=indent,eol,start
+"Allow backspacing while in insert mode.
 
-    set nrformats=
-    "This will cause Vim to treat all numerals as decimals.
-    "Only matters when using <C-a> or <C-x> on numbers padded
-    "with zeros (e.g. 007)
+set nrformats=
+"This will cause Vim to treat all numerals as decimals.
+"Only matters when using <C-a> or <C-x> on numbers padded
+"with zeros (e.g. 007)
 
-    set clipboard=unnamed
-    "This allows you to paste from your system clipboard
-    "in normal mode.
+set clipboard=unnamed
+"This allows you to paste from your system clipboard
+"in normal mode.
 
-    set autochdir
-    "Change directory to the current buffer when opening fies.
+set autochdir
+"Change directory to the current buffer when opening fies.
 
-    set tags=./tags;
-    "let vim know that your tags files will always be called tags
+set tags=./tags;
+"let vim know that your tags files will always be called tags
 
-    :set hidden
-    "This will allow you to switch buffers that have been
-    "modified (keeping its changes) without needing '!'
-    "e.g.(:buffer2! assuming your window is buffer 1 and
-    "you havemade changes to it.)
+:set hidden
+"This will allow you to switch buffers that have been
+"modified (keeping its changes) without needing '!'
+"e.g.(:buffer2! assuming your window is buffer 1 and
+"you havemade changes to it.)
 
-    set timeoutlen=1000
-    set ttimeoutlen=10
-    " http://vi.stackexchange.com/questions/3964/timeoutlen-breaks-leader-and-vim-commentary
-    "Link explians why none of your leader keys work.
-    "without these settings.Also,
-    "Makes Airline faster when leaving insert mode but
-    "may cause issues.
+set timeoutlen=1000
+set ttimeoutlen=10
+" http://vi.stackexchange.com/questions/3964/timeoutlen-breaks-leader-and-vim-commentary
+"Link explians why none of your leader keys work.
+"without these settings.Also,
+"Makes Airline faster when leaving insert mode but
+"may cause issues.
 
-    set encoding=utf-8             "The encoding displayed.
-    set fileencoding=utf-8         "The encoding written to file.
-    set ttyfast                    "Redraw the screen quicker
+set encoding=utf-8             "The encoding displayed.
+set fileencoding=utf-8         "The encoding written to file.
+set ttyfast                    "Redraw the screen quicker
 
-    "}}}
+"}}}
 "UI Config {{{
 
 set wildmenu
@@ -50,11 +50,11 @@ set number                     "Show line numbers.
 match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 " highlight conflicts
 
-"set showmode                   "Show paste mode
+set showmode                   "Show paste mode
 set noshowmode                  "Disabled for PowerLine
 
 set ruler                      "Show the cursor position in command line
-" set showcmd                    "Display incomplete commands
+set showcmd                    "Display incomplete commands
 set laststatus=2               "Show the satus line all the time
 set cmdheight=1                "Make the command prompt bigger
 set showmatch                  "Show matching ",],etc.
@@ -62,11 +62,14 @@ set invlist
 set listchars=tab:▸\ ,eol:¬,trail:⋅,extends:❯,precedes:❮
 set showbreak=↪
 
-"}}}
+""}}}
 "Colors {{{
 
 syntax on
 "turns on syntax highlighting
+
+set termguicolors
+"this makes WebStorm render colors in terminal
 
 let base16colorspace=256  " Access colors present in 256 colorspace
 set t_Co=256  " the terminal supports 256 colors; see iTerm docs

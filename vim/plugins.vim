@@ -13,7 +13,7 @@ Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-obsession'
 Plug 'jiangmiao/auto-pairs' " automatic closing of quotes, parenthesis, brackets, etc.
-Plug 'Valloric/YouCompleteMe'
+" Plug 'Valloric/YouCompleteMe'
 Plug 'scrooloose/syntastic'
 Plug 'majutsushi/tagbar' " enables a list of current ctags
 Plug 'ervandew/supertab' "makes tab work better with YCM and Ultisnips

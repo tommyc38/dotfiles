@@ -1,4 +1,3 @@
-
 " ============================================================================
 " Editor Settings
 " ============================================================================
@@ -12,19 +11,19 @@ set scrolloff=5   " Keep a few lines always visable
 set clipboard=unnamed
 
 " Open one fold under the cursor.
-nnoremap zo :action ExpandRegion<CR>
-
+nnoremap zo :action ExpandRegion<cr>
 
 " Close one fold under the cursor.
-nnoremap zc :action CollapseRegion<CR>
+nnoremap zc :action CollapseRegion<cr>
 
 " Copy until the end of the line
 noremap Y y$
 
-let mapleader = "," "Sets spacebar as leader
-let mapleader = "," "Sets spacebar as leader
+" let mapleader = "," "Sets spacebar as leader
+" let mapleader = "," "Sets spacebar as leader
+
+"Highlight last inserted text
 nnoremap gV `[v`]
-" highlight last inserted text
 
 vnoremap . :normal .<cr>
 " enable dot command in visual mode
@@ -52,8 +51,27 @@ nnoremap <c-l> <c-w>l
 nnoremap <c-j> <c-w>j
 nnoremap <c-h> <c-w>h
 nnoremap <c-k> <c-w>k
-nnoremap <a-h> gT                " Navigate between tabs
-nnoremap <a-l> gt                " Navigate between tabs
+
+" Navigate between tabs
+nnoremap <a-h> gT
+
+" Navigate between tabs
+nnoremap <a-l> gt
+inoremap <c-l> <right>
+inoremap <c-h> <left>
+
+
+nnoremap <space>sv :action SplitVertically<cr>
+nnoremap <space>bo :action OpenInBrowser<cr>
+nnoremap <space>mr :action MoveTabRight<cr>
+nnoremap <space>md :action MoveTabDown<cr>
+nnoremap <space>sh :action SplitHorizontally<cr>
+
+"If editor is split in Ver/Hor then you can move tabs to groups
+nnoremap <space>mt :action MoveEditorToOppositeTabGroup<cr>
+
+"Unsplit vertical or horizontal editor windows
+nnoremap <space>u :action Unsplit<cr>
 
 " ============================================================================
 " Editor control
@@ -64,18 +82,18 @@ nmap <c-z> :action VimEmulator
 
 " preserve IDE shortcutkey
 
+"Access all tools and file tabs - must hold CTRL
 nmap <c-t> :action Switcher<CR>
-nmap <c-z><c-tab> :action Switcher<CR>
-" access all tools and file tabs - must hold tab
 
 " Enter the command-line mode
 " noremap <CR> :
 
+ "Source settings
 nnoremap <space>vs :source ~/.ideavimrc<CR>
-" source settings
 
+"Comment out lines
 nmap gcc :action CommentByLineComment<CR>
-" comment out lines
+
 " Won't work in visual mode (with vmap) for some reason.
 " Use default map of <c-/> for that.
 " ============================================================================
@@ -83,6 +101,7 @@ nmap gcc :action CommentByLineComment<CR>
 " ============================================================================
 nnoremap <space>fu :action FindUsages<cr>
 nnoremap <space>su :action ShowUsages<cr>
+nnoremap <space>sc :action ShowColorPicker<cr>
 nnoremap <space>cv :action ChangeView<cr>
 nnoremap <space>bb :action ToggleLineBreakpoint<cr>
 nnoremap <space>br :action ViewBreakpoints<cr>
@@ -91,12 +110,18 @@ nnoremap <space>oi :action OptimizeImports<cr>
 nnoremap <space>re :action RenameElement<cr>
 nnoremap <space>dc :action ChooseDebugConfiguration<cr>
 nnoremap <space>rc :action ChooseRunConfiguration<cr>
-nnoremap <space>q  :action CloseActiveTab<cr>
+nnoremap <space>q  :action CloseEditor<cr>
 nnoremap <space>gi :action GotoImplementation<cr>
 nnoremap <space>gs :action GotoSuperMethod<cr>
 nnoremap <space>gd :action GotoDeclaration<cr>
+nnoremap <space>fa :action GotoAction<cr>
 nnoremap ]e :action GotoNextError<cr>
 nnoremap [e :action GotoPreviousError<cr>
+nnoremap [b :action SmartHome<cr>
+nnoremap ]b :action SmartEnd<cr>
+" vmap ]f :action EditorSelectFavourite<cr>
+" vmap ]c :action EditorSelectFavouriteContent<cr>
+nnoremap ]b :action SmartEnd<cr>
 nnoremap / :action Find<CR>
 nnoremap n :action FindNext<CR>
 nnoremap N :action FindPrevious<CR>
