@@ -18,35 +18,35 @@ else
 fi
 
 echo "Setting up python2 virtualenvs..."
-mkvirtualenv -p /usr/local/bin/python py2
+mkvirtualenv -p /usr/local/bin/python2 py2
 workon py2
 if test $VIRTUAL_ENV; then
-    pip install --upgrade setuptools
-    pip install --upgrade pip
-    pip install flake8
-    pip install requests
-    pip install jinja2
-    pip install flask
-    pip install scrapy
-    pip install beautifulsoup
-    pip install ipython
+    pip2 install --upgrade setuptools
+    pip2 install --upgrade pip
+    pip2 install flake8
+    pip2 install requests
+    pip2 install jinja2
+    pip2 install flask
+    pip2 install scrapy
+    pip2 install beautifulsoup
+    pip2 install ipython
 else
     echo "py2 virtualenv not setup!"
 fi
 deactivate
 echo "Setting up python3 virtualenvs..."
-mkvirtualenv -p /usr/local/binpython3 py3
+mkvirtualenv -p /usr/local/bin/python3 py3
 workon py3
 if test $VIRTUAL_ENV; then
-    pip install --upgrade setuptools
-    pip install --upgrade pip
-    pip install flake8
-    pip install requests
-    pip install jinja2
-    pip install flask
-    pip install scrapy
-    pip install beautifulsoup
-    pip install ipython
+    pip3 install --upgrade setuptools
+    pip3 install --upgrade pip
+    pip3 install flake8
+    pip3 install requests
+    pip3 install jinja2
+    pip3 install flask
+    pip3 install scrapy
+    pip3 install beautifulsoup
+    pip3 install ipython
 else
     echo "py3 virtualenv not setup!"
 fi

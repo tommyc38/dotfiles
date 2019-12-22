@@ -29,7 +29,7 @@ export HOMEBREW_GITHUB_API_TOKEN=1819020ea53fba39c23d075f2405818cdd0f9936
 
 #THIS IS THE POST INSTALL TO ENABLE AUTOJUMP
 
-[[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+# [[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
 
 #----------------------------------------------------------------
 #THIS WILL CHANGE YUOUR TERMINAL

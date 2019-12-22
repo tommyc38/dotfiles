@@ -1,3 +1,4 @@
+#@IgnoreInspection BashAddShebang
 export DOTFILES=$HOME/dotfiles
 export ZSH=$DOTFILES/zsh
 
@@ -59,9 +60,10 @@ VIRTUALENVWRAPPER_PYTHON=$(which python2)
 # this is the bash script to run virtualenvwrapper
 source /usr/local/bin/virtualenvwrapper.sh
 
-# enable themes
-BASE16_SHELL=$HOME/.config/base16-shell/
-[ -n "$PS1" ] && [ -s $BASE16_SHELL/profile_helper.sh ] && eval "$($BASE16_SHELL/profile_helper.sh)"
+# Enable Themes.  This causes Webstorm's Terminal to not work so only use this when you want to change the theme
+# It will also create a vim_background file to make vim look pretty.
+# BASE16_SHELL=$HOME/.config/base16-shell/
+# [ -n "$PS1" ] && [ -s $BASE16_SHELL/profile_helper.sh ] && eval "$($BASE16_SHELL/profile_helper.sh)"
 
 # THIS IS THE POST INSTALL TO ENABLE AUTOJUMP
 [[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
@@ -73,7 +75,38 @@ if [ -z ${DOTFILES_LOADED+x} ]; then
     source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 fi
 
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh"  ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+export NVM_SYMLINK_CURRENT=true # This allows IDEs to use a single place to set your node version
+autoload -U add-zsh-hook
+# This will tell NVM to use whatever version is in the .nvmrc
+load-nvmrc() {
+  local node_version="$(nvm version)"
+  local nvmrc_path="$(nvm_find_nvmrc)"
+
+  if [ -n "$nvmrc_path" ]; then
+    local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
+
+    if [ "$nvmrc_node_version" = "N/A" ]; then
+      nvm install
+    elif [ "$nvmrc_node_version" != "$node_version" ]; then
+      nvm use
+    fi
+  elif [ "$node_version" != "$(nvm version default)" ]; then
+    echo "Reverting to nvm default version"
+    nvm use default
+  fi
+}
+add-zsh-hook chpwd load-nvmrc
+load-nvmrc
+
 DOTFILES_LOADED=1
 # change the shell login 
 # example: sudo dscl . change /users/$USER UserShell /bin/bash /opt/local/bin/zsh
 # http://superuser.com/questions/362372/how-to-change-the-login-shell-on-mac-os-x-from-bash-to-zsh
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/tomconley/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/tomconley/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/tomconley/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/tomconley/google-cloud-sdk/completion.zsh.inc'; fi

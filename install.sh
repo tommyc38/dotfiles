@@ -1,44 +1,58 @@
 #!/bin/bash
 
+# Make sure you run this script with 'sudo'
+#if ! [ $(id -u) = 0 ]; then
+#   echo "The script need to be run as root." >&2
+#   exit 1
+#fi
+
 echo "Initializing..."
 
 
 if [ "$(uname)" == "Darwin" ]; then
     echo "Running on OSX"
 
-    echo "Setting up IDE tools"
-    sh install/ide.sh
-
-    echo "Installing Powerline Fonts"
-    sh pfonts/install.sh
-
-    echo "Installing Nerd Fonts" 
-    cd ~/Library/Fonts && curl -fLo "Droid Sans Mono for Powerline Nerd Font Complete.otf" https://raw.githubusercontent.com/ryanoasis/nerd-fonts/master/patched-fonts/DroidSansMono/complete/Droid%20Sans%20Mono%20for%20Powerline%20Nerd%20Font%20Complete.otf
-
     echo "Creating symlinks"
     sh install/symlink.sh "1"
 
-    echo "Setting up base16 themes"
-    sh install/base16.sh
+    echo "Setting up IDE tools"
+    sh install/ide.sh
 
-    # echo "Setting up Karabiner"
-    #TODO
+    echo "Setting up ZSH as the default terminal"
+    echo "/usr/local/bin/bash" >> /etc/shells
+    echo "/usr/local/bin/zsh" >> /etc/shells
+    chsh -s /usr/local/bin/zsh
+
+    echo "Setting up Python virtual environments (py2 & p3)"
+    sh install/pyenve.sh
+
+    echo "Setting up base16 themes"
+    git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
+
+    echo "Setting up Karabiner"
+    $KARABINER=$HOME/.config/karabiner/
+    if [ -d $KARABINER ];then
+	    if [ -e $KARABINER/karabiner.json ];then
+		    mv $KARABINER/karabiner.json $KARABINER/karabiner-old.json
+	    fi
+	ln -s $HOME/dotfiles/karabiner/karabiner.json $KARABINER
+    else
+    	mkdir ~/.config/karabiner	    
+	ln -s $HOME/dotfiles/karabiner/karabiner.json $KARABINER
+    fi
 
     echo "Setting up Vim"
     sh install/vim.sh "1"
 
-    echo "Installing Vim Plugins"
-    vim -E -c PlugInstall -c q
+    # echo "Installing Vim Plugins"
+    # vim -E -c PlugInstall -c q
     
-    echo "Running YCM post install hook"
-    sh install/YCM.sh
+    # echo "Symlinkng Tmux plugins folder to ~"
+    # ln -s ~/dotfiles/tmux/tmux.d ~/.tmux
+    # echo "Plugins symlinked.  Don't forget to install plugins"
 
-    echo "Symlinkng Tmux plugins folder to ~"
-    ln -s ~/dotfiles/tmux/tmux.d ~/.tmux
-    echo "Plugins symlinked.  Don't forget to install plugins"
-
-    # echo "Updating OSX settings"
-    # sh install/osx.sh
+    echo "Updating OSX settings"
+    sh install/osx.sh
 
 elif [["$(uname)" == "TODO"]]; then
     echo "Running on Ubuntu"
@@ -48,7 +62,7 @@ else
     echo "Sorry, OS not recognized"
 fi
 
-echo "Configuring zsh as default shell"
-sudo dscl . change /users/$USER UserShell $SHELL /usr/local/bin/zsh
+# echo "Configuring zsh as default shell"
+# sudo dscl . change /users/$USER UserShell $SHELL /usr/local/bin/zsh
 
 echo "Done."

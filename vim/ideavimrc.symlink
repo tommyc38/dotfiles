@@ -14,7 +14,9 @@ set clipboard=unnamed
 nnoremap zo :action ExpandRegion<cr>
 
 " Close one fold under the cursor.
-nnoremap zc :action CollapseRegion<cr>
+" nnoremap zc :action CollapseRegion<cr>
+" nnoremap zc :action CollapseRegion<cr>
+noremap <space>a :action CollapseRegion<cr>
 
 " Copy until the end of the line
 noremap Y y$
@@ -54,9 +56,9 @@ nnoremap <c-k> <c-w>k
 
 " Navigate between tabs
 nnoremap <a-h> gT
-
-" Navigate between tabs
 nnoremap <a-l> gt
+
+" Move cursor in insert mode
 inoremap <c-l> <right>
 inoremap <c-h> <left>
 
@@ -102,11 +104,11 @@ nmap gcc :action CommentByLineComment<CR>
 nnoremap <space>fu :action FindUsages<cr>
 nnoremap <space>su :action ShowUsages<cr>
 nnoremap <space>sc :action ShowColorPicker<cr>
-nnoremap <space>cv :action ChangeView<cr>
+" nnoremap <space>cv :action ChangeView<cr>
 nnoremap <space>bb :action ToggleLineBreakpoint<cr>
 nnoremap <space>br :action ViewBreakpoints<cr>
 nnoremap <space>ic :action InspectCode<cr>
-nnoremap <space>oi :action OptimizeImports<cr>
+" nnoremap <space>oi :action OptimizeImports<cr>
 nnoremap <space>re :action RenameElement<cr>
 nnoremap <space>dc :action ChooseDebugConfiguration<cr>
 nnoremap <space>rc :action ChooseRunConfiguration<cr>
@@ -126,19 +128,24 @@ nnoremap / :action Find<CR>
 nnoremap n :action FindNext<CR>
 nnoremap N :action FindPrevious<CR>
 nnoremap U :action $Redo<CR>
-nnoremap <space>o :action GotoClass<CR>
-nnoremap <space>O :action GotoFile<CR>
+" nnoremap <space>o :action GotoClass<CR>
+" nnoremap <space>O :action GotoFile<CR>
 nnoremap <space>d :action CloseContent<CR>
 nnoremap <space>j :action RecentFiles<CR>
 nnoremap <space>k :action FileStructurePopup<CR>
 nnoremap <space>h :action QuickJavaDoc<CR>
 
+"Toglle Terminal : Command + 2
+"Toggle Project : Command +  1
+
 " Show all possible Live Templates (code snippets) :  Command + J
-" Intentions (the light bulb)                      :  Alt + Enter
+"" Intentions (the light bulb)                      :  Alt + Enter
 " Return focus back to editor from IDE component   :  Esc
 " Hide all tool windows                            :  Shift + Command + F12
 "       also restores windows
 " Hide Active tool window                          :  Shift + Esc
 " Expand & Close folds                             :  Command +  ||  Command -
+" Open Bookmarks (Marks : Command + 5;
+"   use native vim marks with uppercase letters to also enable IDE bookmarks
 " New file                                         :  Command + n
 " AceJump                                          :  Command + ;
