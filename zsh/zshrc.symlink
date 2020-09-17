@@ -53,12 +53,12 @@ for config ($ZSH/**/*completion.sh) source $config
 
 # This will disable the activate prompt script so you
 # can customize the venv prompt
-VIRTUAL_ENV_DISABLE_PROMPT="1"
+# VIRTUAL_ENV_DISABLE_PROMPT="1"
 
 # this solves https://bitbucket.org/virtualenvwrapper/virtualenvwrapper/issues/300/problem-running-initialization-hooks
-VIRTUALENVWRAPPER_PYTHON=$(which python2)
+# VIRTUALENVWRAPPER_PYTHON=$(which python)
 # this is the bash script to run virtualenvwrapper
-source /usr/local/bin/virtualenvwrapper.sh
+# source /usr/local/bin/virtualenvwrapper.sh
 
 # Enable Themes.  This causes Webstorm's Terminal to not work so only use this when you want to change the theme
 # It will also create a vim_background file to make vim look pretty.

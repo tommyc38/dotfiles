@@ -6,6 +6,9 @@
 # export LS_COLORS
 alias ls='ls --color'
 
+HISTSIZE=5000
+HISTFILESIZE=10000
+
 #this will allow vi when using info command
 alias info='info --vi-keys'
 
@@ -21,6 +24,7 @@ BASE16_SHELL="$HOME/.config/base16-shell/"
 
 # this is the bash script to run use virtualenvwrapper
 #source /usr/local/bin/virtualenvwrapper.sh
+
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm

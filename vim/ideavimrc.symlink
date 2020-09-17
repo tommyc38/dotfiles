@@ -43,6 +43,8 @@ nmap <space>] >>
 " ============================================================================
 set surround
 
+" Code Glance gives you the pane on the right scroll to see your code.  Only
+" useful for large files.
 nnoremap <space>cg :action CodeGlance.toggle<cr>
 
 " ============================================================================
@@ -117,6 +119,7 @@ nnoremap <space>gi :action GotoImplementation<cr>
 nnoremap <space>gs :action GotoSuperMethod<cr>
 nnoremap <space>gd :action GotoDeclaration<cr>
 nnoremap <space>fa :action GotoAction<cr>
+nnoremap <space>t :action QuickTypeDefinition<cr>
 nnoremap ]e :action GotoNextError<cr>
 nnoremap [e :action GotoPreviousError<cr>
 nnoremap [b :action SmartHome<cr>
@@ -139,6 +142,7 @@ nnoremap <space>h :action QuickJavaDoc<CR>
 "Toggle Project : Command +  1
 
 " Show all possible Live Templates (code snippets) :  Command + J
+" Show definition :  Command + Y
 "" Intentions (the light bulb)                      :  Alt + Enter
 " Return focus back to editor from IDE component   :  Esc
 " Hide all tool windows                            :  Shift + Command + F12
