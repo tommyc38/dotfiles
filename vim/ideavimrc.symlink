@@ -6,17 +6,12 @@ set hlsearch      " Highlight search pattern results.
 set ignorecase    " Ignore case of normal letters in a pattern.
 set showmode      " Show current mode on the last line.
 set smartcase     " Override ignorecase if pattern contains upper case.
+set nrformats=    " Allows incrementing padded number (e.g. 007)
 set visualbell    " Turn off the annoying bell
 set scrolloff=5   " Keep a few lines always visable
 set clipboard=unnamed
-
-" Open one fold under the cursor.
-nnoremap zo :action ExpandRegion<cr>
-
-" Close one fold under the cursor.
-" nnoremap zc :action CollapseRegion<cr>
-" nnoremap zc :action CollapseRegion<cr>
-noremap <space>a :action CollapseRegion<cr>
+set ideamarks    " Sync IJ marks and vim"
+set ReplaceWithRegister "gr or grr"
 
 " Copy until the end of the line
 noremap Y y$
@@ -24,19 +19,21 @@ noremap Y y$
 " let mapleader = "," "Sets spacebar as leader
 " let mapleader = "," "Sets spacebar as leader
 
-"Highlight last inserted text
+" Highlight last inserted text
 nnoremap gV `[v`]
 
+" Enable dot command in visual mode
 vnoremap . :normal .<cr>
-" enable dot command in visual mode
 
-nnoremap cow :action EditorToggleUseSoftWraps<CR>
+nnoremap zM :action CollapseAllRegions<cr>
+nnoremap zR :action ExpandAllRegions<cr>
+" nnoremap cow :action EditorToggleUseSoftWraps<CR>
 
+" Textmate style indentation
 vmap <space>[ <gv
 vmap <space>] >gv
 nmap <space>[ <<
 nmap <space>] >>
-" Textmate style indentation
 
 " ============================================================================
 " Plugins
@@ -45,7 +42,7 @@ set surround
 
 " Code Glance gives you the pane on the right scroll to see your code.  Only
 " useful for large files.
-nnoremap <space>cg :action CodeGlance.toggle<cr>
+" nnoremap <space>cg :action CodeGlance.toggle<cr>
 
 " ============================================================================
 " Movement
@@ -100,7 +97,7 @@ nmap gcc :action CommentByLineComment<CR>
 
 " Won't work in visual mode (with vmap) for some reason.
 " Use default map of <c-/> for that.
-" ============================================================================
+"============================================================================
 " IDE actions
 " ============================================================================
 nnoremap <space>fu :action FindUsages<cr>
@@ -127,9 +124,9 @@ nnoremap ]b :action SmartEnd<cr>
 " vmap ]f :action EditorSelectFavourite<cr>
 " vmap ]c :action EditorSelectFavouriteContent<cr>
 nnoremap ]b :action SmartEnd<cr>
-nnoremap / :action Find<CR>
-nnoremap n :action FindNext<CR>
-nnoremap N :action FindPrevious<CR>
+" nnoremap / :action Find<CR>
+" nnoremap n :action FindNext<CR>
+" nnoremap N :action FindPrevious<CR>
 nnoremap U :action $Redo<CR>
 " nnoremap <space>o :action GotoClass<CR>
 " nnoremap <space>O :action GotoFile<CR>
@@ -138,10 +135,12 @@ nnoremap <space>j :action RecentFiles<CR>
 nnoremap <space>k :action FileStructurePopup<CR>
 nnoremap <space>h :action QuickJavaDoc<CR>
 
-"Toglle Terminal : Command + 2
-"Toggle Project : Command +  1
-
-" Show all possible Live Templates (code snippets) :  Command + J
+" Toglle Terminal : Command + 2
+" Toggle Project : Command +  1
+" Move Next Terminal Tab : Command + Shift + []
+" IDE wrap : Command + w
+" IDE Navigate Search : Enter or Shift + Enter
+" Show all possible Live Templates (code snippets) :  Command + T / Command +J
 " Show definition :  Command + Y
 "" Intentions (the light bulb)                      :  Alt + Enter
 " Return focus back to editor from IDE component   :  Esc
