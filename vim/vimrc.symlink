@@ -41,6 +41,10 @@ set encoding=utf-8             "The encoding displayed.
 set fileencoding=utf-8         "The encoding written to file.
 set ttyfast                    "Redraw the screen quicker
 
+" start typing a command and then type hit <c-p> or <c-n> to filter history
+cnoremap <c-p> <Up>
+cnoremap <c-n> <Down>
+
 "}}}
 "UI Config {{{
 
@@ -127,8 +131,7 @@ autocmd BufRead .tslintrc set filetype=json
 "}}}
 "Searching {{{
 
-set hls
-"This will highlight all searches
+set hls "This will highlight all searches
 
 set ignorecase " case insensitive searching
 set smartcase " case-sensitive if expresson contains a capital letter
@@ -139,25 +142,23 @@ set nolazyredraw " don't redraw while executing macros
 "}}}
 "Folding {{{
 
-set modelines=1
-" file specific settings; see bottom line below
-set foldlevel=10
-"prevents all folds from expanding when opening a file
+set modelines=1 " file specific settings; see bottom line below
+set foldlevel=10 "prevents all folds from expanding when opening a file
 set foldmethod=indent
 set foldnestmax=10
 set foldenable
 "}}}
 "Custom Movements {{{
 
+" make it easier to jump to open windows
 map <C-j> <C-W>j
 map <C-k> <C-W>k
 map <C-h> <C-W>h
 map <C-l> <C-W>l
-" make it easier to jump to open windows
 
+" scroll the viewport faster
 nnoremap <C-e> 3<C-e>
 nnoremap <C-y> 3<C-y>
-" scroll the viewport faster
 
 nnoremap j gj
 nnoremap k gk
@@ -169,66 +170,65 @@ nnoremap k gk
 
 let mapleader = "\<Space>" "Sets spacebar as leader
 
+"easily format on common characters '=' and ':'
 if exists(":Tabularize")
     nmap <Leader>t= :Tabularize /=<CR>
     vmap <Leader>t= :Tabularize /=<CR>
     nmap <Leader>t: :Tabularize /:\zs<CR>
     vmap <Leader>t: :Tabularize /:\zs<CR>
 endif
-"easily format on common characters '=' and ':'
 
-inoremap <silent> <Bar>   <Bar><Esc>:call <SID>align()<CR>a
 "insert a '|' and the columns will align
+inoremap <silent> <Bar>   <Bar><Esc>:call <SID>align()<CR>a
 
-nnoremap gV `[v`]
 " highlight last inserted text
+nnoremap gV `[v`]
 
-noremap <leader>s :set hlsearch! hlsearch?<cr>
 " clear highlighted search
+noremap <leader>s :set hlsearch! hlsearch?<cr>
 
-vnoremap . :normal .<cr>
 " enable . command in visual mode
+vnoremap . :normal .<cr>
 
+" make it easier to jump to open windows
 map <silent> <C-h> :call WinMove('h')<cr>
 map <silent> <C-j> :call WinMove('j')<cr>
 map <silent> <C-k> :call WinMove('k')<cr>
 map <silent> <C-l> :call WinMove('l')<cr>
-" make it easier to jump to open windows
 
-nmap <leader>i :set list!<cr>
 "Toggle invisible characters.
+nmap <leader>i :set list!<cr>
 
-nnoremap <leader>l :set cursorline!<cr>
 " toggle cursor line
+nnoremap <leader>l :set cursorline!<cr>
 
-nnoremap <leader>ev  :vsp $MYVIMRC<CR>
+nnoremap <leader>ev  :vsp ~/.vimrc<CR>
 nnoremap <leader>ez  :vsp ~/.zshrc<CR>
-nnoremap <leader>sv  :source $MYVIMRC<CR>
+nnoremap <leader>sv  :source ~/.vimrc<CR>
 nnoremap <leader>eb  :vsp ~/.bashrc<CR>
 nnoremap <leader>ebb :vsp ~/.bash_profile<CR>
 nnoremap <leader>ep  :vsp ~/.vim/plugins.vim<CR>
 
-nnoremap <leader>a za  
 "expand folds
+nnoremap <leader>a za  
 
-map <leader>ss :setlocal spell!<cr>
 "enable spellcheck
+map <leader>ss :setlocal spell!<cr>
 
-nmap <leader>w :w!<cr>
 "make it easier to save
+nmap <leader>w :w!<cr>
 
+" Textmate style indentation
 vmap <leader>[ <gv
 vmap <leader>] >gv
 nmap <leader>[ <<
 nmap <leader>] >>
-" Textmate style indentation
 
-:noremap <F4> :call TrimWhitespace()<CR>
 "delete all trailing whitespace off of every line by
 "hitting the <F4> key
+:noremap <F4> :call TrimWhitespace()<CR>
 
-nnoremap <leader>r :mksession<CR>
-" save session
+nnoremap <leader>r :mksession<CR> " save session
 
 nmap <Leader>n :NERDTreeToggle<CR>
 
@@ -240,8 +240,7 @@ nmap <Leader>f <Plug>(easymotion-s)
 " nnoremap <silent> <F5> :!clear;python %<CR>
 
 map <leader>g  :YcmCompleter GoToDefinitionElseDeclaration<CR>
-nnoremap <Leader>\ :YcmCompleter GoTo<CR>
-" jump to function definitions
+nnoremap <Leader>\ :YcmCompleter GoTo<CR> " jump to function definitions
 
 " nmap <F5> :call VimuxRunCommand("clear;~/.virtualenvs/py3/bin/ipython  . bufname("%"))<CR>
 nmap <silent> <F5> :call VimuxRunCommand("clear;[ -z $VIRTUAL_ENV ] && workon py3; ipython " . bufname("%"))<CR>
@@ -249,14 +248,16 @@ nmap <silent> <F5> :call VimuxRunCommand("clear;[ -z $VIRTUAL_ENV ] && workon py
 "}}}
 "Custom Functions{{{
 
+" if no plugins support the file type then use as default
 if has("autocmd") && exists("+omnifunc")
 	autocmd Filetype *
         \	if &omnifunc == "" |
         \		setlocal omnifunc=syntaxcomplete#Complete |
         \	endif
 endif
-" if no plugins support the file type then use as default
 
+" Window movement shortcuts
+" move to the window in the direction shown, or create a new window
 function! WinMove(key)
     let t:curwin = winnr()
     exec "wincmd ".a:key
@@ -269,24 +270,22 @@ function! WinMove(key)
         exec "wincmd ".a:key
     endif
 endfunction
-" Window movement shortcuts
-" move to the window in the direction shown, or create a new window
 
+"This allows you to run a command that will trim
+"all whitespace off the end of every line and file.
 fun! TrimWhitespace()
     let l:save = winsaveview()
     %s/\s\+$//e
     call winrestview(l:save)
 endfun
 command! TrimWhitespace call TrimWhitespace()
-"This allows you to run a command that will trim
-"all whitespace off the end of every line and file.
 
+"run the command to compare buffer with original file
+"to end this command type 'windo diffoff'
 if !exists(":DiffOrig")
   command DiffOrig vert new | set bt=nofile | r ++edit # | 0d_ | diffthis
 		  \ | wincmd p | diffthis
 endif
-"run the command to compare buffer with original file
-"to end this command type 'windo diffoff'
 
 function! VimuxSlime()
     call VimuxSendText("clear")
@@ -308,13 +307,15 @@ function! VimuxPython()
     call VimuxSendKeys("Enter")
 endfunction
 
-nmap <F3> :call VimuxPython()<CR>
 " If text is selected, save it in the v buffer and send that buffer it to tmux
+nmap <F3> :call VimuxPython()<CR>
 vmap <Leader>vs "vy :call VimuxSlime()<CR>
 
 " Select current paragraph and send it to tmux
 nmap <Leader>vs vip<LocalLeader>vs<CR>
 
+"every time a | is inserted while in insertmode Tabularize will autoformat the
+"width
 function! s:align()
   let p = '^\s*|\s.*\s|\s*$'
   if exists(':Tabularize') && getline('.') =~# '^\s*|' && (getline(line('.')-1) =~# p || getline(line('.')+1) =~# p)
@@ -325,9 +326,8 @@ function! s:align()
     call search(repeat('[^|]*|',column).'\s\{-\}'.repeat('.',position),'ce',line('.'))
   endif
 endfunction
-"every time a | is inserted while in insertmode Tabularize will autoformat the
-"width
 
+"rename a file
 command! -bar -nargs=1 -bang -complete=file Rename :
   \ let s:file = expand('%:p') |
   \ setlocal modified |
@@ -336,30 +336,29 @@ command! -bar -nargs=1 -bang -complete=file Rename :
   \   call delete(s:file) |
   \ endif |
   \ unlet s:file
-"rename a file
 
 "}}}
 "Autogroups {{{
 
-autocmd BufWinEnter *.py setlocal foldexpr=SimpylFold(v:lnum) foldmethod=expr
-autocmd BufWinLeave *.py setlocal foldexpr< foldmethod<
 " per the SimplyFold documentation
+" autocmd BufWinEnter *.py setlocal foldexpr=SimpylFold(v:lnum) foldmethod=expr
+" autocmd BufWinLeave *.py setlocal foldexpr< foldmethod<
 
-augroup reload_vimrc " {
-    autocmd!
-    autocmd BufWritePost $MYVIMRC source $MYVIMRC | AirlineRefresh
-augroup END " }
 " resource vim when reloaded
+" augroup reload_vimrc " {
+"     autocmd!
+"     autocmd BufWritePost $MYVIMRC source $MYVIMRC | AirlineRefresh
+" augroup END " }
 
-autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 " if NERDTree is the only window open when you want to close Vim this will help
+" autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
 "}}}
 "Backups {{{
 
 set writebackup
 set backup
-set backupdir=~/.vim/_backups " store backups here
+set backupdir=~/.vim/_backup  " store backups here
 set directory=~/.vim/_swaps   " store swap files here
 
 "}}}

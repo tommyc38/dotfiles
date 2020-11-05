@@ -103,6 +103,7 @@ nmap gcc :action CommentByLineComment<CR>
 nnoremap <space>fu :action FindUsages<cr>
 nnoremap <space>su :action ShowUsages<cr>
 nnoremap <space>sc :action ShowColorPicker<cr>
+noremap <space>sa :set hlsearch! hlsearch?<cr>
 " nnoremap <space>cv :action ChangeView<cr>
 nnoremap <space>bb :action ToggleLineBreakpoint<cr>
 nnoremap <space>br :action ViewBreakpoints<cr>
@@ -135,20 +136,19 @@ nnoremap <space>j :action RecentFiles<CR>
 nnoremap <space>k :action FileStructurePopup<CR>
 nnoremap <space>h :action QuickJavaDoc<CR>
 
-" Toglle Terminal : Command + 2
-" Toggle Project : Command +  1
-" Move Next Terminal Tab : Command + Shift + []
+" Toglle Terminal                                                 : Command + 2
+" Toggle Project                                                  : Command +  1
+" Move Next Terminal Tab                                          : Command + Shift + []
 " IDE wrap : Command + w
+" IDE Bookmarks Window                                            : Command + 3
 " IDE Navigate Search : Enter or Shift + Enter
-" Show all possible Live Templates (code snippets) :  Command + T / Command +J
+" Show all possible Live Templates (code snippets)                :       Command + T / Command +J
 " Show definition :  Command + Y
-"" Intentions (the light bulb)                      :  Alt + Enter
-" Return focus back to editor from IDE component   :  Esc
-" Hide all tool windows                            :  Shift + Command + F12
-"       also restores windows
-" Hide Active tool window                          :  Shift + Esc
-" Expand & Close folds                             :  Command +  ||  Command -
-" Open Bookmarks (Marks : Command + 5;
-"   use native vim marks with uppercase letters to also enable IDE bookmarks
-" New file                                         :  Command + n
-" AceJump                                          :  Command + ;
+" Intentions (the light bulb)                                     :       Alt + Enter
+" Return focus back to editor from IDE component                  :       Esc
+" Hide all tool windows, also restores window                     :       Shift + Command + F12
+" Hide Active tool window                                         :       Shift + Esc
+" Expand & Close folds                                            :       Command +  ||  Command -
+" New file                                                        :       Command + n
+" AceJump                                                         :       Command + ;
+" Terminal - move tab                                             :       CNTRL + ]
