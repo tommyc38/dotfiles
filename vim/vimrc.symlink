@@ -23,7 +23,7 @@ set autochdir
 set tags=./tags;
 "let vim know that your tags files will always be called tags
 
-:set hidden
+set hidden
 "This will allow you to switch buffers that have been
 "modified (keeping its changes) without needing '!'
 "e.g.(:buffer2! assuming your window is buffer 1 and
@@ -48,7 +48,7 @@ cnoremap <c-n> <Down>
 "}}}
 "UI Config {{{
 
-set wildmenu
+set wildmenu                   "Commandline autocomplete view"
 set number                     "Show line numbers.
 
 match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
@@ -57,6 +57,7 @@ match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 set showmode                   "Show paste mode
 set noshowmode                  "Disabled for PowerLine
 
+set scrolloff=5                "Keep a few lines always visable
 set ruler                      "Show the cursor position in command line
 set showcmd                    "Display incomplete commands
 set laststatus=2               "Show the satus line all the time
@@ -78,12 +79,19 @@ set termguicolors
 let base16colorspace=256  " Access colors present in 256 colorspace
 set t_Co=256  " the terminal supports 256 colors; see iTerm docs
 
-if filereadable(expand("~/.vimrc_background"))
-  let base16colorspace=256
-  source ~/.vimrc_background
-endif
+" Note this theme has been tweaked. Keyword was changed to #6897BB 
+" from #CC7832 (~/.vim/plugged/darcula/colors/darcula.vim). Number was 
+" also changed from #6897BB to 
+" #4F8C89.
+colorscheme darcula 
 
-" colorscheme base16-github
+let g:Hexokinase_highlighters = ['sign_column'] " Make the color icon appear in the column
+let g:Hexokinase_signIcon = '◼' " Make the color icon bigger than he default so it's easier to see
+
+" Set mark column color for to make sense for Darcula (default would be #532B2E)
+" current value is #3A3A3A
+let g:SignatureMarkTextHL = "FoldedFg" 
+
 
 "}}}
 "Space and Tabs {{{
@@ -171,12 +179,12 @@ nnoremap k gk
 let mapleader = "\<Space>" "Sets spacebar as leader
 
 "easily format on common characters '=' and ':'
-if exists(":Tabularize")
-    nmap <Leader>t= :Tabularize /=<CR>
-    vmap <Leader>t= :Tabularize /=<CR>
-    nmap <Leader>t: :Tabularize /:\zs<CR>
-    vmap <Leader>t: :Tabularize /:\zs<CR>
-endif
+" if exists(":Tabularize") HAS CONFLICT WITH EASY MOTION
+"     nmap <Leader>t= :Tabularize /=<CR>
+"     vmap <Leader>t= :Tabularize /=<CR>
+"     nmap <Leader>t: :Tabularize /:\zs<CR>
+"     vmap <Leader>t: :Tabularize /:\zs<CR>
+" endif
 
 "insert a '|' and the columns will align
 inoremap <silent> <Bar>   <Bar><Esc>:call <SID>align()<CR>a
@@ -185,10 +193,14 @@ inoremap <silent> <Bar>   <Bar><Esc>:call <SID>align()<CR>a
 nnoremap gV `[v`]
 
 " clear highlighted search
-noremap <leader>s :set hlsearch! hlsearch?<cr>
+noremap <leader>sh :set hlsearch! hlsearch?<cr>
 
 " enable . command in visual mode
 vnoremap . :normal .<cr>
+
+" make it easy to resize window width
+map <leader>- 20<c-w><
+map <leader>= 20<c-w>>
 
 " make it easier to jump to open windows
 map <silent> <C-h> :call WinMove('h')<cr>
@@ -200,14 +212,18 @@ map <silent> <C-l> :call WinMove('l')<cr>
 nmap <leader>i :set list!<cr>
 
 " toggle cursor line
-nnoremap <leader>l :set cursorline!<cr>
+nnoremap <leader>sl :set cursorline!<cr>
 
-nnoremap <leader>ev  :vsp ~/.vimrc<CR>
-nnoremap <leader>ez  :vsp ~/.zshrc<CR>
-nnoremap <leader>sv  :source ~/.vimrc<CR>
-nnoremap <leader>eb  :vsp ~/.bashrc<CR>
-nnoremap <leader>ebb :vsp ~/.bash_profile<CR>
-nnoremap <leader>ep  :vsp ~/.vim/plugins.vim<CR>
+nnoremap <leader>vs  :source ~/.vimrc<CR>
+nnoremap <leader>ve  :vsp ~/.vimrc<CR>
+nnoremap <leader>vp  :vsp ~/.vim/plugins.vim<CR>
+nnoremap <leader>ie  :vsp ~/.ideavimrc<CR>
+nnoremap <leader>ze  :vsp ~/.zshrc<CR>
+nnoremap <leader>zs  :source ~/.zshrc<CR>
+nnoremap <leader>bre :vsp ~/.bashrc<CR>
+nnoremap <leader>brs :source ~/.bashrc<CR>
+nnoremap <leader>bpe :vsp ~/.bash_profile<CR>
+nnoremap <leader>bps :source ~/.bash_profile<CR>
 
 "expand folds
 nnoremap <leader>a za  
@@ -228,13 +244,14 @@ nmap <leader>] >>
 "hitting the <F4> key
 :noremap <F4> :call TrimWhitespace()<CR>
 
-nnoremap <leader>r :mksession<CR> " save session
+" nnoremap <leader>r :mksession<CR> " save session
 
 nmap <Leader>n :NERDTreeToggle<CR>
 
 map  <Leader>j <Plug>(easymotion-j)
 map  <Leader>k <Plug>(easymotion-k)
-nmap <Leader>f <Plug>(easymotion-s)
+map  <Leader>l <Plug>(easymotion-sl)
+map  <Leader>e <Plug>(easymotion-s)
 
 " nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
 " nnoremap <silent> <F5> :!clear;python %<CR>
@@ -309,10 +326,10 @@ endfunction
 
 " If text is selected, save it in the v buffer and send that buffer it to tmux
 nmap <F3> :call VimuxPython()<CR>
-vmap <Leader>vs "vy :call VimuxSlime()<CR>
+" vmap <Leader>vs "vy :call VimuxSlime()<CR>
 
 " Select current paragraph and send it to tmux
-nmap <Leader>vs vip<LocalLeader>vs<CR>
+" nmap <Leader>vs vip<LocalLeader>vs<CR>
 
 "every time a | is inserted while in insertmode Tabularize will autoformat the
 "width
@@ -343,15 +360,18 @@ command! -bar -nargs=1 -bang -complete=file Rename :
 " per the SimplyFold documentation
 " autocmd BufWinEnter *.py setlocal foldexpr=SimpylFold(v:lnum) foldmethod=expr
 " autocmd BufWinLeave *.py setlocal foldexpr< foldmethod<
+"
+" helps syntax_highlighting on large files - see https://stackoverflow.com/questions/27235102/vim-randomly-breaks-syntax-highlighting
+autocmd BufEnter * syntax sync fromstart
 
 " resource vim when reloaded
-" augroup reload_vimrc " {
-"     autocmd!
-"     autocmd BufWritePost $MYVIMRC source $MYVIMRC | AirlineRefresh
-" augroup END " }
+augroup reload_vimrc " {
+    autocmd!
+    autocmd BufWritePost $MYVIMRC source $MYVIMRC | AirlineRefresh
+augroup END " }
 
 " if NERDTree is the only window open when you want to close Vim this will help
-" autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
 "}}}
 "Backups {{{
@@ -381,6 +401,10 @@ let g:ycm_key_list_previous_completion = ['<C-p>']
 " key bindings; similiar to those for Ultisnips
 
 "}}}
+"Deoplete{{{
+" let g:deoplete#enable_at_startup = 1
+" inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm() : "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+"}}}
 "Airline {{{
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#whitespace#enabled = 0
@@ -394,7 +418,7 @@ let g:airline#extensions#tagbar#enabled = 1
 
 let g:airline_left_sep=''
 let g:airline_right_sep=''
-let g:airline_theme='base16'
+let g:airline_theme='base16_ashes'
 let g:airline_powerline_fonts = 1
 
 "}}}
@@ -402,7 +426,8 @@ let g:airline_powerline_fonts = 1
 
 "  include dotfiles and dotdirs in search
 let g:ctrlp_show_hidden = 1
-"  Set the directory to store the cache files: >
+
+"Set the directory to store the cache files: >
 "let g:ctrlp_cache_dir = $HOME.'/.cache/ctrlp'
 
 let g:ctrlp_match_window = 'bottom,order:ttb'
@@ -418,8 +443,7 @@ let g:ctrlp_working_path_mode = 0
 
 "}}}
 "NERDTree{{{
-:let g:NERDTreeWinSize=30
-
+let g:NERDTreeWinSize=50
 
 "}}}
 "Devicons {{{
@@ -476,11 +500,12 @@ let g:UltiSnipsJumpBackwardTrigger = "<C-k>"
 " }}}
 " Golden Ratio {{{
 
-" let g:golden_ratio_autocommand = 0
 " disable when autocommands are called
+let g:golden_ratio_autocommand = 0
 
-let g:golden_ratio_exclude_nonmodifiable = 1
 "disables plugin on nonmodifiable windows
+" let g:golden_ratio_exclude_nonmodifiable = 1
+
 " }}}
 "Plug{{{
     let g:plug_timeout = 1000

@@ -10,9 +10,13 @@ set nrformats=    " Allows incrementing padded number (e.g. 007)
 set visualbell    " Turn off the annoying bell
 set scrolloff=5   " Keep a few lines always visable
 set clipboard=unnamed
-set ideamarks    " Sync IJ marks and vim"
 set ReplaceWithRegister "gr or grr"
-
+set commentary
+set surround
+set exhange
+set easymotion
+set argtextobj
+g:argtextobj_pairs="(:),{:},<:>,[:]"
 " Copy until the end of the line
 noremap Y y$
 
@@ -29,16 +33,10 @@ nnoremap zM :action CollapseAllRegions<cr>
 nnoremap zR :action ExpandAllRegions<cr>
 " nnoremap cow :action EditorToggleUseSoftWraps<CR>
 
-" Textmate style indentation
-vmap <space>[ <gv
-vmap <space>] >gv
-nmap <space>[ <<
-nmap <space>] >>
 
 " ============================================================================
 " Plugins
 " ============================================================================
-set surround
 
 " Code Glance gives you the pane on the right scroll to see your code.  Only
 " useful for large files.
@@ -61,87 +59,75 @@ nnoremap <a-l> gt
 inoremap <c-l> <right>
 inoremap <c-h> <left>
 
-
-nnoremap <space>sv :action SplitVertically<cr>
-nnoremap <space>bo :action OpenInBrowser<cr>
-nnoremap <space>mr :action MoveTabRight<cr>
-nnoremap <space>md :action MoveTabDown<cr>
-nnoremap <space>sh :action SplitHorizontally<cr>
-
-"If editor is split in Ver/Hor then you can move tabs to groups
-nnoremap <space>mt :action MoveEditorToOppositeTabGroup<cr>
-
-"Unsplit vertical or horizontal editor windows
-nnoremap <space>u :action Unsplit<cr>
-
 " ============================================================================
 " Editor control
 " ============================================================================
 
-nmap <c-z> :action VimEmulator
-" toggle vim emulation
-
-" preserve IDE shortcutkey
-
 "Access all tools and file tabs - must hold CTRL
 nmap <c-t> :action Switcher<CR>
 
-" Enter the command-line mode
-" noremap <CR> :
-
- "Source settings
-nnoremap <space>vs :source ~/.ideavimrc<CR>
-
-"Comment out lines
-nmap gcc :action CommentByLineComment<CR>
+let mapleader = " Sets spacebar as leader (DOESNT WORK FOR SPACE)
 
 " Won't work in visual mode (with vmap) for some reason.
 " Use default map of <c-/> for that.
 "============================================================================
 " IDE actions
 " ============================================================================
-nnoremap <space>fu :action FindUsages<cr>
-nnoremap <space>su :action ShowUsages<cr>
+nnoremap <space>wu :action Unsplit<cr>
+nnoremap <space>wh :action SplitHorizontally<cr>
+nnoremap <space>wv :action SplitVertically<cr>
+nnoremap <space>mr :action MoveTabRight<cr>
+nnoremap <space>ml :action MoveTabLeft<cr>
+nnoremap <space>mu :action MoveTabUp<cr>
+nnoremap <space>md :action MoveTabDown<cr>
+nnoremap <space>mo :action MoveEditorToOppositeTabGroup<cr>
+nnoremap <space>bo :action OpenInBrowser<cr>
+
+" Textmate style indentation
+vmap <space>[ <gv
+vmap <space>] >gv
+nmap <space>[ <<
+nmap <space>] >>
+"
+map <space>j <Plug>(easymotion-j)
+map <space>k <Plug>(easymotion-k)
+map <space>l <Plug>(easymotion-sl)
+map <space>e <Plug>(easymotion-s)
+
+nnoremap <space>sl :set cursorline!<cr>
+
 nnoremap <space>sc :action ShowColorPicker<cr>
-noremap <space>sa :set hlsearch! hlsearch?<cr>
-" nnoremap <space>cv :action ChangeView<cr>
-nnoremap <space>bb :action ToggleLineBreakpoint<cr>
-nnoremap <space>br :action ViewBreakpoints<cr>
+nnoremap <space>vs :source ~/.ideavimrc<cr>
+nnoremap <space>sh :set hlsearch! hlsearch?<cr>
+nnoremap <space>sf :action RecentFiles<CR>
+nnoremap <space>su :action ShowUsages<cr>
+nnoremap <space>ss :action FileStructurePopup<cr>
+nnoremap <space>bt :action ToggleLineBreakpoint<cr>
+nnoremap <space>bv :action ViewBreakpoints<cr>
 nnoremap <space>ic :action InspectCode<cr>
-" nnoremap <space>oi :action OptimizeImports<cr>
-nnoremap <space>re :action RenameElement<cr>
-nnoremap <space>dc :action ChooseDebugConfiguration<cr>
-nnoremap <space>rc :action ChooseRunConfiguration<cr>
 nnoremap <space>q  :action CloseEditor<cr>
-nnoremap <space>gi :action GotoImplementation<cr>
-nnoremap <space>gs :action GotoSuperMethod<cr>
-nnoremap <space>gd :action GotoDeclaration<cr>
-nnoremap <space>fa :action GotoAction<cr>
-nnoremap <space>t :action QuickTypeDefinition<cr>
+nnoremap <space>pi :action ParameterInfo<cr>
+nnoremap <space>ph :action ParameterNameHints<cr>
+nnoremap <space>ga :action GotoAction<cr>
+nnoremap <space>gu :action FindUsages<cr>
+nnoremap g; :action JumpToLastChange<cr>
+nnoremap g, :action JumpToNextChange<cr>
+nnoremap <space>gt :action QuickTypeDefinition<cr>
+" nnoremap <space>gc :action ChooseRunConfiguration<cr>
+nnoremap <space>gc :action Git.CompareWithBrach<cr>
+vmap <space>gc :action Git.CompareWithBranch<cr>
+nnoremap <space>gb :action ChooseDebugConfiguration<cr>
+nnoremap <space>gr :action RenameElement<cr>
 nnoremap ]e :action GotoNextError<cr>
 nnoremap [e :action GotoPreviousError<cr>
-nnoremap [b :action SmartHome<cr>
-nnoremap ]b :action SmartEnd<cr>
-" vmap ]f :action EditorSelectFavourite<cr>
-" vmap ]c :action EditorSelectFavouriteContent<cr>
-nnoremap ]b :action SmartEnd<cr>
-" nnoremap / :action Find<CR>
-" nnoremap n :action FindNext<CR>
-" nnoremap N :action FindPrevious<CR>
+nnoremap [b gT<cr>
+nnoremap ]b gt<cr>
 nnoremap U :action $Redo<CR>
-" nnoremap <space>o :action GotoClass<CR>
-" nnoremap <space>O :action GotoFile<CR>
-nnoremap <space>d :action CloseContent<CR>
-nnoremap <space>j :action RecentFiles<CR>
-nnoremap <space>k :action FileStructurePopup<CR>
-nnoremap <space>h :action QuickJavaDoc<CR>
 
-" Toglle Terminal                                                 : Command + 2
-" Toggle Project                                                  : Command +  1
+" Toggle Terminal                                                 : Command + 2
 " Move Next Terminal Tab                                          : Command + Shift + []
 " IDE wrap : Command + w
 " IDE Bookmarks Window                                            : Command + 3
-" IDE Navigate Search : Enter or Shift + Enter
 " Show all possible Live Templates (code snippets)                :       Command + T / Command +J
 " Show definition :  Command + Y
 " Intentions (the light bulb)                                     :       Alt + Enter

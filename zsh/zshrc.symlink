@@ -71,7 +71,7 @@ for config ($ZSH/**/*completion.sh) source $config
 if [ -z ${DOTFILES_LOADED+x} ]; then
     # install zsh-syntax-highlighting
     source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-    # install zsh autosuggestions
+    # install zsh autosuggestions -(TIP -in vi mode use standard motions to expend suggestions)
     source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 fi
 
