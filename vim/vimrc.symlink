@@ -3,25 +3,24 @@ set nocompatible
 source ~/.vim/plugins.vim "run plugins script; install plugins
 
 filetype plugin indent on
-set omnifunc=YouCompleteMe#Complete
 
 set backspace=indent,eol,start
 "Allow backspacing while in insert mode.
 
-set nrformats=
 "This will cause Vim to treat all numerals as decimals.
 "Only matters when using <C-a> or <C-x> on numbers padded
 "with zeros (e.g. 007)
+set nrformats=
 
-set clipboard=unnamed
 "This allows you to paste from your system clipboard
 "in normal mode.
+set clipboard=unnamed
 
-set autochdir
 "Change directory to the current buffer when opening fies.
+" set autochdir
 
-set tags=./tags;
-"let vim know that your tags files will always be called tags
+"Let vim know that your tags files will always be called tags
+"set tags=./tags;
 
 set hidden
 "This will allow you to switch buffers that have been
@@ -29,13 +28,13 @@ set hidden
 "e.g.(:buffer2! assuming your window is buffer 1 and
 "you havemade changes to it.)
 
-set timeoutlen=1000
-set ttimeoutlen=10
 " http://vi.stackexchange.com/questions/3964/timeoutlen-breaks-leader-and-vim-commentary
 "Link explians why none of your leader keys work.
 "without these settings.Also,
 "Makes Airline faster when leaving insert mode but
 "may cause issues.
+set timeoutlen=1000
+set ttimeoutlen=10
 
 set encoding=utf-8             "The encoding displayed.
 set fileencoding=utf-8         "The encoding written to file.
@@ -50,22 +49,32 @@ cnoremap <c-n> <Down>
 
 set wildmenu                   "Commandline autocomplete view"
 set number                     "Show line numbers.
+set cursorline                 "Show the cursor line so its it's easier to find - SEE LEADER KEY TO TOGGLE
+
+" Always show the signcolumn, otherwise it would shift the text each time
+" diagnostics appear/become resolved.
+if has("patch-8.1.1564")
+  " Recently vim can merge signcolumn and number column into one
+  set signcolumn=number
+else
+  set signcolumn=yes
+endi
 
 match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 " highlight conflicts
 
 set showmode                   "Show paste mode
-set noshowmode                  "Disabled for PowerLine
+set noshowmode                 "Disabled for PowerLine
 
 set scrolloff=5                "Keep a few lines always visable
 set ruler                      "Show the cursor position in command line
 set showcmd                    "Display incomplete commands
 set laststatus=2               "Show the satus line all the time
-set cmdheight=1                "Make the command prompt bigger
+set cmdheight=2                "Make the command prompt bigger
 set showmatch                  "Show matching ",],etc.
-set invlist
+" set invlist
 set listchars=tab:▸\ ,eol:¬,trail:⋅,extends:❯,precedes:❮
-set showbreak=↪
+" set showbreak=↪
 
 ""}}}
 "Colors {{{
@@ -76,6 +85,7 @@ syntax on
 set termguicolors
 "this makes WebStorm render colors in terminal
 
+" let g:gruvbox_contrast_dark='medium'
 let base16colorspace=256  " Access colors present in 256 colorspace
 set t_Co=256  " the terminal supports 256 colors; see iTerm docs
 
@@ -83,7 +93,7 @@ set t_Co=256  " the terminal supports 256 colors; see iTerm docs
 " from #CC7832 (~/.vim/plugged/darcula/colors/darcula.vim). Number was 
 " also changed from #6897BB to 
 " #4F8C89.
-colorscheme darcula 
+colorscheme darcula
 
 let g:Hexokinase_highlighters = ['sign_column'] " Make the color icon appear in the column
 let g:Hexokinase_signIcon = '◼' " Make the color icon bigger than he default so it's easier to see
@@ -178,6 +188,127 @@ nnoremap k gk
 
 let mapleader = "\<Space>" "Sets spacebar as leader
 
+"
+" Make <CR> auto-select the first completion item and notify coc.nvim to
+" format on enter, <cr> could be remapped by other vim plugin
+inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm()
+                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+" Use `[g` and `]g` to navigate diagnostics
+" Use `:CocDiagnostics` to get all diagnostics of current buffer in location list.
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
+
+" GoTo code navigation.
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+"show documentation in preview window.
+nnoremap <silent> gh :call <SID>show_documentation()<CR>
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'h '.expand('<cword>')
+  elseif (coc#rpc#ready())
+    call CocActionAsync('doHover')
+  else
+    execute '!' . &keywordprg . " " . expand('<cword>')
+  endif
+endfunction
+
+" Highlight documentation
+let g:markdown_fenced_languages = ['css', 'javascript', 'js=javascript', 'typescript']
+
+" Highlight the symbol and its references when holding the cursor.
+autocmd CursorHold * silent call CocActionAsync('highlight')
+
+" Symbol renaming.
+nmap <leader>rn <Plug>(coc-rename)
+
+" Use tab for trigger completion with characters ahead and navigate.
+" NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
+" other plugin before putting this into your config.
+inoremap <silent><expr> <TAB>
+      \ pumvisible() ? "\<C-n>" :
+      \ <SID>check_back_space() ? "\<TAB>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+augroup mygroup
+  autocmd!
+  " Setup formatexpr specified filetype(s).
+  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+  " Update signature help on jump placeholder.
+  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+augroup end
+
+" Applying codeAction to the selected region.
+" Example: `<leader>aap` for current paragraph
+xmap <leader>a  <Plug>(coc-codeaction-selected)
+nmap <leader>a  <Plug>(coc-codeaction-selected)
+
+" Remap <C-f> and <C-b> for scroll float windows/popups.
+" Note coc#float#scroll works on neovim >= 0.4.0 or vim >= 8.2.0750
+nnoremap <nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+nnoremap <nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
+inoremap <nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
+inoremap <nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
+
+" Map function and class text objects
+" NOTE: Requires 'textDocument.documentSymbol' support from the language server.
+xmap if <Plug>(coc-funcobj-i)
+omap if <Plug>(coc-funcobj-i)
+xmap af <Plug>(coc-funcobj-a)
+omap af <Plug>(coc-funcobj-a)
+xmap ic <Plug>(coc-classobj-i)
+omap ic <Plug>(coc-classobj-i)
+xmap ac <Plug>(coc-classobj-a)
+omap ac <Plug>(coc-classobj-a)
+
+" NeoVim-only mapping for visual mode scroll
+" Useful on signatureHelp after jump placeholder of snippet expansion
+if has('nvim')
+  vnoremap <nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#nvim_scroll(1, 1) : "\<C-f>"
+  vnoremap <nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#nvim_scroll(0, 1) : "\<C-b>"
+endif
+
+" Use CTRL-S for selections ranges.
+" Requires 'textDocument/selectionRange' support of language server.
+nmap <silent> <C-s> <Plug>(coc-range-select)
+xmap <silent> <C-s> <Plug>(coc-range-select)
+
+" Add `:Format` command to format current buffer.
+command! -nargs=0 Format :call CocAction('format')
+
+" Add `:Fold` command to fold current buffer.
+command! -nargs=? Fold :call     CocAction('fold', <f-args>)
+
+" Add `:OR` command for organize imports of the current buffer.
+command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')
+
+" Mappings for CoCList
+" Show all diagnostics.
+nnoremap <silent><nowait> <space>a  :<C-u>CocList diagnostics<cr>
+" Manage extensions.
+nnoremap <silent><nowait> <space>e  :<C-u>CocList extensions<cr>
+" Show commands.
+nnoremap <silent><nowait> <space>c  :<C-u>CocList commands<cr>
+" Find symbol of current document.
+nnoremap <silent><nowait> <space>o  :<C-u>CocList outline<cr>
+" Search workspace symbols.
+nnoremap <silent><nowait> <space>s  :<C-u>CocList -I symbols<cr>
+" Do default action for next item.
+nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
+" Do default action for previous item.
+nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
+" Resume latest coc list.
+nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
 "easily format on common characters '=' and ':'
 " if exists(":Tabularize") HAS CONFLICT WITH EASY MOTION
 "     nmap <Leader>t= :Tabularize /=<CR>
@@ -193,7 +324,7 @@ inoremap <silent> <Bar>   <Bar><Esc>:call <SID>align()<CR>a
 nnoremap gV `[v`]
 
 " clear highlighted search
-noremap <leader>sh :set hlsearch! hlsearch?<cr>
+" noremap <leader>sh :set hlsearch! hlsearch?<cr>
 
 " enable . command in visual mode
 vnoremap . :normal .<cr>
@@ -226,10 +357,10 @@ nnoremap <leader>bpe :vsp ~/.bash_profile<CR>
 nnoremap <leader>bps :source ~/.bash_profile<CR>
 
 "expand folds
-nnoremap <leader>a za  
+" nnoremap <leader>e za  
 
 "enable spellcheck
-map <leader>ss :setlocal spell!<cr>
+" map <leader>ss :setlocal spell!<cr>
 
 "make it easier to save
 nmap <leader>w :w!<cr>
@@ -248,16 +379,8 @@ nmap <leader>] >>
 
 nmap <Leader>n :NERDTreeToggle<CR>
 
-map  <Leader>j <Plug>(easymotion-j)
-map  <Leader>k <Plug>(easymotion-k)
-map  <Leader>l <Plug>(easymotion-sl)
-map  <Leader>e <Plug>(easymotion-s)
-
 " nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
 " nnoremap <silent> <F5> :!clear;python %<CR>
-
-map <leader>g  :YcmCompleter GoToDefinitionElseDeclaration<CR>
-nnoremap <Leader>\ :YcmCompleter GoTo<CR> " jump to function definitions
 
 " nmap <F5> :call VimuxRunCommand("clear;~/.virtualenvs/py3/bin/ipython  . bufname("%"))<CR>
 nmap <silent> <F5> :call VimuxRunCommand("clear;[ -z $VIRTUAL_ENV ] && workon py3; ipython " . bufname("%"))<CR>
@@ -384,26 +507,7 @@ set directory=~/.vim/_swaps   " store swap files here
 "}}}
 
 " PLUGINS
-"YouCompleteMe{{{
-
-" http://www.alexeyshmalko.com/2014/youcompleteme-ultimate-autocomplete-plugin-for-vim/
-" http://valloric.github.io/YouCompleteMe/
-
-let g:ycm_filetype_blacklist = {}
-"this will allow YCM to work for all filetypes
-
-let g:ycm_global_ycm_extra_conf = "~/.vim/.ycm_extra_conf.py"
-
-let g:ycm_autoclose_preview_window_after_completion=1
-" let g:ycm_collect_identifiers_from_tags_files = 1
-let g:ycm_key_list_select_completion   = ['<C-n>']
-let g:ycm_key_list_previous_completion = ['<C-p>']
-" key bindings; similiar to those for Ultisnips
-
-"}}}
-"Deoplete{{{
-" let g:deoplete#enable_at_startup = 1
-" inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm() : "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+"Conquer of Completion{{{
 "}}}
 "Airline {{{
 let g:airline#extensions#tabline#enabled = 1
@@ -425,7 +529,8 @@ let g:airline_powerline_fonts = 1
 "CtrlP {{{
 
 "  include dotfiles and dotdirs in search
-let g:ctrlp_show_hidden = 1
+" let g:ctrlp_show_hidden = 1
+let g:ctrlp_custom_ignore = '\v[\/](node_modules|target|dist)|(\.(swp|ico|git|svn))$'
 
 "Set the directory to store the cache files: >
 "let g:ctrlp_cache_dir = $HOME.'/.cache/ctrlp'
@@ -443,8 +548,29 @@ let g:ctrlp_working_path_mode = 0
 
 "}}}
 "NERDTree{{{
-let g:NERDTreeWinSize=50
 
+function! IsNERDTreeOpen()
+ return exists("t:NERDTreeBuffName") && (bufwinnr(t:NERDTreeBuffName) != -1)
+endfunction
+
+"Call NERDTreeFind if NERDTree is active, current window contains a modifiable
+"file, and we're not in vimdiff
+function! SyncTree()
+    if &modifiable && IsNERDTreeOpen() && strlen(expand('%')) > 0 && !&diff
+        NERDTreeFind 
+        wincmd p
+    endif
+endfunction
+
+" Highlight currently open buffer in NERDTree
+autocmd BufEnter * call SyncTree()
+
+let g:NERDTreeWinSize=50
+let g:NERDTreeHighlightFolders = 0 " enables folder icon highlighting using exact match
+let g:NERDTreeHighlightFoldersFullName = 0 " highlights the folder name
+let s:grey =  "#DCDCDC"
+let g:NERDTreeExtensionHighlightColor = {} " this line is needed to avoid error
+let g:NERDTreeExtensionHighlightColor['json'] = s:grey " sets the color of css files to blue
 "}}}
 "Devicons {{{
 
@@ -460,18 +586,9 @@ endif
 
 "}}}
 "Easy Motion {{{
-
+let g:sneak#label = 1
 let g:EasyMotion_smartcase = 1
-
 "}}}
-" Syntastic {{{
-
-let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list            = 1
-let g:syntastic_check_on_open            = 1
-let g:syntastic_check_on_wq              = 0
-let g:syntastic_javascript_checkers = ['jshint']
-" }}}
 "Tabular{{{
 
 
@@ -511,12 +628,6 @@ let g:golden_ratio_autocommand = 0
     let g:plug_timeout = 1000
     "60 seconds is default but more is needed for YCM
 "}}}
-" Tagbar {{{
-
-nmap <F8> :TagbarToggle<CR>
-let g:tagbar_autofocus = 1
-
-"}}}
 
 " PLUGINS - LANGUAGE SPECIFIC
 " Python {{{
@@ -535,6 +646,9 @@ let g:tagbar_autofocus = 1
 " Markdown {{{
 
 
+
+" }}}
+" Typescript{{{
 
 " }}}
 

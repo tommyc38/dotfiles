@@ -15,33 +15,28 @@ Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'chriskempson/base16-vim'
 Plug 'ryanoasis/vim-devicons'
-
+Plug 'HerringtonDarkholme/yats.vim'
+Plug 'morhetz/gruvbox'
+Plug 'https://github.com/tiagofumo/vim-nerdtree-syntax-highlight'
+Plug 'gerw/vim-HiLinkTrace'
 "}}}
-"Code Completion / Linting / Snippets{{{
-"
-Plug 'neoclide/coc.nvim' "code completion
+"Code Completion / Linting / Snippets / Ctags{{{
+Plug 'beeender/Comrade'
+Plug 'neoclide/coc.nvim'
 Plug 'honza/vim-snippets'
-Plug 'ervandew/supertab' "makes tab work better with YCM and Ultisnips
-
-"If neovim gives unltisnip erros see  
-"https://www.reddit.com/r/neovim/comments/gbb2g3/wierd_vimplug_error_messages/g3n3vtl/
-" Plug 'SirVer/ultisnips'
-" Plug 'beeender/Comrade'
-" Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-" Plug 'Valloric/YouCompleteMe'
-" Plug 'scrooloose/syntastic'
 
 "}}}
 "Navigation{{{
 
 Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] } | Plug 'Xuyuanp/nerdtree-git-plugin'
-Plug 'easymotion/vim-easymotion'
 Plug 'jlanzarotta/bufexplorer'
 Plug 'ctrlpvim/ctrlp.vim'
+Plug 'justinmk/vim-sneak'
 
 "}}}
 "User Interface{{{
-
+Plug 'liuchengxu/vista.vim'
+" Plug 'majutsushi/tagbar' " enables a list of current ctags
 Plug 'kshenoy/vim-signature' " make marks visible in the column bar (https://github.com/kshenoy/vim-signature)
 Plug 'rrethy/vim-hexokinase', { 'do': 'make hexokinase' } " shows color boxes in gutter
 
@@ -59,21 +54,24 @@ Plug 'tpope/vim-surround'
 Plug 'tpope/vim-obsession'
 
 "}}}
-"Language Specific{{{
+"
+"Language Specific
+"Typescript{{{
 
-    "Python{{{
+" Plug 'leafgarland/typescript-vim' "provides better tab behavior for python
+" Plug 'sheerun/vim-polyglot'
+"}}}
+"Python{{{
 
     Plug 'hynek/vim-python-pep8-indent' "provides better tab behavior for python
     Plug 'tmhedberg/SimpylFold' "provides better folding for python
     Plug 'jmcantrell/vim-virtualenv'
 
-    "}}}
-
 "}}}
+"
 "Misc{{{
 
 Plug 'benmills/vimux' " tmux integration for vim
-Plug 'majutsushi/tagbar' " enables a list of current ctags
 
 "}}}
 
