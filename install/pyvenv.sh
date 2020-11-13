@@ -1,4 +1,5 @@
 #!/bin/bash
+# THIS FILE IS OLD - NEED TO UPDATE NEXTIME YOU WORK WITH PYTHON
 if [ ! "$(which python2)" ] && [ ! "$(which python3)" ]; then
     echo "You need to brew install python2 and python 3"
     exit

@@ -1,0 +1,6 @@
+set runtimepath^=~/.vim runtimepath+=~/.vim/after
+let &packpath = &runtimepath
+source ~/.vimrc
+
+" Source the file below to help with debuging
+" source $DOTFILES/vim/minvim.vim

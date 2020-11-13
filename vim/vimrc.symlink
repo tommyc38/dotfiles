@@ -16,6 +16,9 @@ set nrformats=
 "in normal mode.
 set clipboard=unnamed
 
+" allow scrolling
+set mouse=a
+
 "Change directory to the current buffer when opening fies.
 " set autochdir
 
@@ -165,14 +168,9 @@ set foldlevel=10 "prevents all folds from expanding when opening a file
 set foldmethod=indent
 set foldnestmax=10
 set foldenable
+nmap zo za
 "}}}
 "Custom Movements {{{
-
-" make it easier to jump to open windows
-map <C-j> <C-W>j
-map <C-k> <C-W>k
-map <C-h> <C-W>h
-map <C-l> <C-W>l
 
 " scroll the viewport faster
 nnoremap <C-e> 3<C-e>
@@ -183,21 +181,21 @@ nnoremap k gk
 "move through lines that wrap without skipping
 
 "}}}
-"Custom Leader {{{
+"Keymap {{{
 
+" REGULAR KEYS
+" ----------------------------------------------------------
+" Map function and class text objects
+" NOTE: Requires 'textDocument.documentSymbol' support from the language server.
+xmap af <Plug>(coc-funcobj-a)
+omap af <Plug>(coc-funcobj-a)
+xmap ac <Plug>(coc-classobj-a)
+omap ac <Plug>(coc-classobj-a)
 
-let mapleader = "\<Space>" "Sets spacebar as leader
-
-"
-" Make <CR> auto-select the first completion item and notify coc.nvim to
-" format on enter, <cr> could be remapped by other vim plugin
-inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm()
-                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
-
-" Use `[g` and `]g` to navigate diagnostics
-" Use `:CocDiagnostics` to get all diagnostics of current buffer in location list.
-nmap <silent> [g <Plug>(coc-diagnostic-prev)
-nmap <silent> ]g <Plug>(coc-diagnostic-next)
+map f <Plug>Sneak_f
+map F <Plug>Sneak_F
+map t <Plug>Sneak_t
+map T <Plug>Sneak_T
 
 " GoTo code navigation.
 nmap <silent> gd <Plug>(coc-definition)
@@ -207,24 +205,51 @@ nmap <silent> gr <Plug>(coc-references)
 
 "show documentation in preview window.
 nnoremap <silent> gh :call <SID>show_documentation()<CR>
-function! s:show_documentation()
-  if (index(['vim','help'], &filetype) >= 0)
-    execute 'h '.expand('<cword>')
-  elseif (coc#rpc#ready())
-    call CocActionAsync('doHover')
-  else
-    execute '!' . &keywordprg . " " . expand('<cword>')
-  endif
-endfunction
 
-" Highlight documentation
-let g:markdown_fenced_languages = ['css', 'javascript', 'js=javascript', 'typescript']
+" highlight last inserted text
+nnoremap gV `[v`]
 
-" Highlight the symbol and its references when holding the cursor.
-autocmd CursorHold * silent call CocActionAsync('highlight')
+" Toggle with zo since its easier than za
+nmap zo za
+vmap zo za
 
-" Symbol renaming.
-nmap <leader>rn <Plug>(coc-rename)
+"delete all trailing whitespace off of every line by
+:noremap <F4> :call TrimWhitespace()<CR>
+
+" make it easier to jump to open windows
+map <silent> <C-h> :call WinMove('h')<cr>
+map <silent> <C-j> :call WinMove('j')<cr>
+map <silent> <C-k> :call WinMove('k')<cr>
+map <silent> <C-l> :call WinMove('l')<cr>
+
+" Remap <C-f> and <C-b> for scroll float windows/popups.
+if has('nvim')
+  vnoremap <nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#nvim_scroll(1, 1) : "\<C-f>"
+  vnoremap <nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#nvim_scroll(0, 1) : "\<C-b>"
+  inoremap <nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
+  inoremap <nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
+endif
+
+" Use CTRL-S for selections ranges.
+" Requires 'textDocument/selectionRange' support of language server.
+nmap <silent> <C-s> <Plug>(coc-range-select)
+xmap <silent> <C-s> <Plug>(coc-range-select)
+
+" enable . command in visual mode
+vnoremap . :normal .<cr>
+
+" Use `[g` and `]g` to navigate diagnostics
+" Use `:CocDiagnostics` to get all diagnostics of current buffer in location list.
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
+
+"insert a '|' and the columns will align
+inoremap <silent> <Bar>   <Bar><Esc>:call <SID>align()<CR>a
+
+" Make <CR> auto-select the first completion item and notify coc.nvim to
+" format on enter, <cr> could be remapped by other vim plugin
+inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm()
+                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 
 " Use tab for trigger completion with characters ahead and navigate.
 " NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
@@ -235,53 +260,110 @@ inoremap <silent><expr> <TAB>
       \ coc#refresh()
 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
-function! s:check_back_space() abort
-  let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~# '\s'
-endfunction
+" ----------------------------------------------------------
+" LEADER KEYS
+" ----------------------------------------------------------
 
-augroup mygroup
-  autocmd!
-  " Setup formatexpr specified filetype(s).
-  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
-  " Update signature help on jump placeholder.
-  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-augroup end
+let mapleader = "\<Space>" "Sets spacebar as leader
 
 " Applying codeAction to the selected region.
 " Example: `<leader>aap` for current paragraph
 xmap <leader>a  <Plug>(coc-codeaction-selected)
 nmap <leader>a  <Plug>(coc-codeaction-selected)
 
-" Remap <C-f> and <C-b> for scroll float windows/popups.
-" Note coc#float#scroll works on neovim >= 0.4.0 or vim >= 8.2.0750
-nnoremap <nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
-nnoremap <nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
-inoremap <nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
-inoremap <nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
+nnoremap <leader>bre :vsp ~/.bashrc<CR>
+nnoremap <leader>brs :source ~/.bashrc<CR>
+nnoremap <leader>bpe :vsp ~/.bash_profile<CR>
+nnoremap <leader>bps :source ~/.bash_profile<CR>
+
+" Manage extensions.
+nnoremap <silent><nowait> <leader>e  :<C-u>CocList extensions<cr>
+" Do default action for previous item.
+nnoremap <silent><nowait> <leader>k  :<C-u>CocPrev<CR>
+" Resume latest coc list.
+nnoremap <silent><nowait> <leader>p  :<C-u>CocListResume<CR>
+" Do default action for next item.
+nnoremap <silent><nowait> <leader>j  :<C-u>CocNext<CR>
+
+" clear highlighted search
+noremap <leader>h :set hlsearch! hlsearch?<cr>
 
 " Map function and class text objects
-" NOTE: Requires 'textDocument.documentSymbol' support from the language server.
-xmap if <Plug>(coc-funcobj-i)
-omap if <Plug>(coc-funcobj-i)
-xmap af <Plug>(coc-funcobj-a)
-omap af <Plug>(coc-funcobj-a)
 xmap ic <Plug>(coc-classobj-i)
 omap ic <Plug>(coc-classobj-i)
-xmap ac <Plug>(coc-classobj-a)
-omap ac <Plug>(coc-classobj-a)
+xmap if <Plug>(coc-funcobj-i)
+omap if <Plug>(coc-funcobj-i)
 
-" NeoVim-only mapping for visual mode scroll
-" Useful on signatureHelp after jump placeholder of snippet expansion
-if has('nvim')
-  vnoremap <nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#nvim_scroll(1, 1) : "\<C-f>"
-  vnoremap <nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#nvim_scroll(0, 1) : "\<C-b>"
+"Make it easy to edit and source .ideavimrc.
+nnoremap <leader>ie  :vsp ~/.ideavimrc<CR>
+
+nmap <Leader>n :NERDTreeToggle<CR>
+
+" Symbol renaming.
+nmap <leader>rn <Plug>(coc-rename)
+
+" Show / search commands.
+nnoremap <leader>sc  :<C-u>CocList commands<cr>
+
+" Show / search workspace symbols
+nnoremap <leader>sw  :<C-u>CocList -I symbols<cr>
+
+" Show (toggle) invisible characters.
+nmap <leader>si :set list!<cr>
+
+" Show quick file symbol outline
+nnoremap <leader>so  :<C-u>CocList outline<cr>
+
+" Show window file symbol outline
+nnoremap <leader>sO  :<C-u>Vista coc<CR>
+
+" Show all problems/diagnostics.
+nnoremap <silent><nowait> <space>sp  :<C-u>CocList diagnostics<cr>
+
+" Show (toggle) cursor line.
+nnoremap <leader>sl :set cursorline!<cr>
+
+" Show (toggle) spelling errors.
+map <leader>ss :setlocal spell!<cr>
+
+"easily format on common characters '=' and ':'
+if exists(":Tabularize")
+    nmap <Leader>t= :Tabularize /=<CR>
+    vmap <Leader>t= :Tabularize /=<CR>
+    nmap <Leader>t: :Tabularize /:\zs<CR>
+    vmap <Leader>t: :Tabularize /:\zs<CR>
 endif
 
-" Use CTRL-S for selections ranges.
-" Requires 'textDocument/selectionRange' support of language server.
-nmap <silent> <C-s> <Plug>(coc-range-select)
-xmap <silent> <C-s> <Plug>(coc-range-select)
+"Make it easy to edit and source .virmc & plugins.
+nnoremap <leader>vs  :source ~/.vimrc<CR>
+nnoremap <leader>ve  :vsp ~/.vimrc<CR>
+nnoremap <leader>vp  :vsp ~/.vim/plugins.vim<CR>
+
+"make it easier to save
+nmap <leader>w :w!<cr>
+
+"make it easy to edit and source .zshrc
+nnoremap <leader>ze  :vsp ~/.zshrc<CR>
+nnoremap <leader>zs  :source ~/.zshrc<CR>
+
+
+" make it easy to resize window width
+map <leader>- 20<c-w><
+map <leader>= 20<c-w>>
+
+" Textmate style indentation
+vmap <leader>[ <gv
+vmap <leader>] >gv
+nmap <leader>[ <<
+nmap <leader>] >>
+
+" nnoremap <leader>r :mksession<CR> " save session
+" nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
+" nnoremap <silent> <F5> :!clear;python %<CR>
+" nmap <F5> :call VimuxRunCommand("clear;~/.virtualenvs/py3/bin/ipython  . bufname("%"))<CR>
+" nmap <silent> <F5> :call VimuxRunCommand("clear;[ -z $VIRTUAL_ENV ] && workon py3; ipython " . bufname("%"))<CR> 
+"}}}
+"Custom Commands & Functions{{{
 
 " Add `:Format` command to format current buffer.
 command! -nargs=0 Format :call CocAction('format')
@@ -291,102 +373,39 @@ command! -nargs=? Fold :call     CocAction('fold', <f-args>)
 
 " Add `:OR` command for organize imports of the current buffer.
 command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')
+function! SetupCommandAbbrs(from, to)
+  exec 'cnoreabbrev <expr> '.a:from
+        \ .' ((getcmdtype() ==# ":" && getcmdline() ==# "'.a:from.'")'
+        \ .'? ("'.a:to.'") : ("'.a:from.'"))'
+endfunction
 
-" Mappings for CoCList
-" Show all diagnostics.
-nnoremap <silent><nowait> <space>a  :<C-u>CocList diagnostics<cr>
-" Manage extensions.
-nnoremap <silent><nowait> <space>e  :<C-u>CocList extensions<cr>
-" Show commands.
-nnoremap <silent><nowait> <space>c  :<C-u>CocList commands<cr>
-" Find symbol of current document.
-nnoremap <silent><nowait> <space>o  :<C-u>CocList outline<cr>
-" Search workspace symbols.
-nnoremap <silent><nowait> <space>s  :<C-u>CocList -I symbols<cr>
-" Do default action for next item.
-nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
-" Do default action for previous item.
-nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
-" Resume latest coc list.
-nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
-"easily format on common characters '=' and ':'
-" if exists(":Tabularize") HAS CONFLICT WITH EASY MOTION
-"     nmap <Leader>t= :Tabularize /=<CR>
-"     vmap <Leader>t= :Tabularize /=<CR>
-"     nmap <Leader>t: :Tabularize /:\zs<CR>
-"     vmap <Leader>t: :Tabularize /:\zs<CR>
-" endif
+" Use C to open coc config
+call SetupCommandAbbrs('C', 'CocConfig')
 
-"insert a '|' and the columns will align
-inoremap <silent> <Bar>   <Bar><Esc>:call <SID>align()<CR>a
+"rename a file
+command! -bar -nargs=1 -bang -complete=file Rename :
+  \ let s:file = expand('%:p') |
+  \ setlocal modified |
+  \ keepalt saveas<bang> <args> |
+  \ if s:file !=# expand('%:p') |
+  \   call delete(s:file) |
+  \ endif |
+  \ unlet s:file
 
-" highlight last inserted text
-nnoremap gV `[v`]
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'h '.expand('<cword>')
+  elseif (coc#rpc#ready())
+    call CocActionAsync('doHover')
+  else
+    execute '!' . &keywordprg . " " . expand('<cword>')
+  endif
+endfunction
 
-" clear highlighted search
-" noremap <leader>sh :set hlsearch! hlsearch?<cr>
-
-" enable . command in visual mode
-vnoremap . :normal .<cr>
-
-" make it easy to resize window width
-map <leader>- 20<c-w><
-map <leader>= 20<c-w>>
-
-" make it easier to jump to open windows
-map <silent> <C-h> :call WinMove('h')<cr>
-map <silent> <C-j> :call WinMove('j')<cr>
-map <silent> <C-k> :call WinMove('k')<cr>
-map <silent> <C-l> :call WinMove('l')<cr>
-
-"Toggle invisible characters.
-nmap <leader>i :set list!<cr>
-
-" toggle cursor line
-nnoremap <leader>sl :set cursorline!<cr>
-
-nnoremap <leader>vs  :source ~/.vimrc<CR>
-nnoremap <leader>ve  :vsp ~/.vimrc<CR>
-nnoremap <leader>vp  :vsp ~/.vim/plugins.vim<CR>
-nnoremap <leader>ie  :vsp ~/.ideavimrc<CR>
-nnoremap <leader>ze  :vsp ~/.zshrc<CR>
-nnoremap <leader>zs  :source ~/.zshrc<CR>
-nnoremap <leader>bre :vsp ~/.bashrc<CR>
-nnoremap <leader>brs :source ~/.bashrc<CR>
-nnoremap <leader>bpe :vsp ~/.bash_profile<CR>
-nnoremap <leader>bps :source ~/.bash_profile<CR>
-
-"expand folds
-" nnoremap <leader>e za  
-
-"enable spellcheck
-" map <leader>ss :setlocal spell!<cr>
-
-"make it easier to save
-nmap <leader>w :w!<cr>
-
-" Textmate style indentation
-vmap <leader>[ <gv
-vmap <leader>] >gv
-nmap <leader>[ <<
-nmap <leader>] >>
-
-"delete all trailing whitespace off of every line by
-"hitting the <F4> key
-:noremap <F4> :call TrimWhitespace()<CR>
-
-" nnoremap <leader>r :mksession<CR> " save session
-
-nmap <Leader>n :NERDTreeToggle<CR>
-
-" nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
-" nnoremap <silent> <F5> :!clear;python %<CR>
-
-" nmap <F5> :call VimuxRunCommand("clear;~/.virtualenvs/py3/bin/ipython  . bufname("%"))<CR>
-nmap <silent> <F5> :call VimuxRunCommand("clear;[ -z $VIRTUAL_ENV ] && workon py3; ipython " . bufname("%"))<CR>
-
-"}}}
-"Custom Functions{{{
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
 
 " if no plugins support the file type then use as default
 if has("autocmd") && exists("+omnifunc")
@@ -447,15 +466,6 @@ function! VimuxPython()
     call VimuxSendKeys("Enter")
 endfunction
 
-" If text is selected, save it in the v buffer and send that buffer it to tmux
-nmap <F3> :call VimuxPython()<CR>
-" vmap <Leader>vs "vy :call VimuxSlime()<CR>
-
-" Select current paragraph and send it to tmux
-" nmap <Leader>vs vip<LocalLeader>vs<CR>
-
-"every time a | is inserted while in insertmode Tabularize will autoformat the
-"width
 function! s:align()
   let p = '^\s*|\s.*\s|\s*$'
   if exists(':Tabularize') && getline('.') =~# '^\s*|' && (getline(line('.')-1) =~# p || getline(line('.')+1) =~# p)
@@ -467,19 +477,29 @@ function! s:align()
   endif
 endfunction
 
-"rename a file
-command! -bar -nargs=1 -bang -complete=file Rename :
-  \ let s:file = expand('%:p') |
-  \ setlocal modified |
-  \ keepalt saveas<bang> <args> |
-  \ if s:file !=# expand('%:p') |
-  \   call delete(s:file) |
-  \ endif |
-  \ unlet s:file
 
+" If text is selected, save it in the v buffer and send that buffer it to tmux
+" nmap <F3> :call VimuxPython()<CR>
+" vmap <Leader>vs "vy :call VimuxSlime()<CR>
+
+" Select current paragraph and send it to tmux
+" nmap <Leader>vs vip<LocalLeader>vs<CR>
+
+"every time a | is inserted while in insertmode Tabularize will autoformat the
+"width
 "}}}
 "Autogroups {{{
 
+" Highlight the symbol and its references when holding the cursor.
+autocmd CursorHold * silent call CocActionAsync('highlight')
+
+augroup mygroup
+  autocmd!
+  " Setup formatexpr specified filetype(s).
+  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+  " Update signature help on jump placeholder.
+  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+augroup end
 " per the SimplyFold documentation
 " autocmd BufWinEnter *.py setlocal foldexpr=SimpylFold(v:lnum) foldmethod=expr
 " autocmd BufWinLeave *.py setlocal foldexpr< foldmethod<
@@ -494,7 +514,7 @@ augroup reload_vimrc " {
 augroup END " }
 
 " if NERDTree is the only window open when you want to close Vim this will help
-autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+" autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
 "}}}
 "Backups {{{
@@ -508,6 +528,8 @@ set directory=~/.vim/_swaps   " store swap files here
 
 " PLUGINS
 "Conquer of Completion{{{
+" Highlight documentation
+let g:markdown_fenced_languages = ['css', 'javascript', 'js=javascript', 'typescript']
 "}}}
 "Airline {{{
 let g:airline#extensions#tabline#enabled = 1

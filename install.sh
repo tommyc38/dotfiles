@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Make sure you run this script with 'sudo'
-#if ! [ $(id -u) = 0 ]; then
-#   echo "The script need to be run as root." >&2
-#   exit 1
-#fi
+if ! [ $(id -u) = 0 ]; then
+   echo "The script need to be run as root." >&2
+   exit 1
+fi
 
 echo "Initializing..."
 
@@ -15,16 +15,16 @@ if [ "$(uname)" == "Darwin" ]; then
     echo "Creating symlinks"
     sh install/symlink.sh "1"
 
+    echo "Setting up Vim configs"
+    sh install/vim.sh "1"
+
     echo "Setting up IDE tools"
-    sh install/ide.sh
+    sh install/brew.sh
 
     echo "Setting up ZSH as the default terminal"
     echo "/usr/local/bin/bash" >> /etc/shells
     echo "/usr/local/bin/zsh" >> /etc/shells
     chsh -s /usr/local/bin/zsh
-
-    echo "Setting up Python virtual environments (py2 & p3)"
-    sh install/pyenve.sh
 
     echo "Setting up base16 themes"
     git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
@@ -37,16 +37,11 @@ if [ "$(uname)" == "Darwin" ]; then
 	    fi
 	ln -s $HOME/dotfiles/karabiner/karabiner.json $KARABINER
     else
-    	mkdir ~/.config/karabiner	    
+    	mkdir -p ~/.config/karabiner	    
 	ln -s $HOME/dotfiles/karabiner/karabiner.json $KARABINER
     fi
 
-    echo "Setting up Vim"
-    sh install/vim.sh "1"
 
-    # echo "Installing Vim Plugins"
-    # vim -E -c PlugInstall -c q
-    
     # echo "Symlinkng Tmux plugins folder to ~"
     # ln -s ~/dotfiles/tmux/tmux.d ~/.tmux
     # echo "Plugins symlinked.  Don't forget to install plugins"

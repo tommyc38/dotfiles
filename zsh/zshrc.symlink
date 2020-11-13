@@ -1,6 +1,10 @@
 #@IgnoreInspection BashAddShebang
 export DOTFILES=$HOME/dotfiles
 export ZSH=$DOTFILES/zsh
+export NVIM=$HOME/.config/nvim
+export VIM_PLUGINS=$HOME/.vim/plugged
+export VIM_THEME_FILE=$DOTFILES/vim/customPlugins/darcula/colors/darcula.vim
+export CUSTOM_BIN=$DOTFILES/bin/
 
 # source all .zsh files inside of the zsh/ directory
 for config ($ZSH/**/*.zsh) source $config
@@ -14,6 +18,7 @@ fi
 # adding path directory for custom scripts
 export PATH=$DOTFILES/bin:$PATH
 
+
 # add /usr/local/sbin
 if [[ -d /usr/local/sbin ]]; then
     export PATH=/usr/local/sbin:$PATH
@@ -26,11 +31,13 @@ export PATH="/usr/local/bin:$PATH"
 export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
 export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
 
+# pyenv uses shims to manage python versions so this needs to be the last PATH update
+echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bash_profile
 
 export HOMEBREW_GITHUB_API_TOKEN=4f5c12a8cbe6f8732370e2ae4916a4b4c630e8e5
 
 # make vim your default editor
-export EDITOR="vim"
+export EDITOR="nvim"
 
 # aliases for tmux
 alias ta='tmux attach'
@@ -51,20 +58,6 @@ compinit -i
 
 for config ($ZSH/**/*completion.sh) source $config
 
-# This will disable the activate prompt script so you
-# can customize the venv prompt
-# VIRTUAL_ENV_DISABLE_PROMPT="1"
-
-# this solves https://bitbucket.org/virtualenvwrapper/virtualenvwrapper/issues/300/problem-running-initialization-hooks
-# VIRTUALENVWRAPPER_PYTHON=$(which python)
-# this is the bash script to run virtualenvwrapper
-# source /usr/local/bin/virtualenvwrapper.sh
-
-# Enable Themes.  This causes Webstorm's Terminal to not work so only use this when you want to change the theme
-# It will also create a vim_background file to make vim look pretty.
-# BASE16_SHELL=$HOME/.config/base16-shell/
-# [ -n "$PS1" ] && [ -s $BASE16_SHELL/profile_helper.sh ] && eval "$($BASE16_SHELL/profile_helper.sh)"
-
 # THIS IS THE POST INSTALL TO ENABLE AUTOJUMP
 [[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
 
@@ -79,26 +72,8 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh"  ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 export NVM_SYMLINK_CURRENT=true # This allows IDEs to use a single place to set your node version
 autoload -U add-zsh-hook
-# This will tell NVM to use whatever version is in the .nvmrc
-load-nvmrc() {
-  local node_version="$(nvm version)"
-  local nvmrc_path="$(nvm_find_nvmrc)"
 
-  if [ -n "$nvmrc_path" ]; then
-    local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
-
-    if [ "$nvmrc_node_version" = "N/A" ]; then
-      nvm install
-    elif [ "$nvmrc_node_version" != "$node_version" ]; then
-      nvm use
-    fi
-  elif [ "$node_version" != "$(nvm version default)" ]; then
-    echo "Reverting to nvm default version"
-    nvm use default
-  fi
-}
 add-zsh-hook chpwd load-nvmrc
-load-nvmrc
 
 DOTFILES_LOADED=1
 # change the shell login 

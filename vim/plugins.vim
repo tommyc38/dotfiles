@@ -21,7 +21,9 @@ Plug 'https://github.com/tiagofumo/vim-nerdtree-syntax-highlight'
 Plug 'gerw/vim-HiLinkTrace'
 "}}}
 "Code Completion / Linting / Snippets / Ctags{{{
+if has('nvim')
 Plug 'beeender/Comrade'
+endif
 Plug 'neoclide/coc.nvim'
 Plug 'honza/vim-snippets'
 

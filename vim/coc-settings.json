@@ -1,0 +1,6 @@
+{
+    "coc.preferences.hoverTarget": "float",
+    "coc.preferences.enableFloatHighlight": true,
+    "coc.preferences.formatOnInsertLeave": true,
+    "signature.target":"preview"
+} 

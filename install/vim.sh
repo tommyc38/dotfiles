@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DOTFILES=$HOME/dotfiles
-VIMSYMS=("$DOTFILES/vim/MySnips" "$DOTFILES/vim/autoload" "$DOTFILES/vim/plugins.vim")
+VIMSYMS=("$DOTFILES/vim/customPlugins" "$DOTFILES/vim/init.vim" "$DOTFILES/vim/coc-settings.json" "$DOTFILES/vim/autoload" "$DOTFILES/vim/plugins.vim")
 VIMCREATE=("_backup" "_swaps" "sessions")
 VIMBACKUP=$HOME/.vim_backup
 
@@ -10,7 +10,20 @@ echo "=============================="
 
 run(){
     for vims in ${VIMSYMS[@]}; do
-        target=$HOME/.vim/$( basename $vims )
+
+        if [ vims == "$DOTFILES/vim/customPlugins"]; then
+            [ -d $HOME/.vim/plugged ] && mkdir -p $HOME/.vim/plugged
+            target=$HOME/.vim/plugged
+        elif [ vims == "$DOTFILES/vim/init.vim"];then
+            [ -d $HOME/.config/nvim/ ] && mkdir -p $HOME/.config/nvim
+            target=$HOME/.config/nvim/init.vim
+        elif [ vims == "$DOTFILES/vim/coc-settings.json"];then
+            [ -d $HOME/.config/nvim/ ] && mkdir -p $HOME/.config/nvim
+            target=$HOME/.config/nvim/coc-settings.json
+        else
+            target=$HOME/.vim/$( basename $vims )
+        fi
+
         if [ -e $target ]; then
             echo "~${target#$HOME} already exists... Skipping."
         else
@@ -18,6 +31,7 @@ run(){
             ln -s $vims $target
         fi
     done
+
     for create in ${VIMCREATE[@]}; do
         target=$HOME/.vim/$create
         if [ -e $target ]; then
