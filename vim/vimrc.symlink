@@ -39,6 +39,7 @@ set hidden
 set timeoutlen=1000
 set ttimeoutlen=10
 
+set history=200" Number of commands that are remembered.
 set encoding=utf-8             "The encoding displayed.
 set fileencoding=utf-8         "The encoding written to file.
 set ttyfast                    "Redraw the screen quicker
@@ -101,8 +102,6 @@ colorscheme darcula
 let g:Hexokinase_highlighters = ['sign_column'] " Make the color icon appear in the column
 let g:Hexokinase_signIcon = '◼' " Make the color icon bigger than he default so it's easier to see
 
-" Set mark column color for to make sense for Darcula (default would be #532B2E)
-" current value is #3A3A3A
 let g:SignatureMarkTextHL = "FoldedFg" 
 
 
@@ -192,22 +191,19 @@ omap af <Plug>(coc-funcobj-a)
 xmap ac <Plug>(coc-classobj-a)
 omap ac <Plug>(coc-classobj-a)
 
-map f <Plug>Sneak_f
-map F <Plug>Sneak_F
-map t <Plug>Sneak_t
-map T <Plug>Sneak_T
-
 " GoTo code navigation.
-nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
 
 "show documentation in preview window.
 nnoremap <silent> gh :call <SID>show_documentation()<CR>
 
 " highlight last inserted text
 nnoremap gV `[v`]
+
+" Copy until the end of the line
+noremap Y y$
 
 " Toggle with zo since its easier than za
 nmap zo za
@@ -279,11 +275,12 @@ nnoremap <leader>bps :source ~/.bash_profile<CR>
 " Manage extensions.
 nnoremap <silent><nowait> <leader>e  :<C-u>CocList extensions<cr>
 " Do default action for previous item.
-nnoremap <silent><nowait> <leader>k  :<C-u>CocPrev<CR>
-" Resume latest coc list.
-nnoremap <silent><nowait> <leader>p  :<C-u>CocListResume<CR>
+" nnoremap <silent><nowait> <leader>k  :<C-u>CocPrev<CR>
 " Do default action for next item.
-nnoremap <silent><nowait> <leader>j  :<C-u>CocNext<CR>
+" nnoremap <silent><nowait> <leader>j  :<C-u>CocNext<CR>
+
+" Resume latest coc list.
+nnoremap <silent><leader>pl  :<C-u>CocListResume<CR>
 
 " clear highlighted search
 noremap <leader>h :set hlsearch! hlsearch?<cr>
@@ -294,16 +291,22 @@ omap ic <Plug>(coc-classobj-i)
 xmap if <Plug>(coc-funcobj-i)
 omap if <Plug>(coc-funcobj-i)
 
-"Make it easy to edit and source .ideavimrc.
+"Make it easy to edit .ideavimrc.
 nnoremap <leader>ie  :vsp ~/.ideavimrc<CR>
 
 nmap <Leader>n :NERDTreeToggle<CR>
+
+" Show window file symbol outline
+nnoremap <leader>o  :<C-u>Vista coc<CR>
 
 " Symbol renaming.
 nmap <leader>rn <Plug>(coc-rename)
 
 " Show / search commands.
 nnoremap <leader>sc  :<C-u>CocList commands<cr>
+
+" Show / find usages.
+nmap <leader>su <Plug>(coc-references)
 
 " Show / search workspace symbols
 nnoremap <leader>sw  :<C-u>CocList -I symbols<cr>
@@ -314,11 +317,9 @@ nmap <leader>si :set list!<cr>
 " Show quick file symbol outline
 nnoremap <leader>so  :<C-u>CocList outline<cr>
 
-" Show window file symbol outline
-nnoremap <leader>sO  :<C-u>Vista coc<CR>
 
 " Show all problems/diagnostics.
-nnoremap <silent><nowait> <space>sp  :<C-u>CocList diagnostics<cr>
+nnoremap <silent><space>sp  :<C-u>CocList diagnostics<cr>
 
 " Show (toggle) cursor line.
 nnoremap <leader>sl :set cursorline!<cr>

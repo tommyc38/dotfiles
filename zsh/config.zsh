@@ -24,5 +24,5 @@ setopt COMPLETE_ALIASES
 # keybindings in the command prompt
 bindkey -v
 
-fpath=($ZSH/functions $fpath)
+# fpath=($ZSH/functions $fpath)
 # autoload -U $ZSH/functions/*(:t)

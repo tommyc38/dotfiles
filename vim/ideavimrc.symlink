@@ -1,78 +1,108 @@
 " ============================================================================
 " Editor Settings
 " ============================================================================
-set history=10000 " Number of commands that are remembered.
-set hlsearch      " Highlight search pattern results.
-set ignorecase    " Ignore case of normal letters in a pattern.
-set showmode      " Show current mode on the last line.
-set smartcase     " Override ignorecase if pattern contains upper case.
-set nrformats=    " Allows incrementing padded number (e.g. 007)
-set visualbell    " Turn off the annoying bell
-set scrolloff=5   " Keep a few lines always visable
-set clipboard=unnamed
 set ReplaceWithRegister "gr or grr"
+set NERDTree
 set commentary
 set surround
-set exhange
+set exchange
 set easymotion
 set argtextobj
-g:argtextobj_pairs="(:),{:},<:>,[:]"
-" Copy until the end of the line
-noremap Y y$
+let g:argtextobj_pairs="(:),{:},<:>,[:]"
+set clipboard=unnamed
 
 " let mapleader = "," "Sets spacebar as leader
-" let mapleader = "," "Sets spacebar as leader
+
+
+" nnoremap cow :action EditorToggleUseSoftWraps<CR>
+
+
+
+
+" ============================================================================
+" MATCHES VIM
+" ============================================================================
+
+
+" Apply code action to the selected region / under cursor
+map <space>a :action ShowIntentionActions<cr>
+
+" Delete marks easier (Vim does this with a plugin)
+nnoremap dm :delmarks<space>
+
+" clear highlighted search
+noremap <space>h :set hlsearch! hlsearch?<cr>
+
+" Get help documentation
+nnoremap <silent> gh K
 
 " Highlight last inserted text
 nnoremap gV `[v`]
 
-" Enable dot command in visual mode
-vnoremap . :normal .<cr>
+" GoTo code navigation
+" IDE: gd - GotoDefinition already set by default
+nmap <silent>gy :action GotoTypeDeclaration<cr>
+
+" Jump to last change
+nnoremap g; :action JumpToLastChange<cr>
+
+" show outine popup
+nnoremap <space>o :action FileStructurePopup<cr>
+
+" Apply code action to the selected region / under cursor
+map <space>n :NERDTreeToggle<cr>
+
+" Go rename symbol
+nnoremap <space>rn :action RenameElement<cr>
+
+" Show all problems/diagnostics.
+nnoremap <space>sp :action ActivateProblemsViewToolWindow<cr>
+
+" show outine window
+nmap <space>so :action ActivateStructureToolWindow<cr>
+
+" show outine window
+nmap <space>sd :action QuickTypeDefinition<cr>
+
+nmap <space>su :action FindUsages<cr>
+
+" source .ideavimrc
+nnoremap <space>vs :source ~/.ideavimrc<cr>
+nnoremap <space>ve :e ~/.ideavimrc<cr>
+
+" Copy until the end of the line
+noremap Y y$
 
 nnoremap zM :action CollapseAllRegions<cr>
 nnoremap zR :action ExpandAllRegions<cr>
-" nnoremap cow :action EditorToggleUseSoftWraps<CR>
 
+" toggle between buffers
+nnoremap [b gT<cr>
+nnoremap ]b gt<cr>
 
-" ============================================================================
-" Plugins
-" ============================================================================
+" Move cursor in insert mode
+inoremap <c-l> <right>
+inoremap <c-h> <left>
 
-" Code Glance gives you the pane on the right scroll to see your code.  Only
-" useful for large files.
-" nnoremap <space>cg :action CodeGlance.toggle<cr>
-
-" ============================================================================
-" Movement
-" ============================================================================
 " Left / right
 nnoremap <c-l> <c-w>l
 nnoremap <c-j> <c-w>j
 nnoremap <c-h> <c-w>h
 nnoremap <c-k> <c-w>k
 
-" Navigate between tabs
-nnoremap <a-h> gT
-nnoremap <a-l> gt
-
-" Move cursor in insert mode
-inoremap <c-l> <right>
-inoremap <c-h> <left>
+" Textmate style indentation
+vmap <space>[ <gv
+vmap <space>] >gv
+nmap <space>[ <<
+nmap <space>] >>
 
 " ============================================================================
-" Editor control
+" DOESN'T MATCHES VIM
 " ============================================================================
 
 "Access all tools and file tabs - must hold CTRL
 nmap <c-t> :action Switcher<CR>
 
-"let mapleader = " Sets spacebar as leader (DOESNT WORK FOR SPACE)
-
-" Won't work in visual mode (with vmap) for some reason.
-" Use default map of <c-/> for that.
-"============================================================================
-" IDE actions
-" ============================================================================
 nnoremap <space>wu :action Unsplit<cr>
 nnoremap <space>wh :action SplitHorizontally<cr>
 nnoremap <space>wv :action SplitVertically<cr>
@@ -83,58 +113,41 @@ nnoremap <space>md :action MoveTabDown<cr>
 nnoremap <space>mo :action MoveEditorToOppositeTabGroup<cr>
 nnoremap <space>bo :action OpenInBrowser<cr>
 
-" Textmate style indentation
-vmap <space>[ <gv
-vmap <space>] >gv
-nmap <space>[ <<
-nmap <space>] >>
-"
 map <space>j <Plug>(easymotion-j)
 map <space>k <Plug>(easymotion-k)
 map <space>l <Plug>(easymotion-sl)
 map <space>e <Plug>(easymotion-s)
 
-nnoremap <space>sl :set cursorline!<cr>
 
 nnoremap <space>sc :action ShowColorPicker<cr>
-nnoremap <space>vs :source ~/.ideavimrc<cr>
-nnoremap <space>sh :set hlsearch! hlsearch?<cr>
 nnoremap <space>sf :action RecentFiles<CR>
-nnoremap <space>su :action ShowUsages<cr>
-nnoremap <space>ss :action FileStructurePopup<cr>
 nnoremap <space>bt :action ToggleLineBreakpoint<cr>
 nnoremap <space>bv :action ViewBreakpoints<cr>
-nnoremap <space>ic :action InspectCode<cr>
-nnoremap <space>q  :action CloseEditor<cr>
-nnoremap <space>pi :action ParameterInfo<cr>
-nnoremap <space>ph :action ParameterNameHints<cr>
-nnoremap <space>ga :action GotoAction<cr>
-nnoremap <space>gu :action FindUsages<cr>
-nnoremap g; :action JumpToLastChange<cr>
-nnoremap g, :action JumpToNextChange<cr>
-nnoremap <space>gt :action QuickTypeDefinition<cr>
-" nnoremap <space>gc :action ChooseRunConfiguration<cr>
-nnoremap <space>gc :action Git.CompareWithBrach<cr>
+nnoremap <space>rt :action Refactorings.QuickListPopupAction<cr>
+nnoremap <space>gc :action Git.CompareWithBranch<cr>
 vmap <space>gc :action Git.CompareWithBranch<cr>
 nnoremap <space>gb :action ChooseDebugConfiguration<cr>
-nnoremap <space>gr :action RenameElement<cr>
 nnoremap ]e :action GotoNextError<cr>
 nnoremap [e :action GotoPreviousError<cr>
-nnoremap [b gT<cr>
-nnoremap ]b gt<cr>
-nnoremap U :action $Redo<CR>
+" nnoremap <space>ic :action InspectCode<cr>
+" nnoremap <space>ph :action ParameterNameHints<cr>
+" nnoremap <space>ga :action GotoAction<cr>
+" nnoremap <space>gu :action FindUsages<cr>
 
-" Toggle Terminal                                                 : Command + 2
-" Move Next Terminal Tab                                          : Command + Shift + []
-" IDE wrap : Command + w
-" IDE Bookmarks Window                                            : Command + 3
-" Show all possible Live Templates (code snippets)                :       Command + T / Command +J
-" Show definition :  Command + Y
-" Intentions (the light bulb)                                     :       Alt + Enter
-" Return focus back to editor from IDE component                  :       Esc
+" IDE: close tool widows with <S-ESC>
+" IDE: Toggle terminal                                                 : Command + 2
+" IDE: Navigate termainal tabs                                         : Command + Shift + []
+" IDE: Wrap selection with template : Command + w
+" IDE: Bookmarks Window                                            : Command + 3
+" IDE: Show all possible live templates / code snippets                :       Command + T / Command +
+" IDE: Show definition :  Command + Y
+" IDE: Move terminal tabs                                             :       CNTRL + ]
+" IDE: Sow function paramter info while calling a function :       Command + p
+" IDE: Search Everywhere :       SHIFT + SHIFT
+" IDE: Recent Files :       Command + e
+" IDE: Multicursor (has intellisense) :       CTRL + G
+" IDE: Add import :       OPTION + ENTER
 " Hide all tool windows, also restores window                     :       Shift + Command + F12
-" Hide Active tool window                                         :       Shift + Esc
 " Expand & Close folds                                            :       Command +  ||  Command -
 " New file                                                        :       Command + n
 " AceJump                                                         :       Command + ;
-" Terminal - move tab                                             :       CNTRL + ]

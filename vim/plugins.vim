@@ -10,19 +10,19 @@ call plug#begin('~/.vim/plugged')
 "Themeing{{{
 
 " Plug 'doums/darcula'
+Plug 'airblade/vim-gitgutter'
 Plug '~/.vim/plugged/custom-plugins/darcula'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'chriskempson/base16-vim'
 Plug 'ryanoasis/vim-devicons'
-Plug 'HerringtonDarkholme/yats.vim'
 Plug 'morhetz/gruvbox'
-Plug 'https://github.com/tiagofumo/vim-nerdtree-syntax-highlight'
+Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
 Plug 'gerw/vim-HiLinkTrace'
 "}}}
 "Code Completion / Linting / Snippets / Ctags{{{
 if has('nvim')
-Plug 'beeender/Comrade'
+    Plug 'beeender/Comrade'
 endif
 Plug 'neoclide/coc.nvim'
 Plug 'honza/vim-snippets'
@@ -33,12 +33,10 @@ Plug 'honza/vim-snippets'
 Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] } | Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'jlanzarotta/bufexplorer'
 Plug 'ctrlpvim/ctrlp.vim'
-Plug 'justinmk/vim-sneak'
 
 "}}}
 "User Interface{{{
 Plug 'liuchengxu/vista.vim'
-" Plug 'majutsushi/tagbar' " enables a list of current ctags
 Plug 'kshenoy/vim-signature' " make marks visible in the column bar (https://github.com/kshenoy/vim-signature)
 Plug 'rrethy/vim-hexokinase', { 'do': 'make hexokinase' } " shows color boxes in gutter
 
@@ -51,8 +49,8 @@ Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-ragtag' " endings for html, xml, etc. - ehances surround
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-unimpaired'
-Plug 'tpope/vim-fugitive'
-Plug 'tpope/vim-surround'
+Plug 'tpope/vim-fugitive' "git support
+Plug 'tpope/vim-surround' "create vim sessions
 Plug 'tpope/vim-obsession'
 
 "}}}
@@ -60,8 +58,10 @@ Plug 'tpope/vim-obsession'
 "Language Specific
 "Typescript{{{
 
+Plug 'HerringtonDarkholme/yats.vim'
 " Plug 'leafgarland/typescript-vim' "provides better tab behavior for python
 " Plug 'sheerun/vim-polyglot'
+
 "}}}
 "Python{{{
 
