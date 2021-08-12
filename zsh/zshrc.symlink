@@ -9,6 +9,10 @@ export CUSTOM_BIN=$DOTFILES/bin/
 # source all .zsh files inside of the zsh/ directory
 for config ($ZSH/**/*.zsh) source $config
 
+# check for work env file
+if [[ -f ~/.work_env ]]; then
+    source ~/.work_env
+fi
 
 # check for custom bin directory and add to path
 if [[ -d ~/bin ]]; then
@@ -63,14 +67,14 @@ for config ($ZSH/**/*completion.sh) source $config
 
 if [ -z ${DOTFILES_LOADED+x} ]; then
 
-    if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-      source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-      source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-    else 
+    if [[ "$(uname)" == "Darwin" ]]; then
       # install zsh-syntax-highlighting
       source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
       # install zsh autosuggestions -(TIP -in vi mode use standard motions to expend suggestions)
       source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+    else 
+      source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+      source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
     fi
 fi
 
