@@ -59,13 +59,19 @@ compinit -i
 for config ($ZSH/**/*completion.sh) source $config
 
 # THIS IS THE POST INSTALL TO ENABLE AUTOJUMP
-[[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+[[ "$(uname)" == "Darwin" && -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
 
 if [ -z ${DOTFILES_LOADED+x} ]; then
-    # install zsh-syntax-highlighting
-    source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-    # install zsh autosuggestions -(TIP -in vi mode use standard motions to expend suggestions)
-    source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+    if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+      source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+      source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+    else 
+      # install zsh-syntax-highlighting
+      source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+      # install zsh autosuggestions -(TIP -in vi mode use standard motions to expend suggestions)
+      source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+    fi
 fi
 
 export NVM_DIR="$HOME/.nvm"
