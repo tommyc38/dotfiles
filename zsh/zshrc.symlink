@@ -21,6 +21,7 @@ fi
 
 # adding path directory for custom scripts
 export PATH=$DOTFILES/bin:$PATH
+oo
 
 
 # add /usr/local/sbin
