@@ -19,11 +19,15 @@ set clipboard=unnamed
 
 
 
-
 " ============================================================================
 " MATCHES VIM
 " ============================================================================
 
+set visualbell
+set scrolloff=5                "Keep a few lines always visable
+set wildmenu                   "Commandline autocomplete view"
+set number                     "Show line numbers.
+set cursorline                 "Show the cursor line so its it's easier to find - SEE LEADER KEY TO TOGGLE
 
 " Apply code action to the selected region / under cursor
 map <space>a :action ShowIntentionActions<cr>
@@ -47,7 +51,10 @@ nmap <silent>gy :action GotoTypeDeclaration<cr>
 " Jump to last change
 nnoremap g; :action JumpToLastChange<cr>
 
-" show outine popup
+" Jump to previous change
+nnoremap g, :action JumpToLastChange<cr>
+
+" show outline popup
 nnoremap <space>o :action FileStructurePopup<cr>
 
 " Apply code action to the selected region / under cursor
@@ -59,7 +66,7 @@ nnoremap <space>rn :action RenameElement<cr>
 " Show all problems/diagnostics.
 nnoremap <space>sp :action ActivateProblemsViewToolWindow<cr>
 
-" show outine window
+" show outline window
 nmap <space>so :action ActivateStructureToolWindow<cr>
 
 " show outine window
@@ -91,6 +98,10 @@ nnoremap <c-j> <c-w>j
 nnoremap <c-h> <c-w>h
 nnoremap <c-k> <c-w>k
 
+" make it easy to resize window width
+map <space>- :action StretchSplitToLeft<cr>
+map <space>= :action StretchSplitToRight<cr>
+
 " Textmate style indentation
 vmap <space>[ <gv
 vmap <space>] >gv
@@ -103,6 +114,10 @@ nmap <space>] >>
 
 "Access all tools and file tabs - must hold CTRL
 nmap <c-t> :action Switcher<CR>
+
+" gq isn't in ideavim so this plugin works great
+vnoremap gq :action com.andrewbrookins.idea.wrap.WrapAction<cr>
+nnoremap gq :action com.andrewbrookins.idea.wrap.WrapParagraphAction<cr>
 
 nnoremap <space>wu :action Unsplit<cr>
 nnoremap <space>wh :action SplitHorizontally<cr>
@@ -122,9 +137,13 @@ map <space>e <Plug>(easymotion-s)
 
 nnoremap <space>sc :action ShowColorPicker<cr>
 nnoremap <space>sf :action RecentFiles<CR>
+nnoremap <space>st :action QuickEvaluateExpression<CR>
 nnoremap <space>bt :action ToggleLineBreakpoint<cr>
 nnoremap <space>bv :action ViewBreakpoints<cr>
-nnoremap <space>rt :action Refactorings.QuickListPopupAction<cr>
+nnoremap <space>rm :action Refactorings.QuickListPopupAction<cr>
+nnoremap <space>rf :action ReformatCode<cr>
+nnoremap <space>rp :action ReformatWithPrettierAction<cr>
+nnoremap <space>gm :action Vcs.QuickListPopupAction<cr>
 nnoremap <space>gc :action Git.CompareWithBranch<cr>
 vmap <space>gc :action Git.CompareWithBranch<cr>
 nnoremap <space>gb :action ChooseDebugConfiguration<cr>
@@ -138,10 +157,12 @@ nnoremap [e :action GotoPreviousError<cr>
 " IDE: close tool widows with <S-ESC>
 " IDE: Toggle terminal                                                 : Command + 2
 " IDE: Navigate termainal tabs                                         : Command + Shift + []
-" IDE: Wrap selection with template : Command + w
+" IDE: Wrap selection with template : Command + w | Alt + s
 " IDE: Bookmarks Window                                            : Command + 3
 " IDE: Show all possible live templates / code snippets                :       Command + T / Command +
 " IDE: Show definition :  Command + Y
+" IDE: Show parameter info:  Command + p | Alt + p
+" IDE: Show Type info:  CTRL + SHIFT + p
 " IDE: Move terminal tabs                                             :       CNTRL + ]
 " IDE: Sow function paramter info while calling a function :       Command + p
 " IDE: Search Everywhere :       SHIFT + SHIFT

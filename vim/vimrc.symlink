@@ -19,6 +19,9 @@ set clipboard=unnamed
 " allow scrolling
 set mouse=a
 
+" get rid of audible bell
+set visualbell
+
 "Change directory to the current buffer when opening fies.
 " set autochdir
 
@@ -358,6 +361,12 @@ vmap <leader>] >gv
 nmap <leader>[ <<
 nmap <leader>] >>
 
+" This allows you to filter command history AND
+" traverse the results.  Only <Up> / <Down> allow you
+" you to filter your command history.
+cnoremap <C-p> <Up>
+cnoremap <C-n> <Down>
+
 " nnoremap <leader>r :mksession<CR> " save session
 " nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
 " nnoremap <silent> <F5> :!clear;python %<CR>
@@ -558,6 +567,8 @@ let g:ctrlp_custom_ignore = '\v[\/](node_modules|target|dist)|(\.(swp|ico|git|sv
 "Set the directory to store the cache files: >
 "let g:ctrlp_cache_dir = $HOME.'/.cache/ctrlp'
 
+" make CtrlP start in buffer mode
+let g:ctrlp_cmd = 'CtrlPBuffer'
 let g:ctrlp_match_window = 'bottom,order:ttb'
 "order results 
 
