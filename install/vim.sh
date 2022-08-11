@@ -9,15 +9,15 @@ echo -e "\n\nInstalling Vim"
 echo "=============================="
 
 run(){
-    for vims in ${VIMSYMS[@]}; do
+    for vims in "${VIMSYMS[@]}"; do
 
-        if [ vims == "$DOTFILES/vim/customPlugins"]; then
+        if [ "$vims" == "$DOTFILES/vim/customPlugins" ]; then
             [ -d $HOME/.vim/plugged ] && mkdir -p $HOME/.vim/plugged
             target=$HOME/.vim/plugged
-        elif [ vims == "$DOTFILES/vim/init.vim"];then
+        elif [ vims == "$DOTFILES/vim/init.vim" ];then
             [ -d $HOME/.config/nvim/ ] && mkdir -p $HOME/.config/nvim
             target=$HOME/.config/nvim/init.vim
-        elif [ vims == "$DOTFILES/vim/coc-settings.json"];then
+        elif [ vims == "$DOTFILES/vim/coc-settings.json" ];then
             [ -d $HOME/.config/nvim/ ] && mkdir -p $HOME/.config/nvim
             target=$HOME/.config/nvim/coc-settings.json
         else
@@ -32,7 +32,7 @@ run(){
         fi
     done
 
-    for create in ${VIMCREATE[@]}; do
+    for create in "${VIMCREATE[@]}"; do
         target=$HOME/.vim/$create
         if [ -e $target ]; then
             echo "~${target#$HOME} already exists...Skipping"
@@ -78,7 +78,7 @@ else
 
     1.) Skip that are already installed in $HOME/.vim
     2.) Backup the current .vim directory (if present) and install new vim settings
-    3.) Resore .vim back to its previous settings
+    3.) Restore .vim back to its previous settings
     4.) Quit
     "
     read -p "Enter selection [1-4] > "

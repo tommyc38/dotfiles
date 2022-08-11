@@ -18,17 +18,17 @@ fi
 
 # core tools
 brew install coreutils
-
-# key commands
 brew install binutils
 brew install diffutils
-brew install ed --default-names
-brew install findutils --with-default-names
+brew install findutils
+
+# key commands
+brew install ed
 brew install gawk
-brew install gnu-indent --with-default-names
-brew install gnu-sed --with-default-names
-brew install gnu-tar --with-default-names
-brew install gnu-which --with-default-names
+brew install gnu-indent
+brew install gnu-sed
+brew install gnu-tar
+brew install gnu-which
 brew install gnutls
 brew install grep
 brew install gzip
@@ -37,10 +37,13 @@ brew install watch
 brew install wdiff --with-gettext
 brew install wget
 
+
 # development tools
 brew install git
 brew install openssh
-brew install tmux
+brew install neovim
+brew install nvm
+brew install vim
 brew install reattach-to-user-namespace # makes tmux work on mac
 brew install bash
 brew install zsh
@@ -48,11 +51,18 @@ brew install autojump           # helps you move much quicker than 'cd' command
 brew install vim --with-python3
 brew install html2text          # tool for gathering the readable parts of a webpage
 
+# media tools
+brew install ffmpeg
+brew install imagemagick
+
 # desktop programs
-brew cask install karabiner
-brew cask installe seil
-brew cask install google-chrome
-brew cask install iterm2
+brew install --cask karabiner-elements # used to map capslock key to ctrl (long press) and esc (tap)
+brew install --cask google-chrome
+brew install --cask iterm2
+brew install --cask virtualbox
+brew install --cask virtualbox-extension-pack  # requires password on mac os and authorization in settings
+brew install --cask vagrant
+
 
 # C language tools
 brew install cmake
@@ -64,26 +74,13 @@ brew cask install virtualbox
 brew cask install vagrant
 
 # javascript/typescript tools
-brew install node               # JavaScript and TypeScript support for YouCompleteMe Vim
-npm install npm -g              # Update npm
-npm install -g typescript       # Install TypeScript - needed for YouCompleteMe Vim
-npm install tsserver-client     # Needed for TypeScript and YouCompleteMe
-npm install xbuild              # Needed for TypeScript and YouCompleteMe
+brew install node
+npm install npm -g
+npm install -g typescript
 
 # install python
-brew install python
-pip install --upgrade setuptools
-pip install --upgrade pip
-pip install flake8
-pip install virtualenv
-pip install virtualenvwrapper
+brew install pyenv pyenv-virtualenv pyenv-virtualenvwrapper
 
-brew install python3
-pip3 install --upgrade setuptools
-pip3 install --upgrade pip
-pip3 install flake8
-pip3 install virtualenv
-pip3 install virtualenvwrapper
 
 echo "Creating virtualenv directory"
 mkdir ~/.virtualenvs

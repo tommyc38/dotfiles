@@ -1,13 +1,15 @@
-#@IgnoreInspection BashAddShebang
 export DOTFILES=$HOME/dotfiles
 export ZSH=$DOTFILES/zsh
 export NVIM=$HOME/.config/nvim
 export VIM_PLUGINS=$HOME/.vim/plugged
 export VIM_THEME_FILE=$DOTFILES/vim/customPlugins/darcula/colors/darcula.vim
 export CUSTOM_BIN=$DOTFILES/bin/
+export VIRTUAL_BOXES=$HOME/boxes/
 
 # source all .zsh files inside of the zsh/ directory
-for config ($ZSH/**/*.zsh) source $config
+for config in $ZSH/**/*.zsh; do
+  source $config
+done
 
 # check for work env file
 if [[ -f ~/.work_env ]]; then
@@ -21,8 +23,6 @@ fi
 
 # adding path directory for custom scripts
 export PATH=$DOTFILES/bin:$PATH
-oo
-
 
 # add /usr/local/sbin
 if [[ -d /usr/local/sbin ]]; then
@@ -33,13 +33,28 @@ fi
 export PATH="/usr/local/bin:$PATH"
 
 # allow use of corutiles without the prefix g
-export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
+if [[ "$(uname)" == "Darwin" && -n "$(brew -v)" ]]; then
+  export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/grep/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/gnu-indent/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/gnu-indent/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/gnu-tar/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/gnu-tar/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/gnu-sed/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/gnu-which/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/gnu-which/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/findutils/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
+  export GUILE_TLS_CERTIFICATE_DIRECTORY=/usr/local/etc/gnutls/
+fi
 
-# pyenv uses shims to manage python versions so this needs to be the last PATH update
-echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bash_profile
 
-export HOMEBREW_GITHUB_API_TOKEN=4f5c12a8cbe6f8732370e2ae4916a4b4c630e8e5
+
+export HOMEBREW_GITHUB_API_TOKEN=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
 
 # make vim your default editor
 export EDITOR="nvim"

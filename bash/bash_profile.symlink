@@ -22,28 +22,24 @@ export PATH="$PATH:$HOME/dotfiles/bin/"
 # done using the export command.
 
 # Sources:  http://stackoverflow.com/questions/20130681/setting-github-api-token-for-homebrew
-export HOMEBREW_GITHUB_API_TOKEN=1819020ea53fba39c23d075f2405818cdd0f9936
+export HOMEBREW_GITHUB_API_TOKEN=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
 
 #THIS WILL CHANGE YUOUR TERMINAL
 if [[ "$(uname)" == "Darwin" ]]; then
-  if [ -f $(brew --prefix)/etc/bash_completion ]; then
-      . $(brew --prefix)/etc/bash_completion
-  fi
-
-  if [ -f "$(brew --prefix bash-git-prompt)/share/gitprompt.sh" ]; then
-      GIT_PROMPT_THEME=Default
-      source "$(brew --prefix bash-git-prompt)/share/gitprompt.sh"
+  [[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"
+  if [ -f "/usr/local/opt/bash-git-prompt/share/gitprompt.sh" ]; then
+    __GIT_PROMPT_DIR="/usr/local/opt/bash-git-prompt/share"
+    source "/usr/local/opt/bash-git-prompt/share/gitprompt.sh"
   fi
 fi
 
-
 if [ -f ~/.bashrc ]; then
-    source ~/.bashrc;
+    source ~/.bashrc
 fi
 # THIS WILL ALLOW YOU TO CHANGE YOUR THEME, PROVIDED YOU FOLLOWED THE DIRECTIONS.
 # https://github.com/chriskempson/base16-shell
 # BASE16_SHELL=$HOME/.config/base16-shell/
 # [ -n "$PS1" ] && [ -s $BASE16_SHELL/profile_helper.sh ] && eval "$($BASE16_SHELL/profile_helper.sh)"
-if command -v pyenv 1>/dev/null 2>&1; then
+if command -v pyenv 1> /dev/null 2>&1; then
   eval "$(pyenv init -)"
 fi

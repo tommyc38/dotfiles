@@ -1,0 +1,164 @@
+#!/bin/bash
+#
+# Add Google Fonts to the system. A "fonts" directory will be created in the current working directory as
+# a temporary folder.
+# Copyright 2021 tomconley
+
+cwd="$(pwd)"
+fonts="$cwd/fonts"
+font_install_dir=${1:-"/usr/share/fonts/truetype"}
+
+#######################################
+# MAKE A DIRECTORY - Removes the directory if it exits then creates it.  If it fails # to create, an error is throw.
+# Arguments:
+#  DIRECTORY - The name of the directory to create
+#######################################
+make_dir() {
+  remove_dir "$1"
+  if ! mkdir "$1"; then
+    printf "\n Failed to create dir %s" "$1"
+    exit 1
+  fi
+}
+
+#######################################
+# REMOVE DIRECTORY - Ensures a directory # exists before removal to prevent an # error.
+#
+# Arguments:
+#  DIRECTORY - the name of the directory to create
+#######################################
+remove_dir() {
+  if [ -d "$1" ]; then
+    rm -r "$1"
+  fi
+}
+
+#######################################
+# Downloads and extracts a zip/tar file from a git repository.
+# Globals:
+#   download_file - The basename of the file to download given a url.
+#   download_path - The url of the file to download.
+#   exit_code - The function's exit code.
+#   target_dir - The directory to download the file to.
+#   fonts
+# Arguments:
+#   URL - The url to download.
+#   FILE - The name of the file to download the url to. Default is the name of the file including the extension.
+#   DIRECTORY - The directory to download the file to. Default is the name of the file without the file extension.
+#######################################
+download() {
+  local download_path="$fonts"
+  local download_file="${2:-"${1##*/}"}" # Defaults to the url basename (e.g. Hack.ttf)
+
+  if [[ "$download_file" =~ tar. ]]; then
+    local target_dir="${download_file%.*}"
+    target_dir="${3:-"${target_dir%.*}"}"
+  else
+    target_dir="${3:-"${download_file%.*}"}"
+  fi
+
+  if [ ! -f "$download_path/$download_file" ]; then
+    echo "Downloading $1 as $download_file"
+    curl -L --silent -o "$download_path/$download_file" "$1"
+
+    local exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+      echo ""
+      echo "Failed to download $1. Exit code $exit_code. Retrying in 10 seconds"
+      sleep 10
+      curl -L --silent -o "$download_path/$download_file" "$1"
+    fi
+
+    exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+      echo ""
+      echo "Failed to download $1. Exitcode $exit_code"
+      exit 1
+    fi
+
+    echo "... Done"
+  else
+    echo "$download_file has already downloaded."
+  fi
+
+  make_dir "$download_path/$target_dir"
+
+  if [ -n "$3" ]; then
+    if [[ "$download_file" =~ .zip ]]; then
+      if ! unzip "$download_path/$download_file" -d "$download_path/$target_dir" 2>/dev/null >/dev/null; then
+        echo "Failed to extract $download_file"
+        exit 1
+      fi
+    else
+      if ! tar -xvf "$download_path/$download_file" -C "$download_path/$target_dir" 2>/dev/null >/dev/null; then
+        echo "Failed to extract $download_file"
+        exit 1
+      fi
+    fi
+  else
+    if [[ "$download_file" =~ .zip ]]; then
+      if ! unzip "$download_path/$download_file" -d "$download_path/$target_dir" 2>/dev/null >/dev/null; then
+        echo "Failed to extract $download_file"
+        exit 1
+      fi
+    else
+      if ! tar -xvf "$download_path/$download_file" -C "$download_path/$target_dir" --strip-components 1 2>/dev/null >/dev/null; then
+        echo "Failed to extract $download_file"
+        exit 1
+      fi
+    fi
+  fi
+
+  echo "Extracted $download_file"
+
+}
+
+install_fonts() {
+  if [ ! -d "$font_install_dir/$1" ]; then
+    mkdir -p "$font_install_dir/$1"
+  fi
+
+  echo ""
+  echo "Installing $(find "$fonts/$1" -name "*.ttf" | wc -l) fonts into $font_install_dir/$1"
+
+  if ! find "$fonts/$1" -name "*.ttf" -exec install -Dm644 {} "$font_install_dir/$1" \; 2>/dev/null >/dev/null; then
+    echo "$1 failed to install"
+    return 1
+  fi
+
+  echo ""
+  echo "$1 installed"
+  echo "========================="
+  echo ""
+}
+
+clean() {
+  rm -rf "$fonts"
+  fc-cache -f && rm -rf /var/cache/* >/dev/null
+}
+
+echo "fonts-build-script"
+echo "========================="
+echo ""
+
+mkdir -p "$fonts"
+
+if [ ! -d "$font_install_dir" ]; then
+  mkdir -p "$font_install_dir"
+fi
+
+GOOGLE_FONTS="google-fonts"
+download https://github.com/google/fonts/archive/main.zip "$GOOGLE_FONTS.zip"
+install_fonts "$GOOGLE_FONTS"
+
+clean
+
+echo "All fonts have been installed."
+exit 0
+
+function main() {
+    :
+
+}
+
+main "$@"
