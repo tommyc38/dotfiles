@@ -6,6 +6,9 @@ export VIM_THEME_FILE=$DOTFILES/vim/customPlugins/darcula/colors/darcula.vim
 export CUSTOM_BIN=$DOTFILES/bin/
 export VIRTUAL_BOXES=$HOME/boxes/
 
+export NPM_PICKUP_TOKEN_READ_ONLY=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
+export NPM_ACCESS_TOKEN=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
+export NPM_REGISTRY_URL=registry.npmjs.com
 # source all .zsh files inside of the zsh/ directory
 for config in $ZSH/**/*.zsh; do
   source $config

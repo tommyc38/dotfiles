@@ -1,6 +1,11 @@
 #THIS IS SO YOU CAN DOWNLOAD HOMEBREW PROGRAMS MORE OTFEN
 export PATH="/usr/local/bin:$PATH"
 
+# @gotomconley access
+export NPM_ACCESS_TOKEN=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
+export NPM_REGISTRY_URL=registry.npmjs.com
+export NPM_PICKUP_TOKEN_READ_ONLY=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
+
 #THIS WILL ALLOW YOU TO RUN COREUTILS WITHOUT G PREFIX & VIEW MAN PAGES
 # All commands have been installed with the prefix 'g'.
 # If you really need to use these commands with their normal names, you

@@ -9,6 +9,8 @@ alias ls='ls --color'
 HISTSIZE=5000
 HISTFILESIZE=10000
 
+export NPM_PICKUP_TOKEN_READ_ONLY=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
+
 #this will allow vi when using info command
 alias info='info --vi-keys'
 
