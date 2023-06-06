@@ -58,7 +58,8 @@ nnoremap g, :action JumpToLastChange<cr>
 nnoremap <space>o :action FileStructurePopup<cr>
 
 " Apply code action to the selected region / under cursor
-map <space>n :NERDTreeToggle<cr>
+map <space>nt :NERDTreeToggle<cr>
+map <space>nf :NERDTreeFocus<cr>
 
 " Go rename symbol
 nnoremap <space>rn :action RenameElement<cr>
@@ -66,10 +67,10 @@ nnoremap <space>rn :action RenameElement<cr>
 " Show all problems/diagnostics.
 nnoremap <space>sp :action ActivateProblemsViewToolWindow<cr>
 
-" show outline window
+" Show outline window
 nmap <space>so :action ActivateStructureToolWindow<cr>
 
-" show outine window
+" Show definition window
 nmap <space>sd :action QuickTypeDefinition<cr>
 
 nmap <space>su :action FindUsages<cr>
@@ -113,7 +114,9 @@ nmap <space>] >>
 " ============================================================================
 
 "Access all tools and file tabs - must hold CTRL
-nmap <c-t> :action Switcher<CR>
+"nmap <c-t> :action Switcher<CR>
+nmap <c-t> :action ActivateTerminalToolWindow<CR>
+
 
 " gq isn't in ideavim so this plugin works great
 vnoremap gq :action com.andrewbrookins.idea.wrap.WrapAction<cr>
@@ -149,6 +152,12 @@ vmap <space>gc :action Git.CompareWithBranch<cr>
 nnoremap <space>gb :action ChooseDebugConfiguration<cr>
 nnoremap ]e :action GotoNextError<cr>
 nnoremap [e :action GotoPreviousError<cr>
+nnoremap ]c :action Vcs.ShowNextChangeMarker<cr>
+nnoremap [c :action Vcs.ShowPreviousChangeMarker<cr>
+noremap <space>cr :action Vcs.RollbackChangedLines<cr>
+noremap <space>dl :action Vcs.ShowDiffChangedLines<cr>
+noremap <space>sh :action Vcs.ShowTabbedFileHistory<cr>
+vmap <space>d :action Vcs.ShowHistoryForBlock<cr>
 " nnoremap <space>ic :action InspectCode<cr>
 " nnoremap <space>ph :action ParameterNameHints<cr>
 " nnoremap <space>ga :action GotoAction<cr>
@@ -169,7 +178,6 @@ nnoremap [e :action GotoPreviousError<cr>
 " IDE: Recent Files :       Command + e
 " IDE: Multicursor (has intellisense) :       CTRL + G
 " IDE: Add import :       OPTION + ENTER
-" IDE: Add import statment : Option + Enter
 " Hide all tool windows, also restores window                     :       Shift + Command + F12
 " Expand & Close folds                                            :       Command +  ||  Command -
 " New file                                                        :       Command + n

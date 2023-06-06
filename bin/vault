@@ -1,0 +1,251 @@
+#!/bin/bash
+
+# MIT License
+#
+# Copyright (c) 2023 Tom Conley
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+password=
+list_message=
+output_password=
+password_filename="password.txt"
+
+# Find the root directory and build the source arrays.
+function set_dotfiles_dir_and_sources() {
+  local script_path
+  local git_top_level_path # If the script is in a repo, this will be the repo root directory.
+  local dotfiles_directory # Root dotfiles directory
+
+  script_path="$(dirname -- "$( readlink -f -- "$0")")"
+  git_top_level_path="$(git rev-parse --show-toplevel 2> /dev/null)"
+
+  # Assume the dotfiles are always in a repo for backup and use the repo root path.
+  if [ -n "$git_top_level_path" ]; then
+    dotfiles_directory="$git_top_level_path"
+
+  # If not, check the script directory.
+  elif [ "$(basename "$script_path")" == "dotfiles" ]; then
+    dotfiles_directory="$script_path"
+
+  # Check the script directory's parent directory.
+  elif [ "$(basename "${script_path%/*}")" == "dotfiles" ]; then
+    dotfiles_directory="${script_path%/*}"
+  else
+    echo "The dotfiles directory couldn't be established! See the script's set_dotfiles_root_dir function."
+    exit 1
+  fi
+
+  if [ ! -d "$dotfiles_directory" ]; then
+    echo "The dotfiles directory doesn't exist!"
+    exit 1
+  fi
+  encrypt_directory="$dotfiles_directory/vault"
+  decrypt_directory="$dotfiles_directory/vault-key"
+  encrypt_backup_directory="$decrypt_directory/vault_backups/vault"
+  decrypt_backup_directory="$decrypt_directory/vault_backups/vault-key"
+}
+
+# Encrypt/decrypt and base64 encode/decode a string (e.g. file and directory names).
+function encrypt_decrypt_name(){
+  local source_name="$1"
+  local operation="${2:-encrypt}"
+
+  if [ "$operation" == "decrypt" ] || [ "$operation" == "list" ]; then
+    echo "$( echo "$source_name" | base64 --decode | openssl aes-256-cbc -d -a -salt -pbkdf2 -pass pass:"$password")"
+  else
+    echo "$( echo "$source_name" | openssl aes-256-cbc -a -pbkdf2 -pass pass:"$password" | base64 -w 0)"
+  fi
+
+}
+
+# Traverse a directory and encrypt and decrypt files along the way. File and directory names will also be
+# encrypted/dectrypted and base64 encoded to be URL safe.
+function encrypt_decrypt_files() {
+    local source_directory="$1"
+    local target_directory="$2"
+    local operation="${3:-decrypt}"
+    local level="${4:-0}"
+    local msg_spacer_fn=$(printf "%${level}s")
+    local msg_spacer="${msg_spacer_fn// /  }"
+    local filename
+    local directory_name
+    local target
+    local msg
+
+    for file in $(ls -A "$source_directory"); do
+      if [[ ! -d "$source_directory/$file" ]]; then
+        # The password file when listing backup files won't need decrypting since its never stored in the vault dir.
+        if [ "$file" == "$password_filename" ]; then
+          filename="$file"
+        else
+          filename="$( encrypt_decrypt_name "$file" "$operation")"
+        fi
+        target="$target_directory/$filename"
+        if [ "$operation" == "decrypt" ]; then
+          openssl enc -in "$source_directory/$file" -d -aes-256-cbc -pbkdf2 -pass pass:"$password" > "$target"
+        elif [ "$operation" == "encrypt" ]; then
+          openssl enc -in "$source_directory/$file" -aes-256-cbc -pbkdf2 -pass pass:"$password" > "$target"
+        else
+          msg="$filename (${file: -5})"
+          [ "$file" == "$password_filename" ] && msg="$file"
+          list_message="$list_message$msg_spacer$msg\n"
+        fi
+      else
+        [[ "$source_directory/$file" == *"vault_backups"* && "$operation" != "list" ]] && continue
+        directory_name="$( encrypt_decrypt_name "$file" "$operation")"
+        if [ "$operation" == "list" ]; then
+          msg="$directory_name/ (${file: -5})\n"
+          list_message="$list_message$msg_spacer$msg"
+        else
+          mkdir "$target_directory/$directory_name"
+        fi
+        encrypt_decrypt_files "$source_directory/$file" "$target_directory/$directory_name" "$operation" $((level + 1))
+      fi
+    done
+    [ "$level" -eq 0 ] && [ "$operation" == 'list' ] && echo -e "$list_message"
+}
+
+# List decrypted file names in all the backup directories.
+function list_backups() {
+  if [ -d "$encrypt_backup_directory" ]; then
+    for backup_dir in $(ls -A "$encrypt_backup_directory"); do
+      echo "$backup_dir/"
+      encrypt_decrypt_files "$encrypt_backup_directory/$backup_dir" "" "list"
+      list_message=
+    done
+  else
+    echo "No backup directory."
+  fi
+}
+
+# View how to use the script.
+function usage() {
+  local help="
+Description:
+  $0 [-e|--encrypt] [-l|--list] [-o|--output-password] [--list-backups] [-h|--help] <password>
+  Encrypt files and file/directory name stored in the vault-key directory to the vault directory. Or, decrypt files
+  and their respective file/directory names in the vault directory to the vault-key directory. The vault-key directory
+  is ignored by git. When decrypting or encrypting files, any existing files in the target directory will be moved to
+  the backup directory (..vault-key/vault-backups) in a timestamped folder so files won't ever be overwritten or removed.
+
+Options:
+  -e, --encrypt          Encrypt files stored in the vault-key directory to the vault directory (default operation is
+                         decrypt).
+  -o, --output-password  Output the password in a file called password.txt in the backup directory.  If you are worried
+                         you may forget your password this option can be helpful.  Use with caution!
+  -l, --list             List the encrypted file and directory names.
+  --list-backups         List the encrypted file and directory names of any files stored in the backup directory.
+  -h, --help
+
+Usage:
+  $0 my-password                  # Decrypt files in vault to vault-key directory.
+  $0 -e my-password               # Encrypt files in vault to vault-key directory.
+  $0 -o my-password               # Decrypt files and store the password in vault-key's backup directory.
+  $0 -e -o my-password            # Encrypt vault-key files and store the password in vault-key's backup directory.
+  $0 --list my-password           # Decrypt the file/directory names in vault and print them to the console.
+  $0 --list-backups my-password   # Decrypt the file/directory names in vault-key's backup directory."
+ echo "$help"
+}
+
+# Parse the options and run the correct operation.
+function main() {
+  local short="eolh"
+  local long="list,list-backups,help,encrypt,output-password"
+  local options
+  local operation=decrypt
+  local source_directory
+  local target_directory
+  local backup_directory
+  local date
+  local timestamp
+
+  set_dotfiles_dir_and_sources
+
+  if [ "$(uname)" == "Darwin" ]; then
+    if [ -e "/usr/local/opt/gnu-getopt/bin/getopt" ]; then
+      options=$(/usr/local/opt/gnu-getopt/bin/getopt -l "$long" -o "$short" -a -- "$@")
+    else
+      echo "This script requires the latest getopt command. Upgrade with:"
+      echo "  brew install gnu-getopt"
+      exit 1
+    fi
+  else
+      options=$(getopt -l "$long" -o "$short" -a -- "$@")
+  fi
+
+  # Set the positional parameters to the parsed getopt command output.
+  eval set -- "$options"
+
+  while true; do
+    case "$1" in
+      -e|--encrypt) operation=encrypt; shift;;
+      -l|--list) operation=list ; shift;;
+      --list-backups) operation=list_backups ; shift;;
+      -o|--output-password) output_password="true"; shift;;
+      -h|--help) usage; exit 0;;
+      --) shift;;
+      *)
+        password="$1"
+        if [ -z "$password" ];then
+          echo "A password is required! Example: vault [options] password. See usage: vault --help"
+          exit 1
+        fi
+        break;;
+    esac
+  done
+
+  if [ "$operation" == "list_backups" ]; then
+    list_backups
+    exit 0
+  fi
+
+  date="$(date)"
+  timestamp="${date// /_}"
+  # Set the source and target directories
+  if [ "$operation" == "decrypt" ] || [ $operation == "list" ]; then
+    source_directory="$encrypt_directory"
+    target_directory="$decrypt_directory"
+    backup_directory="$decrypt_backup_directory/$timestamp"
+  else
+    source_directory="$decrypt_directory"
+    target_directory="$encrypt_directory"
+    backup_directory="$encrypt_backup_directory/$timestamp"
+  fi
+
+  # Backup files.
+  if [ "$operation" == "decrypt" ] || [ "$operation" == "encrypt" ]; then
+
+    # Check if the target directory is empty.
+    if [ "$(ls -A "$target_directory")" ]; then
+      [ ! -d "$backup_directory" ] && mkdir -p "$backup_directory"
+      mv "$source_directory"/* "$backup_directory"
+    fi
+
+    if [ -n "$output_password" ]; then
+      [ ! -d "$backup_directory" ] && mkdir -p "$backup_directory"
+      echo "$password" > "$backup_directory/$password_filename"
+    fi
+  fi
+
+  encrypt_decrypt_files "$source_directory" "$target_directory" $operation
+}
+
+main "$@"
+

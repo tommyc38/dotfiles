@@ -1,0 +1,179 @@
+{
+    "workbench.colorTheme": "Darcula",
+    "editor.cursorBlinking": "solid",
+    "redhat.telemetry.enabled": true,
+    "vim.enableNeovim": false,
+    "vim.neovimPath": "/usr/bin/nvim",
+    "vim.easymotion": true,
+    "vim.insertModeKeyBindingsNonRecursive": [
+        { "before": [ "<C-l>" ], "after": [ "<right>" ] },
+        { "before": [ "<C-h>" ], "after": [ "<left>" ] } ],
+    "vim.visualModeKeyBindings": [
+        { "before": [ "<leader>", "[" ], "after": [ "<", "g", "v" ] },
+        { "before": [ "<leader>", "]" ], "after": [ ">", "g", "v" ] }
+    ],
+    "vim.normalModeKeyBindings": [
+        { "before": [ "<leader>", "[" ], "after": [ "<", "<" ] },
+        { "before": [ "<leader>", "]" ], "after": [ ">", ">" ] }
+    ],
+    "vim.normalModeKeyBindingsNonRecursive": [
+        { "before": [ "z", "o" ], "after": [ "z", "a" ] },
+        { "before": [ "Y" ], "after": [ "y", "$" ] },
+        { "before": [ "g", "c", "c" ], "commands": [ "editor.action.commentLine" ] },
+        { "before": [ "<leader>", "r", "n" ], "commands": [ "editor.action.rename" ] },
+        { "before": [ "<leader>", "r", "f" ], "commands": [ "fileutils.renameFile" ] },
+        { "before": [ "<leader>", "s", "o" ], "commands": [ "workbench.action.showAllSymbols" ] },
+        { "before": [ "<leader>", "r", "p" ], "commands": [ "editor.action.formatDocument" ] },
+        { "before": [ "<leader>", "h" ], "commands": [ ":set hlsearch! hlsearch?" ] },
+        { "before": [ "<leader>", "w", "v" ], "commands": [ "workbench.action.splitEditor" ] },
+        { "before": [ "<leader>", "n" ], "commands": [ "workbench.action.toggleSidebarVisibility" ] },
+        { "before": [ "<leader>", "f" ], "commands": [ "revealInExplorer" ] },
+        { "before": [ "<leader>", "r", "f" ], "commands": [ "fileutils.renameFile" ] }
+    ],
+    "vim.leader": "<space>",
+    "vim.showMarksInGutter": true,
+    "vim.useSystemClipboard": true,
+    "editor.fontFamily": "JetBrainsMono NF",
+    "editor.fontLigatures": true,
+    "scm.inputFontSize": 14,
+    "yaml.schemas": {
+        "file:///c%3A/Users/tom.conley/.vscode/extensions/atlassian.atlascode-3.0.1/resources/schemas/pipelines-schema.json": "bitbucket-pipelines.yml"
+    },
+    "atlascode.jira.jqlList": [
+        {
+            "id": "eefdd8de-dc71-474c-b468-c5d08347939b",
+            "enabled": true,
+            "name": "My ephesoft Issues",
+            "query": "assignee = currentUser() AND resolution = Unresolved ORDER BY lastViewed DESC",
+            "siteId": "9de127e5-c87d-4bb8-90e4-e1a4e0543868",
+            "monitor": true
+        }
+    ],
+    "atlascode.bitbucket.statusbar.enabled": false,
+    "workbench.editor.highlightModifiedTabs": true,
+    "workbench.editor.limit.enabled": true,
+    "editor.formatOnPaste": true,
+    "atlascode.bitbucket.enabled": true,
+    "terminal.integrated.defaultProfile.osx": "",
+    "customizeUI.font.regular": "JetBrains Mono Light",
+    "customizeUI.font.monospace": "JetBrains Mono Light",
+    "customizeUI.listRowHeight": 24,
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "breadcrumbs.enabled": false,
+    "workbench.iconTheme": "vscode-jetbrains-icon-theme",
+    "workbench.colorCustomizations": {
+        "sideBar.background": "#3B3F41",
+        "list.hoverBackground": "#1C63D1",
+        "list.hoverForeground": "#FFFFFF"
+    },
+    "editor.tokenColorCustomizations": {
+        "[Darcula]": {
+            "keywords": "#429cd9",
+            "textMateRules": [
+                {
+                    "scope": "meta.type.annotation",
+                    "settings": {
+                        "foreground": "#CC8242",
+                    }
+                },
+                {
+                    "scope": "support.type.primitive,keyword.operator entity.name.function, entity.name.type, meta.type.parameters, new.expr entity.name.type ,punctuation.definition.template-expression.begin",
+                    "settings": {
+                        "foreground": "#CCCCCC",
+                    }
+                },
+                {
+                    "scope": "storage.modifier.ts, storage.type, keyword.operator.new ,storage.modifier.async, variable.language",
+                    "settings": {
+                        "foreground": "#429cd9",
+                    }
+                },
+                {
+                    "scope": "keyword.operator, punctuation.decorator.ts, punctuation.definition.template-expression.end",
+                    "settings": {
+                        "foreground": "#CCCCCC",
+                    }
+                },
+                {
+                    "scope": "support.class.promise",
+                    "settings": {
+                        "foreground": "#9E7BB0",
+                        "fontStyle": "bold italic"
+                    }
+                },
+                {
+                    "name": "Storage type",
+                    "scope": "meta.type",
+                    "settings": {
+                        "foreground": "#429cd9",
+                        "fontStyle": "bold"
+                    }
+                },
+                {
+                    "name": "TypeScript Class Modifiers",
+                    "scope": "",
+                    "settings": {
+                        "foreground": "#429cd9",
+                        "fontStyle": "bold"
+                    }
+                },
+                {
+                    "name": "Built-in constant",
+                    "scope": "",
+                    "settings": {
+                        "foreground": "#429cd9",
+                        "fontStyle": "bold"
+                    }
+                }
+            ]
+        }
+    },
+    "editor.semanticTokenColorCustomizations": {
+        "[Darcula]": {
+            // "enabled": true,
+            "rules": {
+                // "keyword": "#429cd9",
+            },
+        }
+    },
+    "shellcheck.ignorePatterns": {
+        "**/*.zshrc": false
+    },
+    "git.confirmSync": false,
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "terminal.integrated.fontWeightBold": "normal",
+    "terminal.integrated.env.linux": {
+    
+    },
+    "customizeUI.activityBarHideSettings": true,
+    "customizeUI.activityBar": "regular",
+    "terminal.integrated.profiles.linux": {
+
+        "bash": {
+            "path": "bash",
+            "icon": "terminal-bash"
+        },
+        "zsh": {
+            "path": "zsh"
+        },
+        "fish": {
+            "path": "fish"
+        },
+        "tmux": {
+            "path": "tmux",
+            "icon": "terminal-tmux"
+        },
+        "pwsh": {
+            "path": "pwsh",
+            "icon": "terminal-powershell"
+        }
+    },
+    "editor.multiCursorModifier": "ctrlCmd",
+    "terminal.external.windowsExec": "zsh",
+    "files.eol": "\n"
+}

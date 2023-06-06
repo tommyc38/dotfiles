@@ -57,7 +57,6 @@ cnoremap <c-n> <Down>
 set wildmenu                   "Commandline autocomplete view"
 set number                     "Show line numbers.
 set cursorline                 "Show the cursor line so its it's easier to find - SEE LEADER KEY TO TOGGLE
-
 " Always show the signcolumn, otherwise it would shift the text each time
 " diagnostics appear/become resolved.
 if has("patch-8.1.1564")
@@ -65,7 +64,7 @@ if has("patch-8.1.1564")
   set signcolumn=number
 else
   set signcolumn=yes
-endi
+endif
 
 match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 " highlight conflicts
@@ -78,7 +77,7 @@ set ruler                      "Show the cursor position in command line
 set showcmd                    "Display incomplete commands
 set laststatus=2               "Show the satus line all the time
 set cmdheight=2                "Make the command prompt bigger
-set showmatch                  "Show matching ",],etc.
+set showmatch                  "Show matching \",],etc.
 " set invlist
 set listchars=tab:▸\ ,eol:¬,trail:⋅,extends:❯,precedes:❮
 " set showbreak=↪
@@ -319,7 +318,6 @@ nmap <leader>si :set list!<cr>
 
 " Show quick file symbol outline
 nnoremap <leader>so  :<C-u>CocList outline<cr>
-
 
 " Show all problems/diagnostics.
 nnoremap <silent><space>sp  :<C-u>CocList diagnostics<cr>
@@ -623,9 +621,10 @@ endif
 let g:sneak#label = 1
 let g:EasyMotion_smartcase = 1
 "}}}
-"Tabular{{{
-
-
+"CocVim{{{
+let g:coc_global_extensions = ['coc-json', 'coc-git', 'coc-tsserver', 'coc-symbol-line', 'coc-svg', 'coc-snippets',
+\'coc-sh', 'coc-prettier', 'coc-html', 'coc-css', 'coc-eslint', 'coc-docker', 'coc-cssmodules', 'coc-angular', 'coc-calc',
+\'coc-markdownlint', 'coc-sql', 'coc-yaml', 'coc-symbol-line']
 
 " }}}
 "Ultisnips{{{

@@ -17,12 +17,12 @@ Plug 'vim-airline/vim-airline-themes'
 Plug 'chriskempson/base16-vim'
 Plug 'ryanoasis/vim-devicons'
 Plug 'morhetz/gruvbox'
-Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
+"Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
 Plug 'gerw/vim-HiLinkTrace'
 "}}}
 "Code Completion / Linting / Snippets / Ctags{{{
 if has('nvim')
-    Plug 'beeender/Comrade'
+    "Plug 'beeender/Comrade'
 endif
 Plug 'neoclide/coc.nvim'
 Plug 'honza/vim-snippets'
@@ -38,7 +38,7 @@ Plug 'ctrlpvim/ctrlp.vim'
 "User Interface{{{
 Plug 'liuchengxu/vista.vim'
 Plug 'kshenoy/vim-signature' " make marks visible in the column bar (https://github.com/kshenoy/vim-signature)
-Plug 'rrethy/vim-hexokinase', { 'do': 'make hexokinase' } " shows color boxes in gutter
+"Plug 'rrethy/vim-hexokinase', { 'do': 'make hexokinase' } " shows color boxes in gutter
 
 "}}}
 "Editing / General Functionality{{{

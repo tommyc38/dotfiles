@@ -1,0 +1,6 @@
+#!/bin/bash
+google="Denk One, Mystery Quest, New Rocker, Roboto"
+#fonts.sh --google="Roboto" --nerd="Hack"
+#fonts.sh --list-google-fonts --list-nerd-fonts -list-powerline-fonts
+fonts.sh --google-fonts-select="Roboto" --nerd-fonts-select="Hacks"
+#fonts.sh --help

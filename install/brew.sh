@@ -3,7 +3,9 @@
 # Xcode
 echo "Installing Xcode Command Line Tools"
 
-if test $(xcode-select -p) == "/Applications/Xcode.app/Contents/Developer"; then
+xcode_path="$(xcode-select -p)"
+if [ "$xcode_path" == "/Applications/Xcode.app/Contents/Developer" ] ||
+   [ "$xcode_path" == "Library/Developer/CommandLineTools" ]; then
     echo "Xcode already installed"
 else
     echo "Installing Xcode..."
@@ -11,124 +13,93 @@ else
  fi
  
 echo "Installing Homebrew packages..."
-if [ ! "$(which brew)" ]; then
-    echo "Installing Homebrew..." 
-    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-fi 
+if [ ! -x "$(command -v brew)"  ]; then
+    # see https://brew.sh/
+    echo "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
 
-# core tools
+# Core tools
 brew install coreutils
 brew install binutils
 brew install diffutils
 brew install findutils
 
-# key commands
-brew install ed
+# Key commands
 brew install gawk
 brew install gnu-indent
 brew install gnu-sed
 brew install gnu-tar
 brew install gnu-which
+brew install gnu-getopt
 brew install gnutls
 brew install grep
 brew install gzip
-brew install screen
 brew install watch
-brew install wdiff --with-gettext
 brew install wget
 
 
-# development tools
+# Development tools
 brew install git
+brew install python
 brew install openssh
+brew install openssl@3
 brew install neovim
-brew install nvm
+brew install docker
+brew install docker-compose
 brew install vim
-brew install reattach-to-user-namespace # makes tmux work on mac
 brew install bash
 brew install zsh
-brew install autojump           # helps you move much quicker than 'cd' command
-brew install vim --with-python3
+brew install autojump           # helps you move much quicker than 'cd' command: https://github.com/wting/autojump
 brew install html2text          # tool for gathering the readable parts of a webpage
 
-# media tools
+# Media tools
 brew install ffmpeg
 brew install imagemagick
 
-# desktop programs
-brew install --cask karabiner-elements # used to map capslock key to ctrl (long press) and esc (tap)
+# Databases
+brew install postgres@14 # TODO create zsh alias to postgres vs postgers@14
+brew install redis@6.2 # TODO create zsh alias to redis vs redis@6.2
+
+# Desktop programs
+brew install --cask karabiner-elements # map capslock to escape (tap) and control (press) on MacOS
 brew install --cask google-chrome
-brew install --cask iterm2
 brew install --cask virtualbox
-brew install --cask virtualbox-extension-pack  # requires password on mac os and authorization in settings
 brew install --cask vagrant
+brew install --cask docker
+brew install --cask spotify
+brew install --cask webstorm
+brew install --cask iterm2
+brew install --cask visual-studio-code
+brew install --cask MonitorControl # needed to control display volume via mac (https://github.com/MonitorControl/MonitorControl)
 
 
-# C language tools
-brew install cmake
-brew install mono               # C# support for YouCompleteMe plugin for Vim
-brew install go                 # Go support for YouCompleteMe plugin for Vim
+# Shell tools
+brew install zsh-syntax-highlighting
+brew install zsh-autosuggestions
+brew install bash-completion@2
+brew install bash-git-prompt
+brew install tmux
 
-# vagrant
-brew cask install virtualbox
-brew cask install vagrant
+# Go
+brew install go # needed for vim-hexokinase
 
-# javascript/typescript tools
-brew install node
-npm install npm -g
-npm install -g typescript
+# Javascript
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+# Load nvm
+source ~/.bash_profile
+nvm install node # Latest
+nvm install 10
+nvm install 14
+nvm install 16
+nvm install 18
 
-# install python
-brew install pyenv pyenv-virtualenv pyenv-virtualenvwrapper
+# Python
+brew install pyenv
+# Load pyenv
+source ~/.bash_profile
+pyenv install 2
+pyenv install 3
+pyenv global 2 # Set python 2 as the default python version
 
-
-echo "Creating virtualenv directory"
-mkdir ~/.virtualenvs
-
-if test $(which virtualenvwrapper.sh); then
-    echo "Setting up python2 virtualenvs..."
-    mkvirtualenv py2
-    workon py2
-    if test $VIRTUAL_ENV; then
-        pip install --upgrade setuptools
-        pip install --upgrade pip
-        pip install flake8
-        pip install requests
-        pip install jinja2
-        pip install flask
-        pip install scrapy
-        pip install beautifulsoup
-        pip install ipython
-    else
-        deactivate
-        echo "py2 virtualenv not setup!"
-    fi
-    echo "Setting up python2 virtualenvs..."
-    mkvirtualenv py3
-    workon py3
-    if test $VIRTUAL_ENV; then
-        pip install --upgrade setuptools
-        pip install --upgrade pip
-        pip install flake8
-        pip install requests
-        pip install jinja2
-        pip install flask
-        pip install scrapy
-        pip install beautifulsoup
-        pip install ipython
-    else
-        deactivate
-        echo "py3 virtualenv not setup!"
-    fi
-
-else
-    echo "You need to make put the virtualenvwrapper.sh file in /usr/local/bin"
-    echo "See http://stackoverflow.com/questions/12647266/where-is-virtualenvwrapper-sh-after-pip-install"
-fi
-
-echo "Installing Nerd Fonts"
-sh ./fonts.sh Hack
-sh ./fonts.sh DroidSans
-echo Installing Powerline Fonts
-sh ./pfonts.sh
-exit 
+exit 0

@@ -20,8 +20,8 @@ fi
 brew install coreutils
 
 # key commands
-brew install pango
-brew install binutils
+#brew install pango
+#brew install binutils
 brew install diffutils
 brew install ed --default-names
 brew install findutils --with-default-names

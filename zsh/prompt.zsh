@@ -60,13 +60,13 @@ suspended_jobs() {
         echo "%{$FG[208]%}✱%f"
     fi
 }
-# You need to set $VIRTUAL_ENV_DISABLE_PROMPT="1"
-# in your .zshrc in order to turn off the activate script
-# prompt update
-add_venv_info () {
-	local virtualenv_path="$VIRTUAL_ENV"
-	if [[ -n $virtualenv_path && -n $VIRTUAL_ENV_DISABLE_PROMPT ]]; then
-		echo `basename $virtualenv_path`
+
+# Add the current version of node when you cd into a directory with a package.json
+add_nvm_version () {
+  if command -v nvm &>/dev/null; then
+    if [[ -e "$(pwd)/package.json"  ]]; then
+      echo `nvm current`
+    fi
 	fi
 }
 
@@ -75,7 +75,7 @@ precmd() {
     print -P '\n%F{141}%n%F{141} @%m%f%F{205}  %~'
 }
 
-export PROMPT='%(?.%F{205}.%F{red})`add_venv_info` ❯%f '
+export PROMPT='%(?.%F{205}.%F{red})`add_nvm_version` ❯%f '
 export RPROMPT='`git_dirty`%F{241}$vcs_info_msg_0_%f `git_arrows``suspended_jobs`'
 
 # sources: 

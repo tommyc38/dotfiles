@@ -1,5 +1,6 @@
 {
     "coc.preferences.hoverTarget": "float",
     "coc.preferences.enableFloatHighlight": true,
-    "coc.preferences.formatOnInsertLeave": true
+    "coc.preferences.formatOnInsertLeave": true,
+    "snippets.ultisnips.pythonPrompt": false
 } 

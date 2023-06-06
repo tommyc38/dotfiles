@@ -1,50 +1,42 @@
-#THIS IS SO YOU CAN DOWNLOAD HOMEBREW PROGRAMS MORE OTFEN
+export DOTFILES=$HOME/dotfiles
+export ZSH=$DOTFILES/zsh
+export NVIM=$HOME/.config/nvim
+export VIM_PLUGINS=$HOME/.vim/plugged
+export VIM_THEME_FILE=$DOTFILES/vim/custom-plugins/darcula/colors/darcula.vim
+export CUSTOM_BIN=$DOTFILES/bin/
+export VIRTUAL_BOXES=$HOME/boxes/
+
+# Homebrew package paths
 export PATH="/usr/local/bin:$PATH"
-
-# @gotomconley access
-export NPM_ACCESS_TOKEN=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
-export NPM_REGISTRY_URL=registry.npmjs.com
-export NPM_PICKUP_TOKEN_READ_ONLY=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
-
-#THIS WILL ALLOW YOU TO RUN COREUTILS WITHOUT G PREFIX & VIEW MAN PAGES
-# All commands have been installed with the prefix 'g'.
-# If you really need to use these commands with their normal names, you
-# can add a "gnubin" directory to your PATH from your bashrc like:
-export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-
-# Additionally, you can access their man pages with normal names if you add
-# the "gnuman" directory to your MANPATH from your bashrc as well:
-export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
 
 # Allows the system to find your executable scripts
 export PATH="$PATH:$HOME/dotfiles/bin/"
 
-# You create your API token on https://github.com/settings/tokens and
-# then set the environment variable HOMEBREW_GITHUB_API_TOKEN to the
-# value of your token. When creating the token, make sure that you only
-# select the scopes you need. As pointed out in the answer by Chad,
-# deselecting all of the scopes is very reasonable! Setting the token is
-# done using the export command.
-
-# Sources:  http://stackoverflow.com/questions/20130681/setting-github-api-token-for-homebrew
-export HOMEBREW_GITHUB_API_TOKEN=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
-
-#THIS WILL CHANGE YUOUR TERMINAL
-if [[ "$(uname)" == "Darwin" ]]; then
-  [[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"
-  if [ -f "/usr/local/opt/bash-git-prompt/share/gitprompt.sh" ]; then
-    __GIT_PROMPT_DIR="/usr/local/opt/bash-git-prompt/share"
-    source "/usr/local/opt/bash-git-prompt/share/gitprompt.sh"
-  fi
+# Use coreutiles without the prefix g
+if [[ "$(uname)" == "Darwin" && "$(command -v brew)" ]]; then
+  export PATH="/usr/local/opt/openssl@3/bin:$PATH"
+  export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/grep/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/gnu-indent/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/gnu-indent/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/gnu-tar/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/gnu-tar/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/gnu-sed/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/gnu-which/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/gnu-which/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH"
+  export MANPATH="/usr/local/opt/findutils/libexec/gnuman:$MANPATH"
+  export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
+  export GUILE_TLS_CERTIFICATE_DIRECTORY=/usr/local/etc/gnutls/
 fi
 
 if [ -f ~/.bashrc ]; then
     source ~/.bashrc
 fi
-# THIS WILL ALLOW YOU TO CHANGE YOUR THEME, PROVIDED YOU FOLLOWED THE DIRECTIONS.
-# https://github.com/chriskempson/base16-shell
-# BASE16_SHELL=$HOME/.config/base16-shell/
-# [ -n "$PS1" ] && [ -s $BASE16_SHELL/profile_helper.sh ] && eval "$($BASE16_SHELL/profile_helper.sh)"
-if command -v pyenv 1> /dev/null 2>&1; then
-  eval "$(pyenv init -)"
+
+if [ -f ~/.workrc ]; then
+    source ~/.workrc
 fi

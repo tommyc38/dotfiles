@@ -22,7 +22,7 @@ make_dir() {
 }
 
 #######################################
-# REMOVE DIRECTORY - Ensures a directory # exists before removal to prevent an # error.
+# REMOVE DIRECTORY - Ensures a directory exists before removal to prevent an error.
 #
 # Arguments:
 #  DIRECTORY - the name of the directory to create
