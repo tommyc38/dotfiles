@@ -22,6 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+script="$(basename "$0")"
 # Remove the variables exported from the current env file.
 function remove_current_env() {
    local line
@@ -110,11 +111,11 @@ function find_env_file() {
 function usage() {
 echo "
 Usage:
-  . workenv.sh [-h|--help] [-e|--env] [-s|--search-directory <directory>] environment
+  . $script [-h|--help] [-e|--env] [-s|--search-directory <directory>] environment
 Description:
   If you work on multiple projects, you often need to load global project variables (e.g. NPM_REGISTRY, NPM_TOKEN,
   etc.). This script simplifies the process of switching between project environments.  Because scripts are ran in a
-  child process, you can't run this script without a \".\" before calling the script (e.g. . workenv.sh [options] args).
+  child process, you can't run this script without a \".\" before calling the script (e.g. . $script [options] args).
   It's recommended that you use a shell function (e.g. .bashrc, .zshrc, etc.) as a wrapper to make it easier. Moreover,
   this script also assumes you source a ~/.workrc file from within your shell configuration (e.g. .bashrc, zshrc) to
   load your project environment. See example for more details.
@@ -143,7 +144,7 @@ Example Files:
   ~/.zshrc OR ~/.bashrc:
     source ~/.workrc
     workenv() {
-      . workenv.sh \"\$@\"
+      . $script \"\$@\"
     }
 
   ~/.workrc:

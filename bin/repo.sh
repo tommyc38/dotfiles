@@ -22,6 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+script="$(basename "$0")"
 dry_run=
 default_directory=
 source_file=
@@ -119,7 +120,7 @@ function clone_repos() {
 function usage() {
 echo "
 Usage:
-  $0 [-h|--help] [-d|--dry-run] [-i|--npm-install] [-D|--default-directory <directory>] [-f|--file <filename>]
+  $script [-h|--help] [-d|--dry-run] [-i|--npm-install] [-D|--default-directory <directory>] [-f|--file <filename>]
 Description:
   Clone multiple git repositories and, optionally, install their dependencies using npm.  You must have nvm and
   node versions 14, 16, and 19 installed.  After cloning a repository, the lockfileVersion property in package-lock.json
@@ -139,7 +140,7 @@ Example:
   git@github/org/org-repo-three.git
   # This line is a comment.  Inline comments aren't supported.
 
-  $0 -file source_file.txt -D \$HOME/dev/work
+  $script -file source_file.txt -D \$HOME/dev/work
 
   first repo will be cloned to \$HOME/dev/work/org-repo
   second repo will be cloned to \$HOME/dev/work/org-two-bitbucket

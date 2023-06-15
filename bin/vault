@@ -26,6 +26,7 @@ password=
 list_message=
 output_password=
 password_filename="password.txt"
+script="$(basename "$0")"
 
 # Find the root directory and build the source arrays.
 function set_dotfiles_dir_and_sources() {
@@ -139,7 +140,7 @@ function list_backups() {
 function usage() {
   local help="
 Description:
-  $0 [-e|--encrypt] [-l|--list] [-o|--output-password] [--list-backups] [-h|--help] <password>
+  $script [-e|--encrypt] [-l|--list] [-o|--output-password] [--list-backups] [-h|--help] <password>
   Encrypt files and file/directory name stored in the vault-key directory to the vault directory. Or, decrypt files
   and their respective file/directory names in the vault directory to the vault-key directory. The vault-key directory
   is ignored by git. When decrypting or encrypting files, any existing files in the target directory will be moved to
@@ -155,12 +156,12 @@ Options:
   -h, --help
 
 Usage:
-  $0 my-password                  # Decrypt files in vault to vault-key directory.
-  $0 -e my-password               # Encrypt files in vault-key to vault directory.
-  $0 -o my-password               # Decrypt files and store the password in vault-key's backup directory.
-  $0 -e -o my-password            # Encrypt vault-key files and store the password in vault-key's backup directory.
-  $0 --list my-password           # Decrypt the file/directory names in vault and print them to the console.
-  $0 --list-backups my-password   # Decrypt the file/directory names in vault-key's backup directory."
+  $script my-password                  # Decrypt files in vault to vault-key directory.
+  $script -e my-password               # Encrypt files in vault-key to vault directory.
+  $script -o my-password               # Decrypt files and store the password in vault-key's backup directory.
+  $script -e -o my-password            # Encrypt vault-key files and store the password in vault-key's backup directory.
+  $script --list my-password           # Decrypt the file/directory names in vault and print them to the console.
+  $script --list-backups my-password   # Decrypt the file/directory names in vault-key's backup directory."
  echo "$help"
 }
 

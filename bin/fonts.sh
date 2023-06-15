@@ -22,6 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+script="$(basename "$0")"
 temp_dir="$(mktemp -d)"
 download_directory=$temp_dir  #
 font_install_dir=  # Set by the function: set_font_install_dir
@@ -451,7 +452,7 @@ function handle_invalid_fonts(){
 function usage() {
   local help="
 Usage:
-  fonts.sh [-G|--google-fonts] [-g|--google-fonts-light] [--google-fonts-select '<font>, ...'] [--list-google-fonts]
+  $script [-G|--google-fonts] [-g|--google-fonts-light] [--google-fonts-select '<font>, ...'] [--list-google-fonts]
   [--list-google-fonts-light] [-N|--nerd-fonts] [-n|--nerd-fonts-light] [--nerd-fonts-select '<font>, ...']
   [--list-nerd-fonts] [--list-nerd-fonts-light] [-P|--powerline-fonts] [-p|--powerline-fonts-light]
   [--powerline-fonts-select '<font>, ...'] [--list-powerline-fonts] [--list-powerline-fonts -light] [-I|--install-only]
@@ -491,20 +492,20 @@ Options:
 
 Examples:
   Correct:
-    fonts.sh --google-fonts --nerd-fonts --powerline-fonts                           # Install all fonts
-    fonts.sh --google-fonts-light --nerd-fonts --powerline-fonts-light               # Install fonts
-    fonts.sh --list-google-fonts --list-nerd-fonts --list-powerline-fonts            # List all fonts
-    fonts.sh --list-google-fonts --list-nerd fonts-light                             # List fonts
+    $script --google-fonts --nerd-fonts --powerline-fonts                           # Install all fonts
+    $script --google-fonts-light --nerd-fonts --powerline-fonts-light               # Install fonts
+    $script --list-google-fonts --list-nerd-fonts --list-powerline-fonts            # List all fonts
+    $script --list-google-fonts --list-nerd fonts-light                             # List fonts
 
   Wrong:
-    fonts.sh --google-fonts --google-fonts-light  # only one selection from a given font group can be installed.
+    $script --google-fonts --google-fonts-light  # only one selection from a given font group can be installed.
 
   For finer grain control (e.g. manually remove bold fonts, etc.), you can use these options together as follows:
 
   Correct:
-    1.) fonts.sh --download-only --download-directory=\"path/to/dir\" --google-fonts --nerd-fonts-light
+    1.) $script --download-only --download-directory=\"path/to/dir\" --google-fonts --nerd-fonts-light
     2.) Manually remove fonts.
-    3.) fonts.sh --install-only --download-directory=\"path/to/dir\" --google-fonts --nerd-fonts-light
+    3.) $script --install-only --download-directory=\"path/to/dir\" --google-fonts --nerd-fonts-light
 
     ** When using the --install-only option, it will only look in expected directories based on the font install
     options. If you add folders with fonts that don't match download_directory/font_name of a font in a given --list
@@ -512,29 +513,29 @@ Examples:
     expects to find the fonts in (e.g. a directory the script downloaded a font to - download_dir/font-group/font).
 
   Wrong:
-    1.) fonts.sh --download-only --download-directory=\"path/to/dir\" --google-fonts --nerd-fonts-light
+    1.) $script --download-only --download-directory=\"path/to/dir\" --google-fonts --nerd-fonts-light
     2.) Manually remove fonts.
-    3.) fonts.sh --install-only --download-directory=\"path/to/dir\"
-        fonsts.sh --install-only --download-directory=\"path/to/dir\" --powerline-fonts
+    3.) $script --install-only --download-directory=\"path/to/dir\"
+        $script --install-only --download-directory=\"path/to/dir\" --powerline-fonts
 
   Selected fonts must be included in one the respective font lists and must be delimited by either ', ' or ',' with
   no line breaks.
 
   Correct:
-    fonts.sh --google-fonts-select='Roboto, Denk One, Mystery Quest, New Rocker, Luckiest Guy'
+    $script --google-fonts-select='Roboto, Denk One, Mystery Quest, New Rocker, Luckiest Guy'
 
     local fonts='Roboto, Denk One, Mystery Quest, New Rocker \\
     Aladin, Smokum, Grand Hotel, Kosugi, Grandstander, Irish Grover'
 
-    fonts.sh --google-fonts-select=\"\$fonts\"
+    $script --google-fonts-select=\"\$fonts\"
 
   Wrong:
-    fonts.sh --google-fonts-select 'Roboto' 'Denk One' 'Mystery Quest' 'New Rocker' 'Luckiest Guy'
+    $script --google-fonts-select 'Roboto' 'Denk One' 'Mystery Quest' 'New Rocker' 'Luckiest Guy'
 
     local fonts='Roboto, Denk One, Mystery Quest, New Rocker \\n
     Aladin, Smokum, Grand Hotel, Kosugi, Grandstander, Irish Grover'
 
-    fonts.sh --google-fonts-select=\"\$fonts\""
+    $script --google-fonts-select=\"\$fonts\""
   echo "$help"
 }
 

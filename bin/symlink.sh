@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+script="$(basename "$0")"
+
 # Directories
 symlink_destination_dir=$HOME          # Root directory for all symlinks targets without the --file.
 backup_directory=$symlink_destination_dir/dotfiles_backup  # Directory to back up files matching symlink targets.
@@ -430,7 +432,7 @@ function run_type() {
 function usage() {
   echo "
 Usage:
-  symlink.sh [-h|--help] [-d|--dry-run] [-s|--skip] [-b|--backup-directory <backup-directory>] [-f|--file <directory>]
+  $script [-h|--help] [-d|--dry-run] [-s|--skip] [-b|--backup-directory <backup-directory>] [-f|--file <directory>]
   [-v|--include-vim] [-k|--include-karabiner] [-R|--restore]
 
 Description:
@@ -455,22 +457,22 @@ Options:
   -h, --help                     Get help on running this script.
 
 Examples:
-  symlink.sh                                               # Symlink all files with a .symlink extension to \$HOME.
-  symlink.sh --include-vim --include-karabiner             # Symlink all files.
-  symlink.sh --backup-directory dot-backups                # Using a custom backup directory. Relative or absolute paths.
-  symlink.sh --dry-run --include-vim --include-karabiner   # See which files will be affected before running file operations.
-  symlink.sh --restore                                     # Restore all files from the default backup directory.
+  $script                                               # Symlink all files with a .symlink extension to \$HOME.
+  $script --include-vim --include-karabiner             # Symlink all files.
+  $script --backup-directory dot-backups                # Using a custom backup directory. Relative or absolute paths.
+  $script --dry-run --include-vim --include-karabiner   # See which files will be affected before running file operations.
+  $script --restore                                     # Restore all files from the default backup directory.
 
   When you include the [-f|--file <file>] option, the paths in the file must be delimited by \" | \".  For example,
-  let's assume we are using the command, 'symlink.sh --file symlink.txt', and the contents of symlink.txt are:
+  let's assume we are using the command, '$script --file symlink.txt', and the contents of symlink.txt are:
 
  \$HOME/some/path/file.txt | \$HOME/another/path
   ~/some/path/file-two.txt | ~/another/path/another-file.txt
   ~/some/path/directory | ~/another/path/directory
   # This is a comment and won't be read.
 
-  symlink.sh --file symlink.txt  --backup-directory dot-backups           # Symlink all sources to targets in symlink.txt
-  symlink.sh --restore --backup-directory dot-backups --file symlink.txt  # Restoring from the backup directory. --file is required.
+  $script --file symlink.txt  --backup-directory dot-backups           # Symlink all sources to targets in symlink.txt
+  $script --restore --backup-directory dot-backups --file symlink.txt  # Restoring from the backup directory. --file is required.
 
   ** Files can contain comments with any line starting with '#'.
 
