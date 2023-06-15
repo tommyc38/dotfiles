@@ -144,6 +144,11 @@ load-nvmrc() {
   fi
 }
 
+workenv() {
+  # We have to run the command in the current environment to set/unset variables
+  . workenv.sh "$@"
+}
+
 function changeu(){
     #TODO remove autojump from dotfiles
     #TODO change zsh-sytax-highlight path in .zshrc

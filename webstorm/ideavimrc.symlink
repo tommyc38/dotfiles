@@ -157,7 +157,7 @@ nnoremap [c :action Vcs.ShowPreviousChangeMarker<cr>
 noremap <space>cr :action Vcs.RollbackChangedLines<cr>
 noremap <space>dl :action Vcs.ShowDiffChangedLines<cr>
 noremap <space>sh :action Vcs.ShowTabbedFileHistory<cr>
-vmap <space>d :action Vcs.ShowHistoryForBlock<cr>
+vmap <space>sh :action Vcs.ShowHistoryForBlock<cr>
 " nnoremap <space>ic :action InspectCode<cr>
 " nnoremap <space>ph :action ParameterNameHints<cr>
 " nnoremap <space>ga :action GotoAction<cr>

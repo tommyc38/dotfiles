@@ -56,7 +56,4 @@ else
     echo "Sorry, OS not recognized"
 fi
 
-# echo "Configuring zsh as default shell"
-# sudo dscl . change /users/$USER UserShell $SHELL /usr/local/bin/zsh
-
 echo "Done."

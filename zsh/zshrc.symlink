@@ -4,15 +4,14 @@ export NVIM=$HOME/.config/nvim
 export VIM_PLUGINS=$HOME/.vim/plugged
 export VIM_THEME_FILE=$DOTFILES/vim/custom-plugins/darcula/colors/darcula.vim
 export CUSTOM_BIN=$DOTFILES/bin/
-export VIRTUAL_BOXES=$HOME/boxes/
-
+export VMS=$HOME/vagrant_boxes/
 
 # Load ZSH files
 for config in $ZSH/**/*.zsh; do
   source $config
 done
 
-# Add and work environments.
+# Add work environments - See workenv.sh script to make env switching easier.
 if [[ -f ~/.workrc ]]; then
     source $HOME/.workrc
 fi
@@ -49,8 +48,6 @@ if [[ "$(uname)" == "Darwin" && "$(command -v brew)" ]]; then
   export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
   export GUILE_TLS_CERTIFICATE_DIRECTORY=/usr/local/etc/gnutls/
 fi
-
-#export HOMEBREW_GITHUB_API_TOKEN=TODO is the still needed
 
 # Make vim your default editor
 export EDITOR="nvim"
@@ -97,9 +94,7 @@ export NVM_DIR="$HOME/.nvm"
 
 export NVM_SYMLINK_CURRENT=true # This allows IDEs to use a single place to set your node version
 
-
 DOTFILES_LOADED=1
-
 
 # Functions that require a zsh hook should be added here
 

@@ -76,7 +76,7 @@ function encrypt_decrypt_name(){
 }
 
 # Traverse a directory and encrypt and decrypt files along the way. File and directory names will also be
-# encrypted/dectrypted and base64 encoded to be URL safe.
+# encrypted/decrypted and base64 encoded to be URL safe.
 function encrypt_decrypt_files() {
     local source_directory="$1"
     local target_directory="$2"
@@ -89,9 +89,9 @@ function encrypt_decrypt_files() {
     local target
     local msg
 
-    for file in $(ls -A "$source_directory"); do
+    for file in $(ls -A "$source_directory" | grep -v '.DS_Store'); do
       if [[ ! -d "$source_directory/$file" ]]; then
-        # The password file when listing backup files won't need decrypting since its never stored in the vault dir.
+        # The password file when listing backup files won't need decrypting since it's never stored in the vault dir.
         if [ "$file" == "$password_filename" ]; then
           filename="$file"
         else
@@ -156,7 +156,7 @@ Options:
 
 Usage:
   $0 my-password                  # Decrypt files in vault to vault-key directory.
-  $0 -e my-password               # Encrypt files in vault to vault-key directory.
+  $0 -e my-password               # Encrypt files in vault-key to vault directory.
   $0 -o my-password               # Decrypt files and store the password in vault-key's backup directory.
   $0 -e -o my-password            # Encrypt vault-key files and store the password in vault-key's backup directory.
   $0 --list my-password           # Decrypt the file/directory names in vault and print them to the console.
@@ -182,8 +182,7 @@ function main() {
     if [ -e "/usr/local/opt/gnu-getopt/bin/getopt" ]; then
       options=$(/usr/local/opt/gnu-getopt/bin/getopt -l "$long" -o "$short" -a -- "$@")
     else
-      echo "This script requires the latest getopt command. Upgrade with:"
-      echo "  brew install gnu-getopt"
+      echo "This script requires the latest getopt command. Upgrade with: brew install gnu-getopt"
       exit 1
     fi
   else
@@ -233,9 +232,10 @@ function main() {
   if [ "$operation" == "decrypt" ] || [ "$operation" == "encrypt" ]; then
 
     # Check if the target directory is empty.
-    if [ "$(ls -A "$target_directory")" ]; then
+    if [ "$(ls -A "$target_directory" | grep -v '.DS_Store')" ]; then
       [ ! -d "$backup_directory" ] && mkdir -p "$backup_directory"
-      mv "$source_directory"/* "$backup_directory"
+      find "$target_directory" -maxdepth 1 -mindepth 1 -not -name .DS_Store -not -name vault_backups \
+        -exec mv '{}' "$backup_directory" \;
     fi
 
     if [ -n "$output_password" ]; then

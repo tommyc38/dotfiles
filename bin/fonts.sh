@@ -451,7 +451,7 @@ function handle_invalid_fonts(){
 function usage() {
   local help="
 Usage:
-  $0 [-G|--google-fonts] [-g|--google-fonts-light] [--google-fonts-select '<font>, ...'] [--list-google-fonts]
+  fonts.sh [-G|--google-fonts] [-g|--google-fonts-light] [--google-fonts-select '<font>, ...'] [--list-google-fonts]
   [--list-google-fonts-light] [-N|--nerd-fonts] [-n|--nerd-fonts-light] [--nerd-fonts-select '<font>, ...']
   [--list-nerd-fonts] [--list-nerd-fonts-light] [-P|--powerline-fonts] [-p|--powerline-fonts-light]
   [--powerline-fonts-select '<font>, ...'] [--list-powerline-fonts] [--list-powerline-fonts -light] [-I|--install-only]
@@ -491,10 +491,10 @@ Options:
 
 Examples:
   Correct:
-    $0 --google-fonts --nerd-fonts --powerline-fonts                           # Install all fonts
-    $0 --google-fonts-light --nerd-fonts --powerline-fonts-light               # Install fonts
-    $0 --list-google-fonts --list-nerd-fonts --list-powerline-fonts            # List all fonts
-    $0 --list-google-fonts --list-nerd fonts-light                             # List fonts
+    fonts.sh --google-fonts --nerd-fonts --powerline-fonts                           # Install all fonts
+    fonts.sh --google-fonts-light --nerd-fonts --powerline-fonts-light               # Install fonts
+    fonts.sh --list-google-fonts --list-nerd-fonts --list-powerline-fonts            # List all fonts
+    fonts.sh --list-google-fonts --list-nerd fonts-light                             # List fonts
 
   Wrong:
     fonts.sh --google-fonts --google-fonts-light  # only one selection from a given font group can be installed.
@@ -502,39 +502,39 @@ Examples:
   For finer grain control (e.g. manually remove bold fonts, etc.), you can use these options together as follows:
 
   Correct:
-    1.) $0 --download-only --download-directory=\"path/to/dir\" --google-fonts --nerd-fonts-light
+    1.) fonts.sh --download-only --download-directory=\"path/to/dir\" --google-fonts --nerd-fonts-light
     2.) Manually remove fonts.
-    3.) $0 --install-only --download-directory=\"path/to/dir\" --google-fonts --nerd-fonts-light
+    3.) fonts.sh --install-only --download-directory=\"path/to/dir\" --google-fonts --nerd-fonts-light
 
-    **When using the --install-only option, it will only look in expected directories based on the font install
+    ** When using the --install-only option, it will only look in expected directories based on the font install
     options. If you add folders with fonts that don't match download_directory/font_name of a font in a given --list
     then it won't be installed.  If you manually want to add fonts just add them to any directory the script
     expects to find the fonts in (e.g. a directory the script downloaded a font to - download_dir/font-group/font).
 
   Wrong:
-    1.) $0 --download-only --download-directory=\"path/to/dir\" --google-fonts --nerd-fonts-light
+    1.) fonts.sh --download-only --download-directory=\"path/to/dir\" --google-fonts --nerd-fonts-light
     2.) Manually remove fonts.
-    3.) $0 --install-only --download-directory=\"path/to/dir\"
-        $0 --install-only --download-directory=\"path/to/dir\" --powerline-fonts
+    3.) fonts.sh --install-only --download-directory=\"path/to/dir\"
+        fonsts.sh --install-only --download-directory=\"path/to/dir\" --powerline-fonts
 
   Selected fonts must be included in one the respective font lists and must be delimited by either ', ' or ',' with
   no line breaks.
 
   Correct:
-    $0 --google-fonts-select='Roboto, Denk One, Mystery Quest, New Rocker, Luckiest Guy'
+    fonts.sh --google-fonts-select='Roboto, Denk One, Mystery Quest, New Rocker, Luckiest Guy'
 
     local fonts='Roboto, Denk One, Mystery Quest, New Rocker \\
     Aladin, Smokum, Grand Hotel, Kosugi, Grandstander, Irish Grover'
 
-    $0 --google-fonts-select=\"\$fonts\"
+    fonts.sh --google-fonts-select=\"\$fonts\"
 
   Wrong:
-    $0 --google-fonts-select 'Roboto' 'Denk One' 'Mystery Quest' 'New Rocker' 'Luckiest Guy'
+    fonts.sh --google-fonts-select 'Roboto' 'Denk One' 'Mystery Quest' 'New Rocker' 'Luckiest Guy'
 
     local fonts='Roboto, Denk One, Mystery Quest, New Rocker \\n
     Aladin, Smokum, Grand Hotel, Kosugi, Grandstander, Irish Grover'
 
-    $0 --google-fonts-select=\"\$fonts\""
+    fonts.sh --google-fonts-select=\"\$fonts\""
   echo "$help"
 }
 
@@ -724,7 +724,6 @@ function parse_options() {
 function main() {
   parse_options "$@"
   install_fonts
-
 }
 
 main "$@"

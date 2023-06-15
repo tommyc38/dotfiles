@@ -4,7 +4,8 @@ export NVIM=$HOME/.config/nvim
 export VIM_PLUGINS=$HOME/.vim/plugged
 export VIM_THEME_FILE=$DOTFILES/vim/custom-plugins/darcula/colors/darcula.vim
 export CUSTOM_BIN=$DOTFILES/bin/
-export VIRTUAL_BOXES=$HOME/boxes/
+export VMS=$HOME/vagrant_boxes/
+export BASH_PROFILE_SOURCED=1
 
 # Homebrew package paths
 export PATH="/usr/local/bin:$PATH"
@@ -33,10 +34,10 @@ if [[ "$(uname)" == "Darwin" && "$(command -v brew)" ]]; then
   export GUILE_TLS_CERTIFICATE_DIRECTORY=/usr/local/etc/gnutls/
 fi
 
-if [ -f ~/.bashrc ]; then
+if [[ -f "$HOME/.bashrc" && -z "$BASHRC_SOURCED" ]]; then
     source ~/.bashrc
 fi
 
-if [ -f ~/.workrc ]; then
+if [[ -f "$HOME/.workrc" ]]; then
     source ~/.workrc
 fi

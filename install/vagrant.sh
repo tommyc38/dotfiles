@@ -58,7 +58,7 @@ function create_project() {
 #   HOME - The user's home directory.
 #   mac_box - The mac os box.
 # Arguments:
-#   1 - directory - The name of the root directory to story Vagrant projects in (default is $HOME/vagrant_boxes).
+#   1 - directory - The name of the root directory to store Vagrant projects in (default is $HOME/vagrant_boxes).
 #######################################
 function main() {
   local vagrant_project_root_default="$HOME/vagrant_boxes"
@@ -70,13 +70,6 @@ function main() {
       -i) install_only="true";;
     esac
   done
-
-  # Make sure you run this script with 'sudo'
-  if ! [ "$(id -u)" = 0 ]; then
-     echo "The script need to be run as root."
-     exit 1
-  fi
-
 
   # MacOS Monterey (12.5). See docs at https://app.vagrantup.com/amarcireau/boxes/macos
   local mac_box="amarcireau/macos"
@@ -97,18 +90,19 @@ function main() {
     cd "$vagrant_project_root" || exit
 
     # See https://www.virtualbox.org/wiki/Downloads for the latest version and update the download URL.
-    local extension_pack_url="https://download.virtualbox.org/virtualbox/7.0.6/Oracle_VM_VirtualBox_Extension_Pack-7.0.6a-155176.vbox-extpack"
+    local extension_pack_url="https://download.virtualbox.org/virtualbox/7.0.8/Oracle_VM_VirtualBox_Extension_Pack-7.0.8-156879.vbox-extpack"
     if [ ! -e "$vagrant_project_root/$(basename "$extension_pack_url")" ]; then
       curl -o "$(basename $extension_pack_url)" "$extension_pack_url"
+      VBoxManage extpack install --replace "$(basename "$extension_pack_url")"
     fi
-    VBoxManage extpack install --replace "$(basename "$extension_pack_url")"
-
 
     # Check if the --install option was passed to the script.
     if [ "$1" != "--install-only" ] && [ "$2" != "--install-only" ]; then
       create_project "$vagrant_project_root/ubuntu-focal-20.04" "ubuntu/focal64"
       create_project "$vagrant_project_root/ubuntu-bionic-18.02" "ubuntu/bionic64"
-      create_project "$vagrant_project_root/mac-monterey-12.5" "$mac_box"
+#      create_project "$vagrant_project_root/mac-monterey-12.5" "$mac_box"
+      create_project "$vagrant_project_root/windows-10" "gusztavvargadr/windows-10"
+      create_project "$vagrant_project_root/mac-monterey" "jrl/macos-monterey"
     fi
   fi
 }

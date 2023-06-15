@@ -41,12 +41,9 @@ brew install wget
 
 # Development tools
 brew install git
-brew install python
 brew install openssh
 brew install openssl@3
 brew install neovim
-brew install docker
-brew install docker-compose
 brew install vim
 brew install bash
 brew install zsh
@@ -58,8 +55,11 @@ brew install ffmpeg
 brew install imagemagick
 
 # Databases
-brew install postgres@14 # TODO create zsh alias to postgres vs postgers@14
+brew install postgresql@14 # TODO create zsh alias to postgres vs postgers@14
 brew install redis@6.2 # TODO create zsh alias to redis vs redis@6.2
+brew install --cask pgadmin4
+brew services start postgresql@14
+brew services start redis@6.2
 
 # Desktop programs
 brew install --cask karabiner-elements # map capslock to escape (tap) and control (press) on MacOS
@@ -84,15 +84,23 @@ brew install tmux
 # Go
 brew install go # needed for vim-hexokinase
 
-# Javascript
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+# Node
+command -v nvm || curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
 # Load nvm
 source ~/.bash_profile
 nvm install node # Latest
 nvm install 10
+nvm use v10
+npm install -g yarn
 nvm install 14
+nvm use v14
+npm install -g yarn
 nvm install 16
+nvm use v16
+npm install -g yarn
 nvm install 18
+nvm use v18
+npm install -g yarn
 
 # Python
 brew install pyenv

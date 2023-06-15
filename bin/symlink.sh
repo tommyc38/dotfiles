@@ -146,10 +146,8 @@ function get_message_file_name() {
 
   if [ -n "$source_target_file" ]; then
     echo "$file"
-    echo
   else
     echo "$(basename "$file")"
-echo
   fi
 }
 
@@ -348,7 +346,7 @@ function symlink_dotfiles(){
     fi
     if [ -e "$target_file" ]; then
       local source_file_name
-      source_file_name="$(get_message_file_name "$source_file_name")"
+      source_file_name="$(get_message_file_name "$source_file")"
 
       if [ "$source_file" == "$(readlink -f "$target_file")" ]; then
         message="$message_indent$source_file_name|-->|$target_file\n"
@@ -425,14 +423,14 @@ function run_type() {
   fi
 
   [ -n "$dry_run" ] && echo "Dry Run"
-  echo "Done."
+  echo "Done!"
 }
 
 # View how to use the script.
 function usage() {
   echo "
 Usage:
-  $0 [-h|--help] [-d|--dry-run] [-s|--skip] [-b|--backup-directory <backup-directory>] [-f|--file <directory>]
+  symlink.sh [-h|--help] [-d|--dry-run] [-s|--skip] [-b|--backup-directory <backup-directory>] [-f|--file <directory>]
   [-v|--include-vim] [-k|--include-karabiner] [-R|--restore]
 
 Description:
@@ -457,22 +455,22 @@ Options:
   -h, --help                     Get help on running this script.
 
 Examples:
-  $0                                               # Symlink all files with a .symlink extension to \$HOME.
-  $0 --include-vim --include-karabiner             # Symlink all files.
-  $0 --backup-directory dot-backups                # Using a custom backup directory. Relative or absolute paths.
-  $0 --dry-run --include-vim --include-karabiner   # See which files will be affected before running file operations.
-  $0 --restore                                     # Restore all files from the default backup directory.
+  symlink.sh                                               # Symlink all files with a .symlink extension to \$HOME.
+  symlink.sh --include-vim --include-karabiner             # Symlink all files.
+  symlink.sh --backup-directory dot-backups                # Using a custom backup directory. Relative or absolute paths.
+  symlink.sh --dry-run --include-vim --include-karabiner   # See which files will be affected before running file operations.
+  symlink.sh --restore                                     # Restore all files from the default backup directory.
 
   When you include the [-f|--file <file>] option, the paths in the file must be delimited by \" | \".  For example,
-  let's assume we are using the command, '$0 --file symlink.txt', and the contents of symlink.txt are:
+  let's assume we are using the command, 'symlink.sh --file symlink.txt', and the contents of symlink.txt are:
 
  \$HOME/some/path/file.txt | \$HOME/another/path
   ~/some/path/file-two.txt | ~/another/path/another-file.txt
   ~/some/path/directory | ~/another/path/directory
   # This is a comment and won't be read.
 
-  $0 --file symlink.txt  --backup-directory dot-backups           # Symlink all sources to targets in symlink.txt
-  $0 --restore --backup-directory dot-backups --file symlink.txt  # Restoring from the backup directory. --file is required.
+  symlink.sh --file symlink.txt  --backup-directory dot-backups           # Symlink all sources to targets in symlink.txt
+  symlink.sh --restore --backup-directory dot-backups --file symlink.txt  # Restoring from the backup directory. --file is required.
 
   ** Files can contain comments with any line starting with '#'.
 
@@ -482,8 +480,8 @@ Examples:
 
 # Parse the options passed to the script.
 function main() {
-  local short="dsvkRb:f:"
-  local long="dry-run,skip,include-vim,include-karabiner,restore,file:,backup-directory:"
+  local short="dhsvkRb:f:"
+  local long="dry-run,help,skip,include-vim,include-karabiner,restore,file:,backup-directory:"
   local options
   local include_vim
   local include_karabiner
@@ -510,13 +508,13 @@ function main() {
 
   while true; do
     case "$1" in
-      -d|--dry-run|-dry-run) dry_run="true"; shift;;
-      -b|--backup-directory|-backup-directory) shift;
+      -d|--dry-run) dry_run="true"; shift;;
+      -b|--backup-directory) shift;
         backup_directory="$(readlink -f "$1")"
         shift ;;
-      -s|--skip|-skip) skip="true"; shift;;
-      -R|--restore|-restore) type="restore"; shift;;
-      -f|--file|-file) shift
+      -s|--skip) skip="true"; shift;;
+      -R|--restore) type="restore"; shift;;
+      -f|--file) shift
         source_target_file="$(readlink -f "$1")"
         if [ ! -e "$source_target_file" ];then
           echo "The symlink file you supplied could not be found! See usage: vault --help"
@@ -525,9 +523,9 @@ function main() {
           exit 1
         fi
         shift;;
-      -v|--vim|-vim) include_vim="true"; shift;;
-      -k|--karabiner|-karabiner) include_karabiner="true"; shift;;
-      -h|--help|-help) usage; exit 0;;
+      -v|--vim) include_vim="true"; shift;;
+      -k|--karabiner) include_karabiner="true"; shift;;
+      -h|--help) usage; exit 0;;
       --) break;;
       *) usage; exit 0;;
 
