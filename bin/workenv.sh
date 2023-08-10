@@ -100,7 +100,7 @@ function find_env_file() {
             env_file="$file"
             break
         fi
-      done < <(find "$root_dir" -type f -name '*.env' -print0)
+      done < <(find "$root_dir" -type d -name "vault_backups" -prune -o -type f -name '*.env' -print0)
       if [ -n "$env_file" ]; then
         echo "$env_file"
       fi

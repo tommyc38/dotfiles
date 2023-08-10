@@ -26,6 +26,7 @@ if [[ "$(uname)" == "Darwin" ]]; then
   if [[ -f "/usr/local/opt/bash-git-prompt/share/gitprompt.sh" ]]; then
     __GIT_PROMPT_DIR="/usr/local/opt/bash-git-prompt/share"
     GIT_PROMPT_ONLY_IN_REPO=1
+    GIT_PROMPT_IGNORE_SUBMODULES=1
     source "/usr/local/opt/bash-git-prompt/share/gitprompt.sh"
   fi
 fi
@@ -54,4 +55,3 @@ function workenv() {
   # We have to run the command in the current environment to set/unset variables
   . workenv.sh "$@"
 }
-export workenv
