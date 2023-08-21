@@ -1,10 +1,9 @@
-
-export BASHRC_SOURCED=1
-
 # Depending on how configurable the terminal is we may need to source .bash-profile manually.
 if [[ -z "$BASH_PROFILE_SOURCED" && -f "$HOME/.bash_profile" ]]; then
   source "$HOME/.bash_profile"
 fi
+
+export BASHRC_SOURCED=1
 
 # Custom ls command colors
 LS_COLORS='di=34:fi=0:ln=36:pi=5:so=5:bd=5:cd=5:or=31:mi=5;31:ex=32:*.rpm=90'

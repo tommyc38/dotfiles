@@ -100,9 +100,7 @@ function main() {
     if [ "$1" != "--install-only" ] && [ "$2" != "--install-only" ]; then
       create_project "$vagrant_project_root/ubuntu-focal-20.04" "ubuntu/focal64"
       create_project "$vagrant_project_root/ubuntu-bionic-18.02" "ubuntu/bionic64"
-#      create_project "$vagrant_project_root/mac-monterey-12.5" "$mac_box"
       create_project "$vagrant_project_root/windows-10" "gusztavvargadr/windows-10"
-      create_project "$vagrant_project_root/mac-monterey" "jrl/macos-monterey"
     fi
   fi
 }
