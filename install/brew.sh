@@ -53,6 +53,7 @@ brew install html2text          # tool for gathering the readable parts of a web
 # Media tools
 brew install ffmpeg
 brew install imagemagick
+brew install graphicsmagick
 
 # Databases
 brew install postgresql@14 # TODO create zsh alias to postgres vs postgers@14
