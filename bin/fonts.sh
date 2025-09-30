@@ -135,7 +135,7 @@ nerd_fonts_light=("Hack" "DroidSansMono" "RobotoMono" "JetBrainsMono" "UbuntuMon
 
 # Font download urls
 google_fonts_url="https://fonts.google.com/download?family="
-nerd_fonts_url="https://github.com/ryanoasis/nerd-fonts/releases/download/v2.3.3/" # Check and update to the most recent version
+nerd_fonts_url="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/" # Check and update to the most recent version
 powerline_fonts_url="https://github.com/powerline/fonts.git"
 
 # See options
