@@ -2,6 +2,10 @@
 
 script_path="$(dirname -- "$( readlink -f -- "$0")")"
 
+# Accept optional vault password as first argument (or via VAULT_PASSWORD env var)
+VAULT_PASSWORD_ARG="${1:-}"
+VAULT_PASSWORD="${VAULT_PASSWORD:-$VAULT_PASSWORD_ARG}"
+
 # Make sure you run this script with 'sudo'
 if [ ! "$(id -u)" = 0 ]; then
    echo "The script need to be run as root." >&2
@@ -21,7 +25,14 @@ if [ "$(uname)" == "Darwin" ]; then
     sh install/brew.sh
 
     echo "Decrypting Vault Files.."
-    sh bin/vault
+    echo "Decrypting Vault Files.."
+    if [ -n "$VAULT_PASSWORD" ]; then
+      # Pass as an argument
+      sh bin/vault "$VAULT_PASSWORD"
+      # Or, if bin/vault.sh reads from stdin, use: printf '%s\n' "$VAULT_PASSWORD" | sh bin/vault
+    else
+      sh bin/vault
+    fi
 
     if [ -e "$script_path/vault-key/install.sh" ]; then
       echo "Running Vault-Key Install..."
