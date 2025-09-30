@@ -24,6 +24,12 @@ if [ "$(uname)" == "Darwin" ]; then
     echo "Installing System Packages & Desktop Applications..."
     sh install/brew.sh
 
+    echo "Installing Node..."
+    sh install/node.sh
+
+    echo "Installing Python..."
+    sh install/python.sh
+
     echo "Decrypting Vault Files.."
     echo "Decrypting Vault Files.."
     if [ -n "$VAULT_PASSWORD" ]; then
