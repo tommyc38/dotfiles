@@ -90,7 +90,17 @@ function main() {
     cd "$vagrant_project_root" || exit
 
     # See https://www.virtualbox.org/wiki/Downloads for the latest version and update the download URL.
-    local extension_pack_url="https://download.virtualbox.org/virtualbox/7.0.8/Oracle_VM_VirtualBox_Extension_Pack-7.0.8-156879.vbox-extpack"
+    local extension_pack_url_intel="https://download.virtualbox.org/virtualbox/7.1.12/VirtualBox-7.1.12-169651-OSX.dmg"
+    local extension_pack_url_apple="https://download.virtualbox.org/virtualbox/7.1.12/VirtualBox-7.1.12-169651-macOSArm64.dmg"
+
+    # Detect if running on Apple Silicon, even if shell is under Rosetta
+    is_rosetta="$(sysctl -in sysctl.proc_translated 2>/dev/null)"
+    arch="$(uname -m)"
+    if [ "$arch" = "arm64" ] || [ "$is_rosetta" = "1" ]; then
+      extension_pack_url="$extension_pack_url_apple"
+    else
+      extension_pack_url="$extension_pack_url_intel"
+    fi
     if [ ! -e "$vagrant_project_root/$(basename "$extension_pack_url")" ]; then
       curl -o "$(basename $extension_pack_url)" "$extension_pack_url"
       VBoxManage extpack install --replace "$(basename "$extension_pack_url")"

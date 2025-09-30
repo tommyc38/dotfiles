@@ -5,6 +5,7 @@ export VIM_PLUGINS=$HOME/.vim/plugged
 export VIM_THEME_FILE=$DOTFILES/vim/custom-plugins/darcula/colors/darcula.vim
 export CUSTOM_BIN=$DOTFILES/bin/
 export VMS=$HOME/vagrant_boxes/
+export ANDROID_HOME=/Users/tomconley/Library/Android/sdk
 
 # Load ZSH files
 for config in $ZSH/**/*.zsh; do
@@ -26,6 +27,9 @@ export PATH=$DOTFILES/bin:$PATH
 
 # Homebrew install path
 export PATH="/usr/local/bin:$PATH"
+
+# Webstorm command line tools
+export PATH="/Applications/WebStorm.app/Contents/MacOS:$PATH"
 
 # Use coreutiles without the prefix g
 if [[ "$(uname)" == "Darwin" && "$(command -v brew)" ]]; then

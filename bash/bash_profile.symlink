@@ -13,6 +13,9 @@ export PATH="/usr/local/bin:$PATH"
 # Allows the system to find your executable scripts
 export PATH="$PATH:$HOME/dotfiles/bin/"
 
+# Webstorm command line tools
+export PATH="/Applications/WebStorm.app/Contents/MacOS:$PATH "
+
 # Use coreutiles without the prefix g
 if [[ "$(uname)" == "Darwin" && "$(command -v brew)" ]]; then
   export PATH="/usr/local/opt/openssl@3/bin:$PATH"

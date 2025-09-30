@@ -6,7 +6,10 @@ set NERDTree
 set commentary
 set surround
 set exchange
+set ideajoin
 set easymotion
+set functiontextobj
+set incsearch
 set argtextobj
 set mu
 let g:argtextobj_pairs="(:),{:},<:>,[:]"
@@ -49,7 +52,7 @@ nnoremap gV `[v`]
 nmap <silent>gy :action GotoTypeDeclaration<cr>
 
 " Jump to last change
-nnoremap g; :action JumpToLastChange<cr>
+" nnoremap g; :action JumpToLastChange<cr>
 
 " Jump to previous change
 nnoremap g, :action JumpToLastChange<cr>
@@ -112,6 +115,34 @@ nmap <space>] >>
 " ============================================================================
 " DOESN'T MATCHES VIM
 " ============================================================================
+:set ignorecase smartcase
+
+" Function to toggle between relative and absolute line numbers
+function! ToggleLineNumbers()
+  if &relativenumber
+    set norelativenumber
+    set number
+  else
+    set relativenumber
+    set number
+  endif
+endfunction
+
+" Key mapping to call the toggle function (e.g., <Leader>n)
+nnoremap <space>n :call ToggleLineNumbers()<CR>
+
+" Escape characters when using * in visual mode.
+xnoremap * :<C-u>call <SID>VSetSearch()<CR>/<C-R>=@/<C-R><C-R>
+xnoremap # :<C-u>call <SID>VSetSearch()<CR>?<C-R>=@/<C-R><C-R>
+
+function! s:VSetSearch()
+    let temp = @s
+    norm! gv"sy
+    let @/ = '\V' . substitute(escape(@s, '/\'), '/n', '\\n', 'g')
+    let @s = temp
+endfunction
+
+
 
 "Access all tools and file tabs - must hold CTRL
 "nmap <c-t> :action Switcher<CR>
@@ -137,13 +168,15 @@ map <space>k <Plug>(easymotion-k)
 map <space>l <Plug>(easymotion-sl)
 map <space>e <Plug>(easymotion-s)
 
-
+nnoremap <space>sw :action JumpToLastWindow<CR>
 nnoremap <space>sc :action ShowColorPicker<cr>
 nnoremap <space>sf :action RecentFiles<CR>
 nnoremap <space>st :action QuickEvaluateExpression<CR>
+nnoremap <space>si :action QuickImplementations<CR>
 nnoremap <space>bt :action ToggleLineBreakpoint<cr>
 nnoremap <space>bv :action ViewBreakpoints<cr>
 nnoremap <space>rm :action Refactorings.QuickListPopupAction<cr>
+vmap <space>rm :action Refactorings.QuickListPopupAction<cr>
 nnoremap <space>rf :action ReformatCode<cr>
 nnoremap <space>rp :action ReformatWithPrettierAction<cr>
 nnoremap <space>gm :action Vcs.QuickListPopupAction<cr>
@@ -152,22 +185,25 @@ vmap <space>gc :action Git.CompareWithBranch<cr>
 nnoremap <space>gb :action ChooseDebugConfiguration<cr>
 nnoremap ]e :action GotoNextError<cr>
 nnoremap [e :action GotoPreviousError<cr>
-nnoremap ]c :action Vcs.ShowNextChangeMarker<cr>
-nnoremap [c :action Vcs.ShowPreviousChangeMarker<cr>
+nnoremap ]c :action VcsShowNextChangeMarker<cr>
+nnoremap [c :action VcsShowPrevChangeMarker<cr>
+nnoremap ]g :action NextDiff<cr>
+nnoremap [g :action PreviousDiff<cr>
 noremap <space>cr :action Vcs.RollbackChangedLines<cr>
 noremap <space>dl :action Vcs.ShowDiffChangedLines<cr>
 noremap <space>sh :action Vcs.ShowTabbedFileHistory<cr>
 vmap <space>sh :action Vcs.ShowHistoryForBlock<cr>
+nnoremap <space>ga :action GotoAction<cr>
+vmap <space>ga :action GotoAction<cr>
 " nnoremap <space>ic :action InspectCode<cr>
 " nnoremap <space>ph :action ParameterNameHints<cr>
-" nnoremap <space>ga :action GotoAction<cr>
-" nnoremap <space>gu :action FindUsages<cr>
 
 " IDE: close tool widows with <S-ESC>
 " IDE: Toggle terminal                                                 : Command + 2
 " IDE: Navigate termainal tabs                                         : Command + Shift + []
 " IDE: Wrap selection with template : Command + w | Alt + s
 " IDE: Bookmarks Window                                            : Command + 3
+" IDE: Extend Selection: OPTION + ARROW
 " IDE: Show all possible live templates / code snippets                :       Command + T / Command +
 " IDE: Show definition :  Command + Y
 " IDE: Show parameter info:  Command + p | Alt + p
