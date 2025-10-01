@@ -118,7 +118,9 @@ set shiftround " round indent to a multiple of 'shiftwidth'
 set autoindent  " automatically set indent of new line?
 set smartindent
 
-set pastetoggle=<F2>
+if !has('nvim')
+  set pastetoggle=<f6>
+endif
 "Allows you to preserve indentation when pasting
 "during insert/normal mode (e.g.<C-r> 0).
 

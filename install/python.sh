@@ -64,8 +64,14 @@ install_one_version() {
     return 0
   fi
 
-  # Create and use a named virtualenv for this Python
-  local venv_name="py${full//./_}"
+  # Special handling for Python 3.13
+  local venv_name
+  if [ "$short" = "3.13" ]; then
+    venv_name="nvim-provider"
+  else
+    venv_name="py${full//./_}"
+  fi
+
   if command -v pyenv-virtualenv >/dev/null 2>&1; then
     pyenv virtualenv -f "$full" "$venv_name" || true
     pyenv shell "$venv_name" || pyenv local "$venv_name" || true
@@ -84,6 +90,21 @@ install_one_version() {
   if command -v python >/dev/null 2>&1; then
     python -m pip install --upgrade pip || true
     python -m pip install --upgrade pip-tools pipx poetry uv || true
+
+    # Special handling for Python 3.13 - install pynvim
+    if [ "$short" = "3.13" ]; then
+      echo "Installing pynvim for nvim-provider environment..."
+      python -m pip install pynvim || true
+      
+      # Echo the full path of the virtual environment
+      if command -v pyenv-virtualenv >/dev/null 2>&1; then
+        local venv_path
+        venv_path="$(pyenv prefix "$venv_name" 2>/dev/null || echo "$HOME/.pyenv/versions/$venv_name")"
+        echo "nvim-provider virtual environment path: $venv_path"
+      else
+        echo "nvim-provider virtual environment path: $HOME/.venvs/$venv_name"
+      fi
+    fi
 
     # Ensure pipx path is set up
     if command -v pipx >/dev/null 2>&1; then

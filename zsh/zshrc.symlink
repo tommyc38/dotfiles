@@ -9,12 +9,16 @@ export ANDROID_HOME=/Users/tomconley/Library/Android/sdk
 
 # Load ZSH files
 for config in $ZSH/**/*.zsh; do
-  source $config
+    if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+      source $config
+    fi
 done
 
 # Add work environments - See workenv.sh script to make env switching easier.
 if [[ -f ~/.workrc ]]; then
-    source $HOME/.workrc
+    if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+        source $HOME/.workrc
+    fi
 fi
 
 # check for custom bin directory and add to path
@@ -25,32 +29,23 @@ fi
 # Add custom scripts
 export PATH=$DOTFILES/bin:$PATH
 
-# Homebrew install path
-export PATH="/usr/local/bin:$PATH"
 
 # Webstorm command line tools
 export PATH="/Applications/WebStorm.app/Contents/MacOS:$PATH"
 
 # Use coreutiles without the prefix g
 if [[ "$(uname)" == "Darwin" && "$(command -v brew)" ]]; then
-
-  export PATH="/usr/local/opt/openssl@3/bin:$PATH"
-  export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-  export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
-  export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"
-  export MANPATH="/usr/local/opt/grep/libexec/gnuman:$MANPATH"
-  export PATH="/usr/local/opt/gnu-indent/libexec/gnubin:$PATH"
-  export MANPATH="/usr/local/opt/gnu-indent/libexec/gnuman:$MANPATH"
-  export PATH="/usr/local/opt/gnu-tar/libexec/gnubin:$PATH"
-  export MANPATH="/usr/local/opt/gnu-tar/libexec/gnuman:$MANPATH"
-  export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
-  export MANPATH="/usr/local/opt/gnu-sed/libexec/gnuman:$MANPATH"
-  export PATH="/usr/local/opt/gnu-which/libexec/gnubin:$PATH"
-  export MANPATH="/usr/local/opt/gnu-which/libexec/gnuman:$MANPATH"
-  export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH"
-  export MANPATH="/usr/local/opt/findutils/libexec/gnuman:$MANPATH"
-  export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
-  export GUILE_TLS_CERTIFICATE_DIRECTORY=/usr/local/etc/gnutls/
+  if [[ -z "$HOMEBREW_PREFIX" ]]; then
+    if [[ -x "/opt/homebrew/bin/brew" ]]; then
+      # Apple Silicon Macs
+      HOMEBREW_PREFIX="/opt/homebrew"
+      export PATH="$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin:$PATH"
+    elif [[ -x "/usr/local/bin/brew" ]]; then
+      # Intel Macs
+      HOMEBREW_PREFIX="/usr/local"
+      export PATH="/usr/local/bin:$PATH"
+    fi
+  fi
 fi
 
 # Make vim your default editor
@@ -69,32 +64,42 @@ alias info='info --vi-keys'
 #this will allow vi navigation when using the info command
 
 # initialize autocomplete
-autoload -U compinit add-zsh-hook
-compinit -i
 
-BASE16_SHELL="$HOME/.config/base16-shell/"
-[ -n "$PS1" ] && \
-    [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
-        eval "$("$BASE16_SHELL/profile_helper.sh")"
+if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+  autoload -U compinit add-zsh-hook
+  compinit -i
+  BASE16_SHELL="$HOME/.config/base16-shell/"
+  [ -n "$PS1" ] && \
+      [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
+          eval "$("$BASE16_SHELL/profile_helper.sh")"
+fi
 
 # Post install for the autojump package.
-[[ "$(uname)" == "Darwin" && -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+
+if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+    [[ "$(uname)" == "Darwin" && -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+fi
 
 if [ -z ${DOTFILES_LOADED+x} ]; then
 
-    if [[ "$(uname)" == "Darwin" ]]; then
-      # install zsh-syntax-highlighting
-      source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-      # install zsh autosuggestions -(TIP -in vi mode use standard motions to expend suggestions)
-      source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-    else 
-      source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-      source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+    if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+      if [[ "$(uname)" == "Darwin" ]]; then
+        # install zsh-syntax-highlighting
+        source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+        # install zsh autosuggestions -(TIP -in vi mode use standard motions to expend suggestions)
+        source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+      else
+        source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+        source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+      fi
     fi
 fi
 
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh"  ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+    [ -s "$NVM_DIR/nvm.sh"  ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+fi
 
 export NVM_SYMLINK_CURRENT=true # This allows IDEs to use a single place to set your node version
 
@@ -102,14 +107,24 @@ DOTFILES_LOADED=1
 
 # Functions that require a zsh hook should be added here
 
-for config ($ZSH/**/*completion.sh) source $config
+if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+    for config ($ZSH/**/*completion.sh) source $config
+fi
 
 # https://stackoverflow.com/questions/30840651/what-does-autoload-do-in-zsh
-autoload -U add-zsh-hook
-add-zsh-hook chpwd load-nvmrc # Runs this function every time to the pwd changes.
-load-nvmrc
+if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+    autoload -U add-zsh-hook
+fi
+
+if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+  add-zsh-hook chpwd load-nvmrc # Runs this function every time to the pwd changes.
+fi
 
 export PYENV_ROOT="$HOME/.pyenv"
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+export PATH="$PYENV_ROOT/bin:$PATH"
+
+if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+    eval "$(pyenv init --path)"
+    eval "$(pyenv init -)"      # This makes pyenv functions available in the shell
+    eval "$(pyenv virtualenv-init -)" # This enables pyenv-virtualenv functionality
+fi

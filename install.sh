@@ -1,4 +1,4 @@
-#!/bin/bash
+ls#!/bin/bash
 
 script_path="$(dirname -- "$( readlink -f -- "$0")")"
 
@@ -18,17 +18,17 @@ if [ "$(uname)" == "Darwin" ]; then
     echo "Running on OSX"
 
     echo "Creating Dotfile Symlinks..."
-    sh install/symlink.sh -v -k
+#    sh install/symlink.sh -v -k
     source ~/.bash_profile
 
     echo "Installing System Packages & Desktop Applications..."
-    sh install/brew.sh
+#    sh install/brew.sh
 
     echo "Installing Node..."
     sh install/node.sh
 
     echo "Installing Python..."
-    sh install/python.sh
+#    sh install/python.sh
 
     echo "Decrypting Vault Files.."
     echo "Decrypting Vault Files.."
@@ -51,10 +51,18 @@ if [ "$(uname)" == "Darwin" ]; then
     echo "Setting ZSH as the Default Terminal"
     # In order to change a user's default login shell, the shell must be added to /etc/shells first (MacOS).
     # These are the updated versions of bash and zsh installed by homebrew.
-    [ -z "$(cat < /etc/shells | grep "/usr/local/bin/bash")" ] && echo "/usr/local/bin/bash" >> /etc/shells
-    [ -z "$(cat < /etc/shells | grep "/usr/local/bin/zsh")" ] && echo "/usr/local/bin/zsh" >> /etc/shells
+    
+    # Detect Homebrew prefix
+    if [[ -x "/opt/homebrew/bin/brew" ]]; then
+      BREW_PREFIX="/opt/homebrew"
+    else
+      BREW_PREFIX="/usr/local"
+    fi
+    
+    [ -z "$(cat < /etc/shells | grep "${BREW_PREFIX}/bin/bash")" ] && echo "${BREW_PREFIX}/bin/bash" >> /etc/shells
+    [ -z "$(cat < /etc/shells | grep "${BREW_PREFIX}/bin/zsh")" ] && echo "${BREW_PREFIX}/bin/zsh" >> /etc/shells
     # Because this script is ran with sudo we need to apply it to the user running the sudo command.
-    chsh -s /usr/local/bin/zsh "$SUDO_USER"
+    chsh -s "${BREW_PREFIX}/bin/zsh" "$SUDO_USER"
 
     echo "Installing Base16 Themes"
     [ ! -e ~/.config/base16-shell ] && git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell

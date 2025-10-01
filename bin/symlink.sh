@@ -326,8 +326,7 @@ get_target_from_file(){
   done < <(sed "$sed_pattern" "$symlink_source_target_file")
   has_updated_sources=true
 }
-
-# Iterate over the dotfiles to symlink.
+# Iterate over the dot/files to symlink.
 function symlink_dotfiles(){
   local skip="$1" # Truthy string to enable skip
   local target_file
@@ -482,57 +481,75 @@ Examples:
 
 # Parse the options passed to the script.
 function main() {
-  local short="dhsvkRb:f:"
-  local long="dry-run,help,skip,include-vim,include-karabiner,restore,file:,backup-directory:"
-  local options
   local include_vim
   local include_karabiner
   local skip
   local type="symlink"
 
-  if [ "$(uname)" == "Darwin" ]; then
-    if [ -e "/usr/local/opt/gnu-getopt/bin/getopt" ]; then
-      options=$(/usr/local/opt/gnu-getopt/bin/getopt -l "$long" -o "$short" -a -- "$@")
-    else
-      echo "This script requires the latest getopt command. Upgrade with:"
-      echo "  brew install gnu-getopt"
-      exit 1
-    fi
-  else
-      options=$(getopt -l "$long" -o "$short" -a -- "$@")
-  fi
-
   # Set the default dotfile root path.
   set_dotfiles_root_dir
 
-  # Set the positional parameters to the parsed getopt command output.
-  eval set -- "$options"
-
-  while true; do
+  # Manual argument parsing (portable, no getopt required)
+  while [ $# -gt 0 ]; do
     case "$1" in
-      -d|--dry-run) dry_run="true"; shift;;
-      -b|--backup-directory) shift;
-        backup_directory="$(readlink -f "$1")"
-        shift ;;
-      -s|--skip) skip="true"; shift;;
-      -R|--restore) type="restore"; shift;;
-      -f|--file) shift
-        source_target_file="$(readlink -f "$1")"
-        if [ ! -e "$source_target_file" ];then
-          echo "The symlink file you supplied could not be found! See usage: vault --help"
-          echo "  $source_target_file"
-          echo "  $1"
+      -d|--dry-run)
+        dry_run="true"
+        shift
+        ;;
+      -b|--backup-directory)
+        if [ -z "$2" ] || [[ "$2" == -* ]]; then
+          echo "Error: --backup-directory requires a directory argument"
           exit 1
         fi
-        shift;;
-      -v|--vim) include_vim="true"; shift;;
-      -k|--karabiner) include_karabiner="true"; shift;;
-      -h|--help) usage; exit 0;;
-      --) break;;
-      *) usage; exit 0;;
-
-    esac;
-  done;
+        backup_directory="$(readlink -f "$2")"
+        shift 2
+        ;;
+      -s|--skip)
+        skip="true"
+        shift
+        ;;
+      -R|--restore)
+        type="restore"
+        shift
+        ;;
+      -f|--file)
+        if [ -z "$2" ] || [[ "$2" == -* ]]; then
+          echo "Error: --file requires a file argument"
+          exit 1
+        fi
+        source_target_file="$(readlink -f "$2")"
+        if [ ! -e "$source_target_file" ]; then
+          echo "The symlink file you supplied could not be found! See usage: $script --help"
+          echo "  $source_target_file"
+          echo "  $2"
+          exit 1
+        fi
+        shift 2
+        ;;
+      -v|--include-vim)
+        include_vim="true"
+        shift
+        ;;
+      -k|--include-karabiner)
+        include_karabiner="true"
+        shift
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      -*)
+        echo "Unknown option: $1"
+        usage
+        exit 1
+        ;;
+      *)
+        echo "Unexpected argument: $1"
+        usage
+        exit 1
+        ;;
+    esac
+  done
 
   # Set the source files from a source_file.txt
   if [ "$source_target_file" ]; then

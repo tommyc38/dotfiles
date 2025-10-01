@@ -180,8 +180,8 @@ function main() {
   set_dotfiles_dir_and_sources
 
   if [ "$(uname)" == "Darwin" ]; then
-    if [ -e "/usr/local/opt/gnu-getopt/bin/getopt" ]; then
-      options=$(/usr/local/opt/gnu-getopt/bin/getopt -l "$long" -o "$short" -a -- "$@")
+    if [ -e "$(brew --prefix)/opt/gnu-getopt/bin/getopt" ]; then
+      options=$("$(brew --prefix)/opt/gnu-getopt/bin/getopt" -l "$long" -o "$short" -- "$@")
     else
       echo "This script requires the latest getopt command. Upgrade with: brew install gnu-getopt"
       exit 1

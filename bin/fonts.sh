@@ -24,7 +24,7 @@
 
 script="$(basename "$0")"
 temp_dir="$(mktemp -d)"
-download_directory=$temp_dir  #
+download_directory="$HOME/dotfiles/playground"  #
 font_install_dir=  # Set by the function: set_font_install_dir
 
 
@@ -182,7 +182,8 @@ function download() {
     if [ -n "$(ls -A "$target_dir")" ]; then
       echo "Already Extracted $download_file"
     else
-      if ! unzip "$download_dir/$download_file" -d "$target_dir" &> /dev/null; then
+      echo "Trying to unzip $download_dir/$download_file to $target_dir"
+      if ! unzip "$download_dir/$download_file" -d "$target_dir"; then
         echo "$(color_red "Failed to extract $download_file")"
         exit 1
       fi
@@ -305,6 +306,10 @@ function install_fonts() {
     if [ -z "$install_only" ]; then
       echo "Downloading Google Fonts..."
       for google_font in "${google_font_array[@]}"; do
+        echo "Arg 1: $google_fonts_url$google_font"
+        echo "Arg 2 $google_fonts_download_dir/zip-files"
+        echo "Arg 3 $google_fonts_download_dir/$google_font"
+        echo "Arg 4 $google_font.zip"
         download "$google_fonts_url$google_font" "$google_fonts_download_dir/zip-files" \
          "$google_fonts_download_dir/$google_font" "$google_font.zip"
       done
@@ -558,8 +563,8 @@ function parse_options() {
   local use_user_dir=
 
   if [ "$(uname)" == "Darwin" ]; then
-    if [ -e "/usr/local/opt/gnu-getopt/bin/getopt" ]; then
-      options=$(/usr/local/opt/gnu-getopt/bin/getopt -l "$long" -o "$short" -- "$@")
+    if [ -e "$(brew --prefix)/opt/gnu-getopt/bin/getopt" ]; then
+      options=$("$(brew --prefix)/opt/gnu-getopt/bin/getopt" -l "$long" -o "$short" -- "$@")
     else
       echo "This script requires the latest getopt command. Upgrade with:"
       echo "  brew install gnu-getopt"

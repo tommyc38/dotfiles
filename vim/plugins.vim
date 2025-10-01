@@ -24,7 +24,7 @@ Plug 'gerw/vim-HiLinkTrace'
 if has('nvim')
     "Plug 'beeender/Comrade'
 endif
-Plug 'neoclide/coc.nvim'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'honza/vim-snippets'
 
 "}}}
