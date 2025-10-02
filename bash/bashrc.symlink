@@ -1,7 +1,39 @@
+# Auto-load vault password if file exists
+# This password corresponds to the encrypted files in /vault
+# Try to find dotfiles directory (supports multiple possible locations)
+if [ -n "$DOTFILES" ]; then
+    VAULT_PASSWORD_FILE="$DOTFILES/vault-key/password.txt"
+elif [ -d "$HOME/dotfiles" ]; then
+    VAULT_PASSWORD_FILE="$HOME/dotfiles/vault-key/password.txt"
+elif [ -d "$HOME/.dotfiles" ]; then
+    VAULT_PASSWORD_FILE="$HOME/.dotfiles/vault-key/password.txt"
+fi
+
+if [ -n "$VAULT_PASSWORD_FILE" ] && [ -f "$VAULT_PASSWORD_FILE" ]; then
+    export VAULT_PASSWORD=$(cat "$VAULT_PASSWORD_FILE" 2>/dev/null)
+    if [ -n "$VAULT_PASSWORD" ]; then
+        echo "Vault password loaded from $VAULT_PASSWORD_FILE"
+    fi
+fi
+
+# Setup SSH agent and add keys (only if needed)
+# With macOS keychain (--apple-use-keychain), keys are automatically loaded when needed
+# Only run setup if: agent isn't running OR no keys are loaded
+if [ -f "$DOTFILES/bin/ssh-setup.sh" ] && [ -d "$DOTFILES/vault-key" ] && [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+    # Check if ssh-agent is running and has keys
+    if ! ssh-add -l >/dev/null 2>&1; then
+        # Agent not running or no keys loaded - run setup
+        echo "Running ssh-setup.sh from .bashrc"
+        source "$DOTFILES/bin/ssh-setup.sh"
+    fi
+fi
+
 # Depending on how configurable the terminal is we may need to source .bash-profile manually.
 if [[ -z "$BASH_PROFILE_SOURCED" && -f "$HOME/.bash_profile" ]]; then
-  echo "Sourching BashprfileY"
-  source "$HOME/.bash_profile"
+  if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+    echo "Sourcing .bash_profile"
+    source "$HOME/.bash_profile"
+  fi
 fi
 
 export BASHRC_SOURCED=1
@@ -44,12 +76,14 @@ if [[ "$(uname)" == "Darwin" ]]; then
 fi
 
 # Post install for the autojump package.
-[[ "$(uname)" == "Darwin" && -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+
+if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+  [[ "$(uname)" == "Darwin" && -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+fi
 
 # Shell themes
 BASE16_SHELL="$HOME/.config/base16-shell/"
-[ -n "$PS1" ] && \
-    [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
+[ -n "$PS1" ] && [ -z "$INTELLIJ_ENVIRONMENT_READER" ] && [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
         eval "$("$BASE16_SHELL/profile_helper.sh")"
 
 # Node Manager
@@ -59,15 +93,22 @@ if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
   [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 fi
 
-#export NVM_SYMLINK_CURRENT=true # This allows IDEs to use a single place to set your node version
+export NVM_SYMLINK_CURRENT=true # This allows IDEs to use a single place to set your node version
+
+# Python
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+
+if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+  eval "$(pyenv init --path)"
+  eval "$(pyenv init -)"      # This makes pyenv functions available in the shell
+  eval "$(pyenv virtualenv-init -)" # This enables pyenv-virtualenv functionality
+fi
+
+# workenv function wrapper for easier environment switching
+workenv() {
+  . $DOTFILES/bin/workenv.sh "$@"
+}
 
 # Always export DOTFILES_LOADED, even for INTELLIJ_ENVIRONMENT_READER
-DOTFILES_LOADED=1
-
-
-
-# Custom Functions
-function workenv() {
-  # We have to run the command in the current environment to set/unset variables
-  . workenv.sh "$@"
-}
+export DOTFILES_LOADED=1

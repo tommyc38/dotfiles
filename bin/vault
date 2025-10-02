@@ -92,12 +92,8 @@ function encrypt_decrypt_files() {
 
     for file in $(ls -A "$source_directory" | grep -v '.DS_Store'); do
       if [[ ! -d "$source_directory/$file" ]]; then
-        # The password file when listing backup files won't need decrypting since it's never stored in the vault dir.
-        if [ "$file" == "$password_filename" ]; then
-          filename="$file"
-        else
-          filename="$( encrypt_decrypt_name "$file" "$operation")"
-        fi
+        # Encrypt/decrypt ALL filenames, including password.txt
+        filename="$( encrypt_decrypt_name "$file" "$operation")"
         target="$target_directory/$filename"
         if [ "$operation" == "decrypt" ]; then
           openssl enc -in "$source_directory/$file" -d -aes-256-cbc -pbkdf2 -pass pass:"$password" > "$target"
@@ -105,7 +101,6 @@ function encrypt_decrypt_files() {
           openssl enc -in "$source_directory/$file" -aes-256-cbc -pbkdf2 -pass pass:"$password" > "$target"
         else
           msg="$filename (${file: -5})"
-          [ "$file" == "$password_filename" ] && msg="$file"
           list_message="$list_message$msg_spacer$msg\n"
         fi
       else
@@ -140,35 +135,44 @@ function list_backups() {
 function usage() {
   local help="
 Description:
-  $script [-e|--encrypt] [-l|--list] [-o|--output-password] [--list-backups] [-h|--help] <password>
-  Encrypt files and file/directory name stored in the vault-key directory to the vault directory. Or, decrypt files
-  and their respective file/directory names in the vault directory to the vault-key directory. The vault-key directory
-  is ignored by git. When decrypting or encrypting files, any existing files in the target directory will be moved to
-  the backup directory (..vault-key/vault-backups) in a timestamped folder so files won't ever be overwritten or removed.
+  $script [-e|--encrypt] [-l|--list] [--list-backups] [-h|--help] <password>
+  
+  Encrypt files stored in the vault-key directory to the vault directory, or decrypt files from vault
+  to vault-key. The password.txt file is automatically managed:
+  
+  - When encrypting: password.txt is created in vault-key and encrypted with other files
+  - When decrypting: password.txt is decrypted to vault-key for shell auto-loading
+  - Backup process: existing files (including password.txt) are moved to timestamped backup folders
+  
+  The vault-key directory is ignored by git. When encrypting or decrypting, any existing files in the
+  target directory are backed up to vault-key/vault_backups/TIMESTAMP/ so nothing is ever overwritten.
 
 Options:
-  -e, --encrypt          Encrypt files stored in the vault-key directory to the vault directory (default operation is
-                         decrypt).
-  -o, --output-password  Output the password in a file called password.txt in the backup directory.  If you are worried
-                         you may forget your password this option can be helpful.  Use with caution!
-  -l, --list             List the encrypted file and directory names.
-  --list-backups         List the encrypted file and directory names of any files stored in the backup directory.
-  -h, --help
+  -e, --encrypt          Encrypt files stored in the vault-key directory to the vault directory
+                         (default operation is decrypt)
+  -l, --list             List the encrypted file and directory names
+  --list-backups         List files in backup directories
+  -h, --help             Show this help message
 
 Usage:
-  $script my-password                  # Decrypt files in vault to vault-key directory.
-  $script -e my-password               # Encrypt files in vault-key to vault directory.
-  $script -o my-password               # Decrypt files and store the password in vault-key's backup directory.
-  $script -e -o my-password            # Encrypt vault-key files and store the password in vault-key's backup directory.
-  $script --list my-password           # Decrypt the file/directory names in vault and print them to the console.
-  $script --list-backups my-password   # Decrypt the file/directory names in vault-key's backup directory."
+  $script my-password                  # Decrypt files from vault/ to vault-key/
+                                       # password.txt will be decrypted and available for shell auto-load
+  
+  $script -e my-password               # Encrypt files from vault-key/ to vault/
+                                       # password.txt will be created in vault-key first, then encrypted
+  
+  $script --list my-password           # List encrypted file/directory names in vault/
+  $script --list-backups my-password   # List files in backup directories
+
+Note: password.txt is automatically created/managed in vault-key/ and your shell configs
+will auto-load it as VAULT_PASSWORD environment variable on next shell session."
  echo "$help"
 }
 
 # Parse the options and run the correct operation.
 function main() {
-  local short="eolh"
-  local long="list,list-backups,help,encrypt,output-password"
+  local short="elh"
+  local long="list,list-backups,help,encrypt"
   local options
   local operation=decrypt
   local source_directory
@@ -198,13 +202,22 @@ function main() {
       -e|--encrypt) operation=encrypt; shift;;
       -l|--list) operation=list ; shift;;
       --list-backups) operation=list_backups ; shift;;
-      -o|--output-password) output_password="true"; shift;;
       -h|--help) usage; exit 0;;
       --) shift;;
       *)
-        password="$1"
+        # Check for password: command line argument first, then fall back to env var
+        # This ensures explicit passwords always take precedence
+        if [ -n "$1" ]; then
+          password="$1"
+        elif [ -n "$VAULT_PASSWORD" ]; then
+          password="$VAULT_PASSWORD"
+        fi
+        
         if [ -z "$password" ];then
-          echo "A password is required! Example: vault [options] password. See usage: vault --help"
+          echo "A password is required! Provide via:"
+          echo "  - Command line argument: vault [options] password"
+          echo "  - VAULT_PASSWORD environment variable (fallback)"
+          echo "See usage: vault --help"
           exit 1
         fi
         break;;
@@ -229,23 +242,72 @@ function main() {
     backup_directory="$encrypt_backup_directory/$timestamp"
   fi
 
-  # Backup files.
+  # Handle password file and backups based on operation
   if [ "$operation" == "decrypt" ] || [ "$operation" == "encrypt" ]; then
+    # Create target directory if it doesn't exist
+    [ ! -d "$target_directory" ] && mkdir -p "$target_directory"
 
-    # Check if the target directory is empty.
+    # Backup existing files in target directory if not empty
     if [ "$(ls -A "$target_directory" | grep -v '.DS_Store')" ]; then
       [ ! -d "$backup_directory" ] && mkdir -p "$backup_directory"
+      
+      # Move existing target files to backup
       find "$target_directory" -maxdepth 1 -mindepth 1 -not -name .DS_Store -not -name vault_backups \
         -exec mv '{}' "$backup_directory" \;
+      
+      # For encryption: ALSO copy vault-key/password.txt to the vault backup
+      # This preserves the password that can decrypt the vault files we just backed up
+      if [ "$operation" == "encrypt" ] && [ -f "$source_directory/$password_filename" ]; then
+        cp "$source_directory/$password_filename" "$backup_directory/$password_filename"
+        chmod 600 "$backup_directory/$password_filename"
+        echo "Saved password.txt to vault backup: $backup_directory/$password_filename"
+      fi
+      
+      echo "Backed up existing files to: $backup_directory"
     fi
 
-    if [ -n "$output_password" ]; then
-      [ ! -d "$backup_directory" ] && mkdir -p "$backup_directory"
-      echo "$password" > "$backup_directory/$password_filename"
+    # For encryption: Create NEW password.txt in vault-key with the NEW password from command line
+    # This will be encrypted along with other vault-key files
+    # IMPORTANT: Use $password (command line arg), NOT $VAULT_PASSWORD (environment variable)
+    if [ "$operation" == "encrypt" ]; then
+      echo "$password" > "$source_directory/$password_filename"
+      chmod 600 "$source_directory/$password_filename"
+      echo "Updated password.txt in vault-key with: $password"
+      echo "This will be encrypted to vault/"
     fi
   fi
 
+  # Perform encryption/decryption
   encrypt_decrypt_files "$source_directory" "$target_directory" $operation
+  
+  # Set proper permissions and export for both operations
+  if [ "$operation" == "decrypt" ]; then
+    # Password.txt was decrypted from vault/ - just set permissions
+    if [ -f "$target_directory/$password_filename" ]; then
+      chmod 600 "$target_directory/$password_filename"
+      export VAULT_PASSWORD="$password"
+      echo "Password file decrypted to: $target_directory/$password_filename"
+      echo "Shell configs will auto-load this password on next session"
+    fi
+  elif [ "$operation" == "encrypt" ]; then
+    # Password.txt was just encrypted - set proper permissions on source
+    if [ -f "$source_directory/$password_filename" ]; then
+      chmod 600 "$source_directory/$password_filename"
+      echo "Password file encrypted from: $source_directory/$password_filename"
+    fi
+  fi
+  
+  # Set proper permissions on decrypted SSH keys and config
+  if [ "$operation" == "decrypt" ]; then
+    echo "Setting permissions on decrypted files..."
+    # SSH directory
+    [ -d "$HOME/.ssh" ] && chmod 700 "$HOME/.ssh"
+    # SSH keys (files without extension, excluding .pub files)
+    find "$target_directory" -type f ! -name "*.pub" ! -name "*.txt" ! -name "*.sh" ! -name "*.env" -exec chmod 600 {} \; 2>/dev/null || true
+    # SSH config if it exists
+    [ -f "$target_directory/config" ] && chmod 600 "$target_directory/config"
+    echo "Permissions set successfully"
+  fi
 }
 
 main "$@"

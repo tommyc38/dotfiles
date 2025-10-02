@@ -1,5 +1,28 @@
 export DOTFILES=$HOME/dotfiles
 export ZSH=$DOTFILES/zsh
+
+# Auto-load vault password if file exists (after DOTFILES is set)
+# This password corresponds to the encrypted files in /vault
+VAULT_PASSWORD_FILE="$DOTFILES/vault-key/password.txt"
+if [ -f "$VAULT_PASSWORD_FILE" ]; then
+    export VAULT_PASSWORD=$(cat "$VAULT_PASSWORD_FILE" 2>/dev/null)
+    if [ -n "$VAULT_PASSWORD" ]; then
+        echo "Vault password loaded from $VAULT_PASSWORD_FILE"
+    fi
+fi
+
+# Setup SSH agent and add keys (only if needed)
+# With macOS keychain (--apple-use-keychain), keys are automatically loaded when needed
+# Only run setup if: agent isn't running OR no keys are loaded
+if [ -f "$DOTFILES/bin/ssh-setup.sh" ] && [ -d "$DOTFILES/vault-key" ] && [ -z "$INTELLIJ_ENVIRONMENT_READER" ] ; then
+    # Check if ssh-agent is running and has keys
+    if ! ssh-add -l >/dev/null 2>&1; then
+        # Agent not running or no keys loaded - run setup
+        echo "Running ssh-setup.sh from .zshrc"
+        source "$DOTFILES/bin/ssh-setup.sh"
+    fi
+fi
+
 export NVIM=$HOME/.config/nvim
 export VIM_PLUGINS=$HOME/.vim/plugged
 export VIM_THEME_FILE=$DOTFILES/vim/custom-plugins/darcula/colors/darcula.vim
@@ -20,6 +43,11 @@ if [[ -f ~/.workrc ]]; then
         source $HOME/.workrc
     fi
 fi
+
+# workenv function wrapper for easier environment switching
+workenv() {
+    . $DOTFILES/bin/workenv.sh "$@"
+}
 
 # check for custom bin directory and add to path
 if [[ -d ~/bin ]]; then
@@ -50,11 +78,6 @@ fi
 
 # Make vim your default editor
 export EDITOR="nvim"
-# aliases for tmux
-alias ta='tmux attach'
-alias tls='tmux ls'
-alias tat='tmux attach -t'
-alias tns='tmux new-session -s'
 
 # make output of ls color code file/dir types
 alias ls="ls --color"
@@ -63,7 +86,6 @@ export LS_COLORS='or=5;31:mi=5:ow=01;91'
 alias info='info --vi-keys'
 #this will allow vi navigation when using the info command
 
-# initialize autocomplete
 
 if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
   autoload -U compinit add-zsh-hook
@@ -75,11 +97,11 @@ if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
 fi
 
 # Post install for the autojump package.
-
 if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
     [[ "$(uname)" == "Darwin" && -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
 fi
 
+# initialize autocomplete and syntax highlighting
 if [ -z ${DOTFILES_LOADED+x} ]; then
 
     if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
@@ -103,7 +125,7 @@ fi
 
 export NVM_SYMLINK_CURRENT=true # This allows IDEs to use a single place to set your node version
 
-DOTFILES_LOADED=1
+export DOTFILES_LOADED=1
 
 # Functions that require a zsh hook should be added here
 

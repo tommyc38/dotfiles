@@ -134,7 +134,7 @@ nerd_fonts=("3270" "Agave" "AnonymousPro" "Arimo" "AurulentSansMono" "BigBlueTer
 nerd_fonts_light=("Hack" "DroidSansMono" "RobotoMono" "JetBrainsMono" "UbuntuMono")
 
 # Font download urls
-google_fonts_url="https://fonts.google.com/download?family="
+google_fonts_repo="https://github.com/google/fonts.git"
 nerd_fonts_url="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/" # Check and update to the most recent version
 powerline_fonts_url="https://github.com/powerline/fonts.git"
 
@@ -304,25 +304,44 @@ function install_fonts() {
      local google_install_count=0
 
     if [ -z "$install_only" ]; then
-      echo "Downloading Google Fonts..."
-      for google_font in "${google_font_array[@]}"; do
-        echo "Arg 1: $google_fonts_url$google_font"
-        echo "Arg 2 $google_fonts_download_dir/zip-files"
-        echo "Arg 3 $google_fonts_download_dir/$google_font"
-        echo "Arg 4 $google_font.zip"
-        download "$google_fonts_url$google_font" "$google_fonts_download_dir/zip-files" \
-         "$google_fonts_download_dir/$google_font" "$google_font.zip"
-      done
+      echo "Downloading Google Fonts repository..."
+      # Clone Google Fonts repository if not already cloned
+      if [ ! -d "$google_fonts_download_dir/.git" ]; then
+        echo "Cloning Google Fonts repository (this may take a few minutes)..."
+        if ! git clone --depth=1 "$google_fonts_repo" "$google_fonts_download_dir"; then
+          echo "$(color_red "Failed to clone Google Fonts repository")"
+          exit 1
+        fi
+        echo "Google Fonts repository cloned successfully"
+      else
+        echo "Google Fonts repository already exists"
+      fi
       echo "Downloading Google Fonts Done!"
     fi
+    
     if [ -z "$download_only" ]; then
       echo "Installing Google Fonts..."
       for google_font in "${google_font_array[@]}"; do
-         if [ -d "$google_fonts_download_dir/$google_font" ]; then
-            find "$google_fonts_download_dir/$google_font" -name "*.[ot]tf" -type f -exec  cp {} "$font_install_dir" \;
-            ((google_install_count++))
-            echo -e "$(color_green "Google Fonts ($google_install_count/$total_google_fonts): $google_font installed ✔")"
-            ls "$google_fonts_download_dir/$google_font" | grep '[ot]tf$' | sed 's/^/  /g'
+         # Convert font name to lowercase and remove spaces for directory search
+         # Google Fonts repo uses lowercase names without spaces (e.g., "JetBrains Mono" -> "jetbrainsmono")
+         local search_name=$(echo "$google_font" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+         
+         # Search for font directory in ofl, apache, or ufl directories (case-insensitive)
+         local font_dir=$(find "$google_fonts_download_dir" -type d -iname "$search_name" 2>/dev/null | head -1)
+         
+         if [ -n "$font_dir" ] && [ -d "$font_dir" ]; then
+            # Copy all font files from the found directory
+            local font_files=$(find "$font_dir" -name "*.[ot]tf" -type f 2>/dev/null)
+            if [ -n "$font_files" ]; then
+              find "$font_dir" -name "*.[ot]tf" -type f -exec cp {} "$font_install_dir" \;
+              ((google_install_count++))
+              echo -e "$(color_green "Google Fonts ($google_install_count/$total_google_fonts): $google_font installed ✔")"
+              echo "$font_files" | xargs -n1 basename | sed 's/^/  /g'
+            else
+              echo "$(color_red "No font files found for: $google_font")"
+            fi
+         else
+            echo "$(color_red "Font directory not found for: $google_font (searched for: $search_name)")"
          fi
       done
       echo "Installing Google Fonts Done!"

@@ -1,178 +1,719 @@
-<a name="readme-top"></a>
+# Dotfiles - macOS Development Environment Setup
 
-## Table of Contents
+Quickly set up a new Mac with all development tools, configurations, and secrets using this automated dotfiles repository.
 
-<ol>
-  <li>
-    <a href="#about-the-project">About The Project</a>
-  </li>
-  <li>
-    <a href="#getting-started">Getting Started</a>
-    <ul>
-      <li><a href="#prerequisites">Prerequisites</a></li>
-      <li><a href="#setup">Setup a New Machine</a></li>
-      <li><a href="#post-setup">Post Setup</a></li>
-    </ul>
-  </li>
-  <li><a href="#config-files">Sym-linking Configuration Files</a></li>
-  <li>
-    <a href="#ides">IDEs</a>
-    <ul>
-      <li><a href="#vim">Vim</a></li>
-      <li><a href="#webstorm">Webstorm</a></li>
-      <li><a href="#visual-studio">Visual Studio</a></li>
-    </ul>
-  </li>
-  <li><a href="#virtualbox">VirtualBox and Vagrant</a></li>
-  <li><a href="#fonts">Fonts</a></li>
-  <li>
-    <a href="#shells">Operating Systems</a>
-    <ul>
-      <li><a href="#vim">MacOS</a></li>
-      <li><a href="#vim">Ubuntu</a></li>
-    </ul>
-  </li>
-  <li><a href="#karabiner">Karabiner</a></li>
-  <li>
-    <a href="#shells">Shells</a>
-    <ul>
-      <li><a href="#zsh">Zsh</a></li>
-      <li><a href="#bash">Bash</a></li>
-    </ul>
-  </li>
-  <li>
-    <a href="#contributing">Contributing</a>
-    <ul>
-      <li><a href="#coding-rules">Coding Rules</a></li>
-      <li><a href="#node-npm">Node & NPM</a></li>
-      <li><a href="#secondary-entrypoints">Secondary Entrypoints</a></li>
-      <li><a href="#standalong-components">Standalone Components</a></li>
-      <li><a href="#versioning">Versioning</a></li>
-      <li><a href="#example">Example</a></li>
-    </ul>
-  </li>
-</ol>
+## 🚀 Quick Start
 
-## About The Project <a name="about-the-project">#</a>
+```bash
+# 1. Clone this repository
+git clone https://github.com/yourusername/dotfiles.git ~/dotfiles
+cd ~/dotfiles
 
-Unless you are constantly setting up new computers for development, it can often be a frustrating task.
-The goal of this repo is to automate that process and serve as an easy way to remember small steps that would otherwise
-likely be forgotten.  Moreover, there are also scripts that can help you whether it's ssh'ing into a new machine and
-quickly setting up vim or installing fonts into a docker image, there are lots of tools to help. 
+# 2. (Optional but recommended) Run pre-flight checks
+./bin/preflight.sh
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-<!-- GETTING STARTED -->
+# 3. Run installation with your vault password
+./install.sh your_vault_password
 
-## Getting Started <a name="getting-started">#</a>
+# 4. (Optional but recommended) Validate installation
+./bin/validate-install.sh
 
-This guide explains how to set up your Angular project to begin using ng-material-plus. It includes information on
-prerequisites, installation, and optionally displaying a sample component in your application to
-verify your setup.
+# 5. Restart your terminal or source config
+source ~/.zshrc
+```
 
-### Prerequisites <a name="prerequisites">#</a>
+**Important Notes:**
+- Do NOT run with sudo - the script will request sudo access only when needed
+- Vault password is REQUIRED as the first argument
+- The script handles Xcode, packages, decryption, and repository cloning automatically
+- Run `preflight.sh` first to catch potential issues before installation
+- Run `validate-install.sh` after to confirm everything installed correctly
 
-#### MacOs
+## 📋 What Gets Installed
 
-Install Xcode from https://developer.apple.com/xcode/.  The app store doesn't work well and you can't install it from brew.
+### System Packages (via Homebrew)
+- Development tools (git, node, python, etc.)
+- Terminal utilities (tmux, vim, etc.)
+- Desktop applications (browsers, IDEs, etc.)
 
-Update Urls
+### Programming Languages
+- **Node.js**: Multiple versions via NVM (10, 12, 14, 16, 18, 20, 22)
+- **Python**: Multiple versions via pyenv (3.7-3.13)
+  - Each version gets its own virtual environment
+  - Python 3.13 designated for Neovim's Python provider (nvim-provider)
+  - Includes pip-tools, pipx, poetry, uv in each environment
+- Package managers: npm, yarn, pnpm, pip, pipx, poetry, uv
 
-- install/brew.sh
-    - nvm - ensure the link is pointing to the most recent version
-- misc/vbox.sh
-    - virtualbox extension pack - ensure the link is pointing to the most recent version
+### Fonts
+- Google Fonts (curated selection)
+- Nerd Fonts (for terminal icons)
+- Powerline Fonts (for fancy prompts)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+### Shell Configuration
+- **Zsh**: Primary shell with custom configuration
+- **Bash**: Backup shell configuration
+- Custom prompt with git integration
+- Environment-specific configurations
 
-### Setup a New Machine <a name="setup">#</a>
+### Development Tools
+- Git configuration and aliases
+- Vim/NeoVim setup with plugins
+  - Python provider for plugin support (pynvim)
+  - Configured in `vim/init.vim`
+- VSCode/Cursor settings
+- WebStorm/IntelliJ settings
 
-1. Clone the repository into your home folder.
-    ```sh
-    cd $HOME
-    git clone https://github.com/tommyc38/dotfiles.git
-    ```
-2. There are a few scripts that may contain outdated packages. Notes are in the scripts below with links.
-   Follow the links and check for the most recent versions and update the scripts with the latest package download URLs.
-    - install/brew.sh
-        - nvm
-    - install/vagrant.sh
-        - virtualbox extension pack
-   - install/fonts.sh
-       - nerd fonts url
+## 🔐 Vault System (Encrypted Secrets)
 
-### Post Setup <a name="setup">#</a>
+The vault system manages encrypted SSH keys, credentials, and environment variables.
 
-#### MacOS
-In order to run `bin/vault` you will need to give full access to whatever programs you may use to run it
-- Examples: Terminal, Webstorm, iTerm, Visual Studio Code, etc.
+### Structure
+```
+vault/                             # Encrypted files (committed to git)
+  ├── VTJGc2RHVm...                # Encrypted filename (base64 encoded)
+  ├── VTJGc2RHVm...                # Another encrypted file
+  └── VTJGc2RHVm.../               # Encrypted subdirectories
+      └── VTJGc2RHVm...            # Encrypted files in subdirs
 
-Moreover, to finish the install we need to symlink our decrypted vault files to the home directory.
+vault-key/                          # Decrypted files (gitignored - never public)
+  ├── password.txt                 # Auto-loaded and generated by shell
+  ├── config                       # SSH config (actual filename)
+  ├── main                         # SSH keys (actual filename)
+  ├── main.pub                     # SSH keys (actual filename)
+  ├── *.env                        # Environment variables
+  ├── *.repos.txt                  # Repository lists
+  └── install.sh                   # Custom installations
+```
 
-1. Go into Settings/Privacy.
-2. Click Developer Tools on the left pane.
-3. Add your apps.
-4. Open your terminal and run: `vault`
-5. Input your encryption/decryption password (1 for each file)
-6. Now symlink the contents
+**Security Note:**
+- `vault/` filenames are encrypted and base64 encoded (e.g., `VTJGc2RHVm...`)
+- This is intentional - even filenames reveal no information in public repos
+- `vault-key/` has actual filenames but is gitignored (never pushed)
+- Directory structure is preserved during encryption/decryption
 
-> If you don't adjust these settings you will get a popup telling you to move the app to the trash and it won't execute.
+### Usage
 
-#### Webstorm
+**Decrypt vault files:**
+```bash
+./bin/vault yourpassword
+# Password is saved to vault-key/password.txt
+# Future shells auto-load this password
+```
 
-Once Webstorm is installed you will need to sync your settings from the cloud and install the command line executable
-to be able to run commands:
-- Open a file: `webstorm file.txt`
-- Launch a project: `open -na Webstorm.app projectDir`
+**What happens during decryption:**
+1. **Automatic Backup**: All existing `vault-key/` files are moved to timestamped backup folder
+2. **Safe Decryption**: Encrypted `vault/` files are decrypted to `vault-key/`
+3. **Password Saved**: Your password is written to `vault-key/password.txt`
+4. **Permissions Set**: SSH keys get proper 600 permissions automatically
+5. **Nothing Lost**: Original files preserved in `vault-key/vault_backups/vault-key/YYYYMMDD_HHMMSS/`
+
+**Encrypt vault files:**
+```bash
+./bin/vault -e newpassword
+# Updates password.txt and encrypts all files
+```
+
+**What happens during encryption:**
+1. **Automatic Backup**: All existing `vault/` files are moved to timestamped backup folder
+2. **Password Preserved**: Current `vault-key/password.txt` is copied to backup folder
+3. **New Password**: Your new password is written to `vault-key/password.txt`
+4. **Safe Encryption**: All `vault-key/` files are encrypted to `vault/`
+5. **Nothing Lost**:
+   - Old encrypted files in `vault/vault_backups/vault/YYYYMMDD_HHMMSS/`
+   - Old password.txt preserved with those backups (so you can decrypt them later)
+6. **Permissions Set**: New encrypted files get proper permissions
+
+**Why backups include password.txt:**
+Each backup folder contains the password that was used to create those encrypted files. This means:
+- You can always decrypt a specific backup set using its password.txt
+- If you rotate passwords, old backups remain accessible
+- You never lose access to historical encrypted files
+- Backups are stored in `vault/vault_backups/..` and are gitignored by /vault-key directory
+
+**Auto-loading (automatic):**
+```bash
+# Your shell config automatically loads password on startup
+source ~/.zshrc  # Shows: "Vault password loaded from..."
+echo $VAULT_PASSWORD  # Password available as environment variable
+./bin/vault  # Works without password argument!
+```
+
+**Backup Structure:**
+```
+vault-key/
+  vault_backups/
+    vault/
+      20240101_120000/              # Timestamped backup folder
+        VTJGc2RHVmtYMTk...          # Even password.txt is encrypted! (base64 encoded)
+        VTJGc2RHVmtYMS8...          # Encrypted filename 1 (base64 encoded)
+        VTJGc2RHVmtYMSs...          # Encrypted filename 2 (base64 encoded)
+        VTJGc2RHVmtYMSt.../         # Encrypted subdirectory
+          VTJGc2RHVm...             # Encrypted file in subdir
+
+vault-key/
+  vault_backups/
+    vault-key/
+        20240101_120000/              # Timestamped backup folder
+          password.txt                # Readable password file
+          config                      # Actual SSH config (readable name)
+          main                        # Actual SSH keys (readable name)
+          org-name.env                # Actual environment file (readable name)
+```
+
+**Why Encrypted Filenames?**
+- This repository is public, so even filenames must not reveal sensitive information
+- `vault/` files use base64-encoded encrypted filenames for ALL files (e.g., `VTJGc2RHVmtYMS8...`)
+- Even `password.txt` has its filename encrypted in `vault/`
+- Only `vault-key/` (gitignored) contains readable filenames
+- The vault script maintains the mapping between encrypted and decrypted names
+
+### What Gets Auto-Processed After Decryption During Installation
 
 
-- [Get settings from account](https://www.jetbrains.com/help/webstorm/sharing-your-ide-settings.html#IDE_settings_sync)
-- [Install Command-line Interface](https://www.jetbrains.com/help/webstorm/working-with-the-ide-features-from-command-line.html)
+>When you modify files in `vault-key/` be sure to run `vault -e <password>` so the changes make it into your
+> dotfiles repo when you commit/push changes (e.g. get encrypted to /vault).  See `vault -h` for more info.
 
-## Sym-linking Configuration Files <a name="config-files">#</a>
+1. **Symlinks** (`vault-key/symlinks.txt`):
+   - SSH keys (private and public) linked to `~/.ssh/`
+   - Config files linked to appropriate locations
 
-The `symlink.sh` script will symlink all configuration files to their respective target directories in a non-destructive
-way. If it finds matching files at the symlink target location, it will move those files to a backup directory. To see what file
-operations will be made without file execution pass the -d|--dry-run option. To include vim pass the -v|--include-vim
-option.  To include karabiner pass the -k|--include-karabiner option.  For more details and options
-run: `symlink.sh --help`.
+2. **SSH Setup** (`vault-key/ssh-keys.txt`):
+   - Automatically adds SSH keys to ssh-agent
+   - Uses macOS keychain for persistence across reboots
+   - Only adds keys listed in configuration file
+   - Auto-runs on every shell startup
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+3. **Custom Installations** (`vault-key/install.sh`):
+   - Organization-specific tools
+   - Additional configurations
 
-## IDEs <a name="ides">#</a>
+4. **Repository Cloning** (`*.repos.txt`):
+   - Automatically clones development repositories with `--npm-install` flag
+   - Smart package installation (detects Node version, package manager, installs dependencies)
+   - Supports multiple organizations
 
-This guide explains how to set up your Angular project to begin using ng-material-plus. It includes information on
-prerequisites, installation, and optionally displaying a sample component in your application to
-verify your setup.
+## 🔑 SSH Setup Automation
 
-### Vim <a name="vim">#</a>
-See https://www.virtualbox.org/wiki/Downloads for latest version
-local extension_pack_url="https://download.virtualbox.org/virtualbox/7.0.6/Oracle_VM_VirtualBox_Extension_Pack-7.0.6a-155176.vbox-extpack"
+The system automatically manages SSH keys with zero manual intervention.
 
+### How It Works
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-### Webstorm <a name="webstorm">#</a>
-
-1. Install ng-material-plus along w
-   ```sh
-   npm install @gotomconley/ng-material-plus
+1. **Configuration** (`vault-key/ssh-keys.txt`):
+   ```
+   # List SSH private key filenames (as they appear in ~/.ssh/ after symlinking)
+   main
+   org-name-one
+   org-name-two
    ```
 
-### Visual Studio <a name="visual-studio">#</a>
+2. **Automatic Processing**:
+   - During installation: Keys added to ssh-agent with macOS keychain integration
+   - On every shell startup: Keys automatically re-added if agent restarts
+   - Persistent across reboots: macOS keychain stores passphrases securely
 
-Settings
-https://code.visualstudio.com/docs/getstarted/settings#_settingsjson
+3. **What You Need To Do**:
+   - Nothing! Just list your key filenames in `ssh-keys.txt`
+   - The system handles everything else automatically
 
-Settings file locations
-Depending on your platform, the user settings file is located here:
+### SSH Agent Management
 
-- Windows %APPDATA%\Code\User\settings.json
-- macOS $HOME/Library/Application\ Support/Code/User/settings.json
-- Linux $HOME/.config/Code/User/settings.json
+The [`bin/ssh-setup.sh`](bin/ssh-setup.sh) script handles:
+- Starting ssh-agent if not running
+- Finding existing agent processes
+- Adding keys to agent with `--apple-use-keychain` for persistence
+- Proper error handling and reporting
 
-Sync Settings
-https://code.visualstudio.com/docs/editor/settings-sync
+**Example Output:**
+```bash
+Starting SSH setup...
+SSH agent is running (PID: 12345)
+Adding SSH key: main
+✓ Successfully added key: main
+Adding SSH key: org-name-one
+✓ Successfully added key: org-name-one
+SSH setup completed: 2/2 keys added successfully
+```
 
-## Vagrant and VirtualBox
+### Troubleshooting SSH
 
-## Testing Scripts
+**Keys not being added:**
+```bash
+# Run manually to see detailed output
+~/dotfiles/bin/ssh-setup.sh
+
+# Check agent is running
+ssh-add -l
+```
+
+**Permission errors:**
+```bash
+# Ensure correct permissions (handled automatically)
+chmod 600 ~/.ssh/your_key
+chmod 644 ~/.ssh/your_key.pub
+```
+
+## 🏢 Multi-Organization Support
+
+Switch between different work environments:
+
+>This is useful for NPM registries, AWS profiles, and other environment variables.
+
+```bash
+# List all available environments
+workenv --list
+
+# Switch to an environment
+workenv org-name-one  # Load org-name-one environment variables
+workenv org-name-two  # Switch to org-name-two environment
+
+# Check current environment
+workenv --env
+```
+
+Each environment can have:
+- Different NPM registries and tokens
+- Different AWS profiles
+- Different SSH keys
+- Different environment variables
+
+Environment files are stored in `vault-key/` and must end with `.env` extension.
+
+## 📁 Repository Structure
+
+```
+dotfiles/
+├── install.sh               # Main installation script
+├── bin/                     # Utility scripts
+│   ├── preflight.sh         # Pre-installation system checks
+│   ├── validate-install.sh  # Post-installation validation
+│   ├── vault                # Encryption/decryption tool
+│   ├── repo.sh              # Repository cloning with smart npm install
+│   ├── ssh-setup.sh         # SSH agent and key management
+│   ├── symlink.sh           # Symlink manager
+│   ├── fonts.sh             # Font installer
+│   └── workenv.sh           # Environment switcher
+├── install/                 # Installation modules
+│   ├── brew.sh              # Homebrew packages
+│   ├── node.sh              # Node.js versions
+│   ├── python.sh            # Python versions
+│   ├── osx.sh               # macOS preferences
+│   └── vagrant.sh           # VirtualBox & Vagrant
+├── bash/                    # Bash configuration
+├── zsh/                     # Zsh configuration
+├── vim/                     # Vim/NeoVim configuration
+├── vscode/                  # VSCode settings
+└── vault/                   # Encrypted secrets
+```
+
+## 🛠️ Main Scripts
+
+### [`bin/preflight.sh`](bin/preflight.sh)
+Pre-flight checks before installation - validates system requirements.
+
+```bash
+./bin/preflight.sh
+```
+
+**Checks Performed:**
+- macOS version and architecture
+- Disk space availability (minimum 5GB)
+- Internet connectivity
+- Xcode Command Line Tools status
+- Homebrew installation status
+- Required tools (git, openssl, zsh, bash)
+- File permissions (home directory, /usr/local)
+- Existing configuration conflicts
+- Vault directory status
+
+**Output:**
+- ✓ Green checkmarks for passed checks
+- ⚠ Yellow warnings for non-critical issues
+- ✗ Red X for failed requirements
+- Summary with pass/warn/fail counts
+- Recommendations for fixes
+
+**When to run:** Before first installation or when troubleshooting issues
+
+### [`bin/validate-install.sh`](bin/validate-install.sh)
+Post-installation validation - confirms successful setup.
+
+```bash
+./bin/validate-install.sh
+```
+
+**Validates:**
+- Homebrew installation and health
+- Vault decryption and password loading
+- Symlink creation and targets
+- SSH configuration and agent status
+- Node.js versions via NVM
+- Python versions via pyenv (including nvim-provider)
+- Shell configuration (zsh, DOTFILES, HOMEBREW_PREFIX)
+- Vim/Neovim setup
+- workenv function availability
+- Repository cloning status
+
+**Output:**
+- Detailed status of each component
+- Summary with recommendations
+- Next steps if issues found
+
+**When to run:** After installation completes, before using the system
+
+### [`install.sh`](install.sh)
+Main orchestrator - runs all installation steps in order.
+
+**Requirements**:
+- Must NOT run with sudo (script will request sudo only when needed)
+- Vault password is REQUIRED as first argument
+
+```bash
+./install.sh your_vault_password
+```
+
+**Execution Order:**
+1. Check/install Xcode Command Line Tools (uses sudo if needed)
+2. Install Homebrew packages (brew.sh)
+3. Decrypt vault files with provided password
+4. Create symlinks (dotfiles + vault-key symlinks including SSH keys)
+5. **Setup SSH keys** (adds to ssh-agent with macOS keychain integration)
+6. Install Node.js and Python versions
+7. Run vault-specific installations
+8. Install fonts
+9. Apply macOS system settings
+10. Set ZSH as default shell (uses sudo)
+11. Install Base16 themes
+12. Source bash_profile
+13. Clone repositories from *.repos.txt files with smart package installation
+
+**Sudo Usage:**
+- Xcode Command Line Tools installation
+- Adding shells to /etc/shells
+- That's it! Everything else runs as your user
+
+### [`bin/vault`](bin/vault)
+Manages encryption/decryption of sensitive files.
+
+```bash
+vault password           # Decrypt vault/ to vault-key/
+vault -e password        # Encrypt vault-key/ to vault/
+vault --list password    # List encrypted files
+vault --list-backups     # List backup files
+```
+
+**Features**:
+- Automatic password.txt management
+- Timestamped backups (never overwrites)
+- Proper permissions (600) on SSH keys
+- Shell auto-loading support
+
+### [`bin/repo.sh`](bin/repo.sh)
+Clones repositories from `.repos.txt` files with intelligent package installation.
+
+```bash
+repo.sh --file repos.txt --default-directory ~/dev
+repo.sh --file repos.txt --npm-install  # Auto-install with smart detection
+repo.sh --file repos.txt --dry-run      # Test without cloning
+```
+
+**Features**:
+- Skips repositories already cloned
+- **Smart Package Installation** (with `--npm-install`):
+  - Detects Node.js version from `.nvmrc` or `package.json` engines.node
+  - Automatically installs missing Node.js versions via NVM
+  - Detects package manager from lock files (pnpm-lock.yaml → pnpm, yarn.lock → yarn, package-lock.json → npm)
+  - Automatically installs missing package managers globally
+  - Gracefully skips repos without package.json
+- Supports $HOME and ~ expansion in paths
+
+### [`bin/ssh-setup.sh`](bin/ssh-setup.sh)
+Manages SSH agent and adds keys automatically.
+
+```bash
+ssh-setup.sh                # Run manually
+# Or automatically via shell config
+```
+
+**Features**:
+- Starts ssh-agent if not running
+- Finds existing agent processes
+- Adds keys from `vault-key/ssh-keys.txt`
+- Uses macOS keychain for persistence
+- Auto-runs on shell startup
+
+### [`bin/symlink.sh`](bin/symlink.sh)
+Creates symlinks for configuration files.
+
+```bash
+symlink.sh -v           # Create all symlinks (verbose)
+symlink.sh -k           # Keep backups of existing files
+symlink.sh --dry-run    # Test without changes
+```
+
+### [`bin/fonts.sh`](bin/fonts.sh)
+Installs fonts from multiple sources.
+
+```bash
+fonts.sh --google-fonts-light --nerd-fonts-light
+fonts.sh --google-fonts-select='Roboto, JetBrains Mono'
+fonts.sh --list-google-fonts    # See available fonts
+```
+
+### [`bin/workenv.sh`](bin/workenv.sh)
+Switches between organization environments.
+
+```bash
+workenv --list          # List all available environments
+workenv org_name        # Switch to org_name environment
+workenv --env           # Show current environment name
+workenv --help          # Show usage
+```
+
+**Features**:
+- Auto-discovers `.env` files in `vault-key/` directory
+- Shows environment names and file locations with `--list`
+- Unloads previous environment variables before loading new ones
+- Updates `~/.workrc` to persist environment selection
+
+## 🏗️ Architecture Support
+
+All scripts work on both:
+- **Intel Macs**: Uses `/usr/local` Homebrew prefix
+- **Apple Silicon Macs**: Uses `/opt/homebrew` Homebrew prefix
+
+Automatic detection handles both architectures transparently.
+
+## 📝 Configuration Files
+
+### Symlink Files
+Files ending in `.symlink` are automatically linked to `$HOME`:
+```
+bash/bashrc.symlink  →  ~/.bashrc
+zsh/zshrc.symlink    →  ~/.zshrc
+```
+
+### Shell Configuration
+- **Zsh**: Primary shell, loaded first
+- **Bash**: Backup shell configuration
+- Both auto-load vault password if available
+- Both detect and use correct Homebrew prefix
+
+## 🔧 Customization
+
+### Adding New Tools
+
+**System packages** - Edit [`install/brew.sh`](install/brew.sh):
+```bash
+brew install your-package
+```
+
+**Shell configuration** - Edit zsh or bash files:
+```bash
+zsh/config.zsh        # Zsh-specific config
+bash/bashrc.symlink   # Bash-specific config
+```
+
+### Adding Encrypted Files
+
+1. Add files to `vault-key/`
+2. Encrypt: `./bin/vault -e password`
+3. Commit encrypted `vault/` files to git
+4. Never commit `vault-key/` (it's gitignored)
+
+### Adding Repository Lists
+
+Create `vault-key/org-name.repos.txt`:
+```
+git@github.com:org/repo1.git $HOME/dev/org-one
+git@github.com:org/repo2.git $HOME/dev/org-two
+```
+
+Repos are automatically cloned during installation with smart package installation:
+- Detects Node.js version from `.nvmrc` or `package.json`
+- Auto-installs correct Node.js version via NVM
+- Detects package manager (pnpm/yarn/npm) from lock files
+- Auto-installs missing package managers
+- Runs `npm install` (or equivalent) automatically
+
+## 🐍 Python & Neovim Integration
+
+### Overview
+The system installs multiple Python versions via pyenv, with Python 3.13 specially configured as Neovim's Python provider.
+
+### Neovim Python Provider Setup
+
+**Automatic Configuration:**
+- `install/python.sh` creates a `nvim-provider` virtual environment using Python 3.13
+- Installs `pynvim` package required by Neovim plugins
+- `vim/init.vim` references this environment: `g:python3_host_prog`
+
+**Verify Configuration:**
+```bash
+# In Neovim, check health status
+:checkhealth provider
+
+# Should show:
+# Python 3 provider (optional)
+#   - INFO: Using: ~/.pyenv/versions/nvim-provider/bin/python
+#   - INFO: Python version: 3.13.x
+```
+
+### Changing the Neovim Python Version
+
+If you need to use a different Python version for Neovim:
+
+1. **Update `install/python.sh`** (line 69):
+   ```bash
+   # Change from:
+   if [ "$short" = "3.13" ]; then
+   # To your desired version, e.g.:
+   if [ "$short" = "3.12" ]; then
+   ```
+
+2. **Run the installation script:**
+   ```bash
+   ./install/python.sh
+   # This creates the new nvim-provider environment
+   ```
+
+3. **Update `vim/init.vim`** (only if path changed):
+   ```vim
+   " Usually stays the same:
+   let g:python3_host_prog = '~/.pyenv/versions/nvim-provider/bin/python'
+   ```
+
+4. **Restart Neovim** and verify:
+   ```vim
+   :checkhealth provider
+   ```
+
+### Python Virtual Environments
+
+Each Python version gets its own virtual environment:
+- Python 3.13: `nvim-provider` (for Neovim)
+- Python 3.12: `py3_12_x` (general use)
+- Python 3.11: `py3_11_x` (general use)
+- etc.
+
+**Each environment includes:**
+- Latest pip
+- pip-tools (pip-compile, pip-sync)
+- pipx (install Python CLI tools in isolation)
+- poetry (Python dependency management)
+- uv (fast Python package installer)
+
+### Troubleshooting Python/Neovim
+
+**Neovim can't find Python provider:**
+```bash
+# Check if nvim-provider exists
+pyenv versions | grep nvim-provider
+
+# If missing, recreate it
+./install/python.sh
+
+# Verify path in Neovim
+:echo g:python3_host_prog
+```
+
+**pynvim not installed:**
+```bash
+# Activate the environment and install
+pyenv activate nvim-provider
+pip install pynvim
+
+# Or recreate with install/python.sh
+./install/python.sh
+```
+
+## 🐛 Troubleshooting
+
+### Installation fails with permission error
+```bash
+# Make sure to run with sudo
+sudo ./install.sh
+```
+
+### Vault password not auto-loading
+```bash
+# Check if password file exists
+cat ~/dotfiles/vault-key/password.txt
+
+# Manually source shell config
+source ~/.zshrc
+
+# Verify environment variable
+echo $VAULT_PASSWORD
+```
+
+### Scripts fail on Apple Silicon Mac
+```bash
+# Verify Homebrew prefix detection
+echo $HOMEBREW_PREFIX  # Should show /opt/homebrew
+
+# Check architecture
+uname -m  # Should show arm64
+```
+
+### Google Fonts installation fails
+The Google Fonts API changed - we now use their GitHub repository. First installation may take a few minutes to clone the fonts repository.
+
+### Repository cloning fails
+```bash
+# Check SSH keys are decrypted
+ls -la ~/.ssh/
+
+# Verify SSH config
+cat ~/.ssh/config
+
+# Test git connection
+ssh -T git@github.com
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test on both Intel and Apple Silicon if possible
+5. Submit a pull request
+
+## 📄 License
+
+MIT License - See LICENSE file for details
+
+## ✨ Features
+
+- ✅ **One-command setup**: Single script installs everything
+- ✅ **Cross-architecture**: Works on Intel and Apple Silicon Macs
+- ✅ **Encrypted secrets**: Vault system for SSH keys and credentials
+- ✅ **Multi-organization**: Switch between work environments easily
+- ✅ **Auto-loading passwords**: No need to type vault password repeatedly
+- ✅ **Automatic backups**: Never overwrites, always backs up first
+- ✅ **Repository cloning**: Automatically clones your development repos
+- ✅ **Font installation**: Google, Nerd, and Powerline fonts
+- ✅ **Shell agnostic**: Works with both Zsh and Bash
+
+## 🎯 Post-Installation
+
+After installation completes:
+
+1. **Restart terminal** or run `source ~/.zshrc`
+2. **Verify tools** are installed:
+   ```bash
+   node --version
+   python --version
+   git --version
+   ```
+3. **Check vault** if you decrypted it:
+   ```bash
+   ls ~/.ssh/  # Should show your SSH keys
+   ```
+4. **Switch environments** if needed:
+   ```bash
+   workenv your-org
+   ```
+
+---
+
+**Happy Hacking! 🚀**

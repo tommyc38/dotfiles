@@ -1,6 +1,20 @@
 #!/bin/bash
 
-# Python
+# Python Installation Script
+#
+# This script installs multiple Python versions via pyenv and creates virtual environments for each.
+#
+# IMPORTANT: Neovim Integration
+# - Python 3.13 is currently designated for Neovim's Python provider (nvim-provider)
+# - A special virtualenv named "nvim-provider" is created for Python 3.13
+# - This environment includes pynvim package required by Neovim plugins
+# - The path is referenced in vim/init.vim as g:python3_host_prog
+#
+# To change the Neovim Python version:
+# 1. Update the version number in the special handling section (line 69)
+# 2. Update vim/init.vim to point to the new nvim-provider path
+# 3. Run this script to create the new environment
+#
 # Choose the Python versions you want (latest patch for each will be picked by pyenv).
 PYTHON_VERSIONS=(
   3.7 3.8 3.9 3.10 3.11 3.12 3.13
@@ -64,7 +78,9 @@ install_one_version() {
     return 0
   fi
 
-  # Special handling for Python 3.13
+  # Special handling for Neovim Python provider
+  # Currently using Python 3.13 for the nvim-provider environment
+  # This environment is referenced in vim/init.vim
   local venv_name
   if [ "$short" = "3.13" ]; then
     venv_name="nvim-provider"
@@ -91,18 +107,21 @@ install_one_version() {
     python -m pip install --upgrade pip || true
     python -m pip install --upgrade pip-tools pipx poetry uv || true
 
-    # Special handling for Python 3.13 - install pynvim
+    # Install pynvim for Neovim Python provider environment
+    # This is required by Neovim plugins that use Python
     if [ "$short" = "3.13" ]; then
       echo "Installing pynvim for nvim-provider environment..."
       python -m pip install pynvim || true
       
-      # Echo the full path of the virtual environment
+      # Display the full path - this is what vim/init.vim references
       if command -v pyenv-virtualenv >/dev/null 2>&1; then
         local venv_path
         venv_path="$(pyenv prefix "$venv_name" 2>/dev/null || echo "$HOME/.pyenv/versions/$venv_name")"
         echo "nvim-provider virtual environment path: $venv_path"
+        echo "Referenced in vim/init.vim as: g:python3_host_prog"
       else
         echo "nvim-provider virtual environment path: $HOME/.venvs/$venv_name"
+        echo "Referenced in vim/init.vim as: g:python3_host_prog"
       fi
     fi
 
