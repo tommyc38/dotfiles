@@ -53,6 +53,10 @@ if [[ "$(uname)" == "Darwin" && "$(command -v brew)" ]]; then
   fi
 fi
 
+if [[ -d ~/.local/bin ]]; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
 # Allows the system to find your executable scripts
 export PATH="$PATH:$HOME/dotfiles/bin/"
 
