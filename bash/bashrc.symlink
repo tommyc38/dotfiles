@@ -105,6 +105,23 @@ if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
   eval "$(pyenv virtualenv-init -)" # This enables pyenv-virtualenv functionality
 fi
 
+# Java
+# Gradle needs a launch JVM on PATH before it can honour a project's toolchain,
+# and Homebrew's openjdk is keg-only so it is never linked into PATH for us.
+# Kept outside the INTELLIJ_ENVIRONMENT_READER guard on purpose: IntelliJ harvests
+# this file to build the env for its Gradle sync and its Nx plugin, both of which
+# shell out to ./gradlew and need to find java.
+for _java_home in \
+  /opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home \
+  /usr/local/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home; do
+  if [ -x "$_java_home/bin/java" ]; then
+    export JAVA_HOME="$_java_home"
+    export PATH="$JAVA_HOME/bin:$PATH"
+    break
+  fi
+done
+unset _java_home
+
 # workenv function wrapper for easier environment switching
 workenv() {
   . $DOTFILES/bin/workenv.sh "$@"

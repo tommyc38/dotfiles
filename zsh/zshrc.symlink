@@ -154,3 +154,21 @@ if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
     eval "$(pyenv init -)"      # This makes pyenv functions available in the shell
     eval "$(pyenv virtualenv-init -)" # This enables pyenv-virtualenv functionality
 fi
+
+# Java
+# Gradle needs a launch JVM on PATH before it can honour a project's toolchain,
+# and Homebrew's openjdk is keg-only so it is never linked into PATH for us.
+# This lives here rather than in $ZSH/java.zsh because the $ZSH/**/*.zsh loop
+# above is skipped for INTELLIJ_ENVIRONMENT_READER — and IntelliJ harvests this
+# file to build the env for its Gradle sync and its Nx plugin, both of which
+# shell out to ./gradlew and need to find java.
+for _java_home in \
+    /opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home \
+    /usr/local/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home; do
+    if [[ -x "$_java_home/bin/java" ]]; then
+        export JAVA_HOME="$_java_home"
+        export PATH="$JAVA_HOME/bin:$PATH"
+        break
+    fi
+done
+unset _java_home
