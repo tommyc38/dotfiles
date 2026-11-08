@@ -1,3 +1,4 @@
+# Git aliases/functions shared by zsh and bash.
 # git aliases
 alias ga='git add'
 alias gb='git branch'
@@ -35,9 +36,9 @@ function git-rename() {
 }
 
 function g() {
-    if [[ $# > 0 ]]; then
+    if [ $# -gt 0 ]; then
         # if there are arguments, send them to git
-        git $@
+        git "$@"
     else
         # otherwise, run git status
         git s

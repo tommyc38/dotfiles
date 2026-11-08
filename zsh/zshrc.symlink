@@ -1,58 +1,33 @@
 # ~/.zshrc — managed in ~/dotfiles/zsh/zshrc.symlink
 #
+# Layout (bash mirrors it in bash/):
+#   shell/env.sh     PATH, Homebrew, GNU tools, default node, pyenv PATH, JAVA_HOME — shared with bash
+#   shell/*.sh       aliases + functions shared with bash (git, tmux, helpers)
+#   zsh/*.zsh        zsh-only config (options, prompt, colours)
+#
 # IntelliJ/WebStorm source this file with INTELLIJ_ENVIRONMENT_READER set just to harvest the
-# environment (PATH, JAVA_HOME, NVM, ...). Anything interactive or slow is skipped in that case.
+# environment (PATH, JAVA_HOME, node, ...). Anything interactive or slow is skipped in that case.
 
 export DOTFILES=$HOME/dotfiles
 export ZSH=$DOTFILES/zsh
+source "$DOTFILES/shell/env.sh"
 
-# --- Homebrew & GNU tools -------------------------------------------------------------------------
-if [[ -x /opt/homebrew/bin/brew ]]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-elif [[ -x /usr/local/bin/brew ]]; then
-  eval "$(/usr/local/bin/brew shellenv)"
-fi
-if [[ -n "$HOMEBREW_PREFIX" ]]; then
-  # GNU versions without the g prefix (bin/ scripts rely on GNU getopt, readlink -f, sed -i, ...).
-  for _gnu in coreutils findutils gnu-sed gnu-tar gnu-which gnu-indent grep; do
-    [[ -d "$HOMEBREW_PREFIX/opt/$_gnu/libexec/gnubin" ]] && export PATH="$HOMEBREW_PREFIX/opt/$_gnu/libexec/gnubin:$PATH"
-  done
-  unset _gnu
-  export PATH="$HOMEBREW_PREFIX/opt/gnu-getopt/bin:$PATH"
-fi
-
-# --- Paths & editor -------------------------------------------------------------------------------
-export NVIM=$HOME/.config/nvim
-export VIM_PLUGINS=$HOME/.vim/plugged
-export VIM_THEME_FILE=$DOTFILES/vim/custom-plugins/darcula/colors/darcula.vim
-export CUSTOM_BIN=$DOTFILES/bin/
-export VMS=$HOME/vagrant_boxes/
-export ANDROID_HOME=$HOME/Library/Android/sdk
-export EDITOR="nvim"
-
-[[ -d ~/bin ]] && export PATH=~/bin:$PATH
-[[ -d ~/.local/bin ]] && export PATH="$HOME/.local/bin:$PATH"
-export PATH="$DOTFILES/bin:$PATH"
-export PATH="/Applications/WebStorm.app/Contents/MacOS:$PATH"   # `webstorm .`
-
-# --- SSH keys -------------------------------------------------------------------------------------
-# macOS's launchd agent is shared by every shell, so this only does work after a reboot/login, and
-# ~/.ssh/config (AddKeysToAgent + UseKeychain) covers anything it misses.
-if [[ -z "$INTELLIJ_ENVIRONMENT_READER" && -d "$DOTFILES/vault-key" ]] && ! ssh-add -l >/dev/null 2>&1; then
-  bash "$DOTFILES/bin/ssh-setup.sh" >/dev/null 2>&1
-fi
-
-# --- Zsh config files (aliases, functions, prompt, ...) -------------------------------------------
 if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
-  for config in $ZSH/**/*.zsh(N); do
-    source $config
+  # --- SSH keys -----------------------------------------------------------------------------------
+  # macOS's launchd agent is shared by every shell, so this only does work after a reboot/login, and
+  # ~/.ssh/config (AddKeysToAgent + UseKeychain) covers anything it misses.
+  if [[ -d "$DOTFILES/vault-key" ]] && ! ssh-add -l >/dev/null 2>&1; then
+    bash "$DOTFILES/bin/ssh-setup.sh" >/dev/null 2>&1
+  fi
+
+  # --- Aliases, functions, zsh options/prompt -----------------------------------------------------
+  for config in $DOTFILES/shell/*.sh(N) $ZSH/**/*.zsh(N); do
+    [[ "$config" == */env.sh ]] || source $config
   done
   unset config
-fi
 
-# --- Work environments (vault-key/**/*.env) — see `workenv --help` --------------------------------
-if [[ -f ~/.workrc && -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
-  source $HOME/.workrc
+  # --- Work environments (vault-key/**/*.env) — see `workenv --help` ------------------------------
+  [[ -f ~/.workrc ]] && source $HOME/.workrc
 fi
 workenv() {
   . "$DOTFILES/bin/workenv.sh" "$@"
@@ -84,73 +59,36 @@ if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
 
   if [[ -z ${DOTFILES_LOADED+x} ]]; then
     for _plugin in zsh-syntax-highlighting zsh-autosuggestions; do
-      for _dir in "$HOMEBREW_PREFIX/share/$_plugin" /usr/share/$_plugin; do
-        [[ -f "$_dir/$_plugin.zsh" ]] && { source "$_dir/$_plugin.zsh"; break; }
-      done
+      [[ -f "$HOMEBREW_PREFIX/share/$_plugin/$_plugin.zsh" ]] && source "$HOMEBREW_PREFIX/share/$_plugin/$_plugin.zsh"
     done
-    unset _plugin _dir
+    unset _plugin
   fi
 
   for config ($ZSH/**/*completion.sh(N)) source $config
   unset config
-fi
 
-# --- Node (nvm) -----------------------------------------------------------------------------------
-export NVM_DIR="$HOME/.nvm"
-export NVM_SYMLINK_CURRENT=true # gives IDEs one stable path for the current node version
-# Put the default node on PATH without nvm's ~1.5s default-version lookup — also for IntelliJ's env
-# reader, so Gradle sync / Nx get the same node as the terminal. Handles node/stable, "22", "v22.1.0"
-# (numeric sort: v22.20 > v22.9); anything else (lts/*, ...) falls back to `nvm use` below.
-_nvm_default=""; [[ -f "$NVM_DIR/alias/default" ]] && _nvm_default="$(<"$NVM_DIR/alias/default")"
-case "$_nvm_default" in
-  node|stable|"") _nvm_bin=("$NVM_DIR"/versions/node/v*(N/nOn[1])) ;;
-  v[0-9]*|[0-9]*) _nvm_bin=("$NVM_DIR"/versions/node/v${_nvm_default#v}(|.*)(N/nOn[1])) ;;
-  *) _nvm_bin=() ;;
-esac
-if [[ -x "${_nvm_bin[1]}/bin/node" ]]; then
-  export PATH="${_nvm_bin[1]}/bin:$PATH"
-  export NVM_BIN="${_nvm_bin[1]}/bin"
-fi
+  # --- nvm (default node is already on PATH via shell/env.sh) -------------------------------------
+  if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+    \. "$NVM_DIR/nvm.sh" --no-use
+    [[ -s "$NVM_DIR/bash_completion" ]] && \. "$NVM_DIR/bash_completion"
+    [[ -n "$DOTFILES_NVM_DEFAULT_BIN" ]] || nvm use --silent default >/dev/null 2>&1
+    add-zsh-hook chpwd load-nvmrc # switch node versions on cd (shell/functions.sh)
+  fi
 
-if [[ -z "$INTELLIJ_ENVIRONMENT_READER" && -s "$NVM_DIR/nvm.sh" ]]; then
-  \. "$NVM_DIR/nvm.sh" --no-use
-  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-  [[ -x "${_nvm_bin[1]}/bin/node" ]] || nvm use --silent default >/dev/null 2>&1
-  add-zsh-hook chpwd load-nvmrc # switch node versions on cd (zsh/functions.zsh)
+  # --- pyenv --------------------------------------------------------------------------------------
+  if command -v pyenv >/dev/null; then
+    eval "$(pyenv init --path)"
+    eval "$(pyenv init -)"
+    pyenv commands 2>/dev/null | grep -qx virtualenv-init && eval "$(pyenv virtualenv-init -)"
+  fi
 fi
-unset _nvm_default _nvm_bin
-
-# --- Python (pyenv) -------------------------------------------------------------------------------
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d "$PYENV_ROOT/bin" ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]] && command -v pyenv >/dev/null; then
-  eval "$(pyenv init --path)"
-  eval "$(pyenv init -)"
-  pyenv commands 2>/dev/null | grep -qx virtualenv-init && eval "$(pyenv virtualenv-init -)"
-fi
-
-# --- Java -----------------------------------------------------------------------------------------
-# Gradle needs a launch JVM on PATH before it can honour a project's toolchain, and Homebrew's
-# openjdk is keg-only so it is never linked into PATH for us. This is deliberately outside the
-# INTELLIJ_ENVIRONMENT_READER guards: IntelliJ harvests this file for its Gradle sync and its Nx
-# plugin, both of which shell out to ./gradlew and need to find java.
-for _java_home in \
-    /opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home \
-    /usr/local/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home; do
-    if [[ -x "$_java_home/bin/java" ]]; then
-        export JAVA_HOME="$_java_home"
-        export PATH="$JAVA_HOME/bin:$PATH"
-        break
-    fi
-done
-unset _java_home
 
 export DOTFILES_LOADED=1
 
 # --- Tungsten Cloud -------------------------------------------------------------------------------
 # The marked block below is owned by `pnpm dev:setup` in the Tungsten eng-* repos (tools/dev/setup.sh).
 # Every run deletes it and re-appends it at the END of this file, so keep it last and add nothing
-# after it. install.sh also reads it so first-time package installs can reach the Artifactory mirror.
+# after it. bash/bashrc.symlink and install.sh evaluate it from here (dotfiles_load_tng_block).
 # The CA chain it points at is symlinked from the vault (vault-key/symlinks.txt).
 # >>> tng dev:setup >>>
 export COREPACK_NPM_REGISTRY="https://us01cmsysart01.kofax.com:443/artifactory/api/npm/npm-registry"

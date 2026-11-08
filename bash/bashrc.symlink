@@ -1,96 +1,86 @@
-DOTFILES="${DOTFILES:-$HOME/dotfiles}"
+# ~/.bashrc — managed in ~/dotfiles/bash/bashrc.symlink
+#
+# Interactive bash, kept at feature parity with zsh/zshrc.symlink:
+#   shell/env.sh     environment (via ~/.bash_profile)      shell/*.sh   shared aliases + functions
+# Anything added to one shell should be added to the other (or to shell/).
 
-# Load SSH keys after a reboot/login (the launchd agent is shared by every shell).
-if [ -d "$DOTFILES/vault-key" ] && [ -z "$INTELLIJ_ENVIRONMENT_READER" ] && ! ssh-add -l >/dev/null 2>&1; then
-  bash "$DOTFILES/bin/ssh-setup.sh" >/dev/null 2>&1
+export DOTFILES="${DOTFILES:-$HOME/dotfiles}"
+
+# A non-login `bash` (typed in a zsh session, tmux pane, ...) skips ~/.bash_profile; load the env here.
+if [[ -z "$BASH_PROFILE_SOURCED" ]]; then
+  source "$DOTFILES/shell/env.sh"
+  export BASH_PROFILE_SOURCED=1
 fi
-
-# Depending on how configurable the terminal is we may need to source .bash-profile manually.
-if [[ -z "$BASH_PROFILE_SOURCED" && -f "$HOME/.bash_profile" ]]; then
-  if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-    echo "Sourcing .bash_profile"
-    source "$HOME/.bash_profile"
-  fi
-fi
-
 export BASHRC_SOURCED=1
 
-# Custom ls command colors
+# Tungsten Cloud npm mirror + CA chain: `pnpm dev:setup` writes them into ~/.zshrc only.
+dotfiles_load_tng_block
+
+if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
+  # --- SSH keys (the launchd agent is shared by every shell; only does work after a reboot) -------
+  if [[ -d "$DOTFILES/vault-key" ]] && ! ssh-add -l >/dev/null 2>&1; then
+    bash "$DOTFILES/bin/ssh-setup.sh" >/dev/null 2>&1
+  fi
+
+  # --- Shared aliases + functions (git, tmux, helpers) --------------------------------------------
+  for config in "$DOTFILES"/shell/*.sh; do
+    [[ "$config" == */env.sh ]] || source "$config"
+  done
+  unset config
+
+  # --- Work environments (vault-key/**/*.env) — see `workenv --help` ------------------------------
+  [[ -f ~/.workrc ]] && source "$HOME/.workrc"
+fi
+workenv() {
+  . "$DOTFILES/bin/workenv.sh" "$@"
+}
+
+# --- Interactive niceties -------------------------------------------------------------------------
 LS_COLORS='di=34:fi=0:ln=36:pi=5:so=5:bd=5:cd=5:or=31:mi=5;31:ex=32:*.rpm=90'
 export LS_COLORS
 alias ls='ls -A --color'
-
+alias info='info --vi-keys'
 HISTSIZE=5000
 HISTFILESIZE=10000
-
-# Enable vi when using info command
-alias info='info --vi-keys'
-
-# Enable vi keybindings in the command prompt
 set -o vi
-# Load bash-completion and bash-git-prompt
-if [[ "$(uname)" == "Darwin" ]]; then
 
+if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
   [[ -r "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh" ]] && source "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh"
+
   if [[ -f "$HOMEBREW_PREFIX/opt/bash-git-prompt/share/gitprompt.sh" ]]; then
     __GIT_PROMPT_DIR="$HOMEBREW_PREFIX/opt/bash-git-prompt/share"
     GIT_PROMPT_ONLY_IN_REPO=1
     GIT_PROMPT_IGNORE_SUBMODULES=1
     source "$HOMEBREW_PREFIX/opt/bash-git-prompt/share/gitprompt.sh"
   fi
-fi
 
-# Post install for the autojump package.
-
-if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
   [[ -s "$HOMEBREW_PREFIX/etc/profile.d/autojump.sh" ]] && . "$HOMEBREW_PREFIX/etc/profile.d/autojump.sh"
-fi
 
-# Shell themes
-BASE16_SHELL="$HOME/.config/base16-shell/"
-[ -n "$PS1" ] && [ -z "$INTELLIJ_ENVIRONMENT_READER" ] && [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
-        eval "$("$BASE16_SHELL/profile_helper.sh")"
+  BASE16_SHELL="$HOME/.config/base16-shell/"
+  [[ -n "$PS1" && -s "$BASE16_SHELL/profile_helper.sh" ]] && eval "$("$BASE16_SHELL/profile_helper.sh")"
 
-# Node Manager
-export NVM_DIR="$HOME/.nvm"
-if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-  [ -s "$NVM_DIR/nvm.sh"  ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-fi
-
-export NVM_SYMLINK_CURRENT=true # This allows IDEs to use a single place to set your node version
-
-# Python
-export PYENV_ROOT="$HOME/.pyenv"
-[ -d "$PYENV_ROOT/bin" ] && export PATH="$PYENV_ROOT/bin:$PATH"
-
-if [ -z "$INTELLIJ_ENVIRONMENT_READER" ] && command -v pyenv >/dev/null; then
-  eval "$(pyenv init --path)"
-  eval "$(pyenv init -)"
-  pyenv commands 2>/dev/null | grep -qx virtualenv-init && eval "$(pyenv virtualenv-init -)"
-fi
-
-# Java
-# Gradle needs a launch JVM on PATH before it can honour a project's toolchain,
-# and Homebrew's openjdk is keg-only so it is never linked into PATH for us.
-# Kept outside the INTELLIJ_ENVIRONMENT_READER guard on purpose: IntelliJ harvests
-# this file to build the env for its Gradle sync and its Nx plugin, both of which
-# shell out to ./gradlew and need to find java.
-for _java_home in \
-  /opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home \
-  /usr/local/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home; do
-  if [ -x "$_java_home/bin/java" ]; then
-    export JAVA_HOME="$_java_home"
-    export PATH="$JAVA_HOME/bin:$PATH"
-    break
+  # --- nvm (default node is already on PATH via shell/env.sh) -------------------------------------
+  if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+    \. "$NVM_DIR/nvm.sh" --no-use
+    [[ -s "$NVM_DIR/bash_completion" ]] && \. "$NVM_DIR/bash_completion"
+    [[ -n "$DOTFILES_NVM_DEFAULT_BIN" ]] || nvm use --silent default >/dev/null 2>&1
+    # bash has no chpwd hook: run load-nvmrc (shell/functions.sh) from PROMPT_COMMAND when $PWD changes.
+    _dotfiles_chpwd() {
+      if [[ "$PWD" != "${_DOTFILES_LAST_PWD:-}" ]]; then
+        _DOTFILES_LAST_PWD="$PWD"
+        load-nvmrc
+      fi
+    }
+    _DOTFILES_LAST_PWD="$PWD"   # like zsh's chpwd: not on startup, only after a cd
+    [[ "$PROMPT_COMMAND" == *_dotfiles_chpwd* ]] || PROMPT_COMMAND="_dotfiles_chpwd${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
   fi
-done
-unset _java_home
 
-# workenv function wrapper for easier environment switching
-workenv() {
-  . "$DOTFILES/bin/workenv.sh" "$@"
-}
+  # --- pyenv --------------------------------------------------------------------------------------
+  if command -v pyenv >/dev/null; then
+    eval "$(pyenv init --path)"
+    eval "$(pyenv init -)"
+    pyenv commands 2>/dev/null | grep -qx virtualenv-init && eval "$(pyenv virtualenv-init -)"
+  fi
+fi
 
-# Always export DOTFILES_LOADED, even for INTELLIJ_ENVIRONMENT_READER
 export DOTFILES_LOADED=1

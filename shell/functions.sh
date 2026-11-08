@@ -1,4 +1,4 @@
-
+# Functions shared by zsh and bash (sourced by zsh/zshrc.symlink and bash/bashrc.symlink).
 ####################
 # functions
 ####################
@@ -60,7 +60,7 @@ function escape() {
 
 # Decode \x{ABCD}-style Unicode escape sequences
 function unidecode() {
-    perl -e "binmode(STDOUT, ':utf8'); print \"$@\""
+    perl -e "binmode(STDOUT, ':utf8'); print \"$*\""
     echo # newline
 }
 
@@ -105,12 +105,15 @@ function hl() {
 }
 
 # set the background color to light
+# Reload the current shell's rc with BACKGROUND set (light/dark themes).
 function light() {
-    export BACKGROUND="light" && source ~/.zshrc
+    export BACKGROUND="light"
+    if [ -n "$ZSH_VERSION" ]; then source ~/.zshrc; else source ~/.bashrc; fi
 }
 
 function dark() {
-    export BACKGROUND="dark" && source ~/.zshrc 
+    export BACKGROUND="dark"
+    if [ -n "$ZSH_VERSION" ]; then source ~/.zshrc; else source ~/.bashrc; fi
 }
 
 load-nvmrc() {
@@ -123,7 +126,8 @@ load-nvmrc() {
 
       if [ "$nvmrc_node_version" = "N/A" ]; then
         # Don't install on cd: old versions (< 16) have no arm64 binaries and compile from source.
-        echo "Node $(cat "${nvmrc_path}") (from ${nvmrc_path/#$HOME/~}) isn't installed — run: nvm install"
+        local tilde='~'   # literal ~ in the replacement works the same in bash and zsh
+        echo "Node $(cat "${nvmrc_path}") (from ${nvmrc_path/#$HOME/$tilde}) isn't installed — run: nvm install"
       elif [ "$nvmrc_node_version" != "$node_version" ]; then
         nvm use
       fi

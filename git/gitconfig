@@ -28,5 +28,5 @@
 	prune = true
 
 [alias]
-	# `gs` and `g` (zsh/git.zsh) expect this alias.
+	# `gs` and `g` (shell/git.sh) expect this alias.
 	s = status -sb

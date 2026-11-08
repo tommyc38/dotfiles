@@ -1,38 +1,13 @@
-export DOTFILES=$HOME/dotfiles
-export NVIM=$HOME/.config/nvim
-export VIM_PLUGINS=$HOME/.vim/plugged
-export VIM_THEME_FILE=$DOTFILES/vim/custom-plugins/darcula/colors/darcula.vim
-export CUSTOM_BIN=$DOTFILES/bin/
-export VMS=$HOME/vagrant_boxes/
+# ~/.bash_profile — managed in ~/dotfiles/bash/bash_profile.symlink
+#
+# Login bash (what a terminal profile that runs bash starts). Environment only — the same
+# shell/env.sh zsh uses, so PATH, node, JAVA_HOME, ... are identical in both shells. Interactive
+# setup lives in ~/.bashrc, sourced at the end.
+
+export DOTFILES="$HOME/dotfiles"
+source "$DOTFILES/shell/env.sh"
 export BASH_PROFILE_SOURCED=1
 
-# Homebrew + GNU tools without the g prefix (bin/ scripts rely on GNU getopt, readlink -f, sed -i, ...)
-if [[ -x /opt/homebrew/bin/brew ]]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-elif [[ -x /usr/local/bin/brew ]]; then
-  eval "$(/usr/local/bin/brew shellenv)"
-fi
-if [[ -n "$HOMEBREW_PREFIX" ]]; then
-  for _gnu in coreutils findutils gnu-sed gnu-tar gnu-which gnu-indent grep; do
-    if [[ -d "$HOMEBREW_PREFIX/opt/$_gnu/libexec/gnubin" ]]; then
-      export PATH="$HOMEBREW_PREFIX/opt/$_gnu/libexec/gnubin:$PATH"
-      export MANPATH="$HOMEBREW_PREFIX/opt/$_gnu/libexec/gnuman:$MANPATH"
-    fi
-  done
-  unset _gnu
-  export PATH="$HOMEBREW_PREFIX/opt/gnu-getopt/bin:$PATH"
-fi
-
-if [[ -d ~/.local/bin ]]; then
-    export PATH="$HOME/.local/bin:$PATH"
-fi
-
-# Allows the system to find your executable scripts
-export PATH="$DOTFILES/bin:$PATH"
-
-# Webstorm command line tools
-export PATH="/Applications/WebStorm.app/Contents/MacOS:$PATH"
-
 if [[ -f "$HOME/.bashrc" && -z "$BASHRC_SOURCED" ]]; then
-    source "$HOME/.bashrc"
+  source "$HOME/.bashrc"
 fi

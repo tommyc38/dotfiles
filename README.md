@@ -59,8 +59,10 @@ bin/                     on PATH via zshrc
   workenv.sh             switch work environments (`workenv <name>`)
   jetbrains-backup.sh    snapshot WebStorm settings into webstorm/settings/
   preflight.sh, validate-install.sh, fonts.sh, e
-zsh/                     zshrc.symlink → ~/.zshrc, plus *.zsh (aliases, functions, prompt, ...)
-bash/                    bashrc / bash_profile (backup shell)
+shell/                   shared by zsh AND bash: env.sh (PATH, Homebrew, node, JAVA_HOME, ...),
+                         git.sh / tmux.sh / functions.sh (aliases + helpers)
+zsh/                     zshrc.symlink → ~/.zshrc, plus zsh-only *.zsh (options, prompt, colours)
+bash/                    bash_profile.symlink / bashrc.symlink → ~/.bash_profile, ~/.bashrc
 git/                     gitconfig (included by a local ~/.gitconfig), gitignore_global
 vim/                     .vimrc, init.vim, plugins, coc settings, darcula theme
 karabiner/               → ~/.config/karabiner (caps lock = esc on tap, ctrl on hold)
@@ -173,8 +175,14 @@ always moves it to the **end** of `~/.zshrc`, so keep it last and add nothing af
 
 ## Shell notes
 
-- zsh is primary and bash is the backup; both share the same PATH logic (Homebrew `shellenv`, GNU tools
-  without the `g` prefix, nvm, pyenv, `JAVA_HOME` → openjdk@25).
+- **zsh is the default shell; bash is fully supported** (e.g. a terminal profile that opens bash) and kept
+  at parity. Both load `shell/env.sh` for the environment (Homebrew `shellenv`, GNU tools without the `g`
+  prefix, default node, pyenv, `JAVA_HOME` → openjdk@25), and `shell/*.sh` for aliases and functions.
+  They also both load `workenv`, SSH keys, nvm with `.nvmrc` switching on `cd`, and pyenv. Put new shared
+  things in `shell/` and shell-specific things in `zsh/` or `bash/`.
+- The Tungsten `dev:setup` block lives in `~/.zshrc`; bash evaluates it from there, so both shells get
+  the npm mirror and CA chain. If you ever run `dev:setup` *from* bash, it appends its own copy to
+  `~/.bashrc` instead. That's harmless; delete one of the two copies.
 - IntelliJ sources `~/.zshrc` with `INTELLIJ_ENVIRONMENT_READER` set to harvest PATH, `JAVA_HOME` and
   node. Anything interactive or slow is skipped in that case.
 - nvm loads with `--no-use`, and the default Node goes on PATH directly (saves ~1.5s per shell). On `cd`, a
