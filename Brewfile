@@ -90,7 +90,6 @@ cask "pgadmin4"
 cask "karabiner-elements"  # caps lock = escape (tap) / control (hold); config in karabiner/
 cask "iterm2"
 cask "webstorm"            # settings come from JetBrains Settings Sync — see README
-cask "cursor"
 cask "visual-studio-code"
 cask "docker-desktop"
 cask "google-chrome"

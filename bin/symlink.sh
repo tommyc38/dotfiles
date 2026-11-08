@@ -68,7 +68,7 @@ function set_dotfiles_root_dir() {
 
 # Where a target is backed up: its path relative to $HOME, mirrored under the backup directory
 # (e.g. ~/Library/Application Support/Code/User/settings.json -> dotfiles_backup/Library/.../settings.json),
-# so same-named files (Cursor's and VS Code's settings.json) can't collide.
+# so same-named files (e.g. two apps' settings.json) can't collide.
 function backup_path_for() {
   local target="$1"
   case "$target" in
@@ -243,7 +243,6 @@ function get_target(){
   local vim_directory=$symlink_destination_dir/.vim
   local neovim_directory=$symlink_destination_dir/.config/nvim
   local plugins_directory=$vim_directory/plugged/custom-plugins
-  local cursor_user_directory="$symlink_destination_dir/Library/Application Support/Cursor/User"
   local vscode_user_directory="$symlink_destination_dir/Library/Application Support/Code/User"
 
   if [ "$(basename "$source")" == "darcula" ]; then
@@ -262,9 +261,6 @@ function get_target(){
   # so link the whole ~/.config/karabiner directory instead (what Karabiner's docs recommend).
   elif [ "$(basename "$source")" == "karabiner" ] && [ -d "$source" ]; then
       target="$symlink_destination_dir/.config/karabiner"
-
-  elif [[ "$source" == */cursor/settings.json || "$source" == */cursor/keybindings.json ]]; then
-      target="$cursor_user_directory/$(basename "$source")"
 
   elif [[ "$source" == */vscode/settings.json ]]; then
       target="$vscode_user_directory/settings.json"
@@ -466,7 +462,7 @@ Options:
   -v, --include-vim              Include sym-linking vim files.
   -f, --file <file>              A file containing the source and target paths for symlinks. See example.
   -k, --include-karabiner        Include sym-linking the karabiner directory to ~/.config/karabiner.
-  -c, --include-editors          Include sym-linking Cursor settings.json/keybindings.json and VS Code settings.json.
+  -c, --include-editors          Include sym-linking VS Code settings.json.
   -h, --help                     Get help on running this script.
 
 Examples:
@@ -585,8 +581,7 @@ function main() {
     "$dotfiles_directory/vim/coc-settings.json" "$dotfiles_directory/vim/plugins.vim" "$dotfiles_directory/vim/.vimrc")
 
     local karabiner_sources=("$dotfiles_directory/karabiner")
-    local editor_sources=("$dotfiles_directory/cursor/settings.json" "$dotfiles_directory/cursor/keybindings.json"
-      "$dotfiles_directory/vscode/settings.json")
+    local editor_sources=("$dotfiles_directory/vscode/settings.json")
 
     files_to_symlink=("${dot_symlink_ext_sources[@]}") # Default files to symlink.
 

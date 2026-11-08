@@ -23,7 +23,7 @@ describe() {
     xcode)         echo "Xcode Command Line Tools" ;;
     brew)          echo "Homebrew + Brewfile packages and apps" ;;
     vault)         echo "Decrypt vault/ to vault-key/ (SSH keys, env files, repo lists)" ;;
-    symlinks)      echo "Symlink dotfiles, vim, karabiner, Cursor, and vault-key/symlinks.txt" ;;
+    symlinks)      echo "Symlink dotfiles, vim, karabiner, VS Code, and vault-key/symlinks.txt" ;;
     ssh)           echo "Load SSH keys into the agent / macOS keychain" ;;
     node)          echo "nvm + Node versions" ;;
     python)        echo "pyenv + Python versions + nvim-provider" ;;

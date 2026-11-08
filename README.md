@@ -23,7 +23,7 @@ Each step is idempotent: a failed step is reported, the rest continue, and you r
 | `xcode`         | Xcode Command Line Tools (exits so you can finish the dialog, then re-run)            |
 | `brew`          | Homebrew, trusts the third-party taps, `brew bundle` the [`Brewfile`](Brewfile)        |
 | `vault`         | Decrypts `vault/` → `vault-key/` (SSH keys, `.npmrc`, env files, repo lists)          |
-| `symlinks`      | Links dotfiles, vim, Karabiner, Cursor, then everything in `vault-key/symlinks.txt`   |
+| `symlinks`      | Links dotfiles, vim, Karabiner, VS Code, then everything in `vault-key/symlinks.txt` |
 | `ssh`           | Loads the keys in `vault-key/ssh-keys.txt` into the agent + macOS keychain            |
 | `node`          | nvm + Node 18/20/22/24 (+ yarn, pnpm); repos get their `.nvmrc` version on demand     |
 | `python`        | pyenv + Python 3.11–3.13; 3.13's virtualenv is Neovim's `nvim-provider`               |
@@ -53,7 +53,7 @@ install/                 brew.sh, node.sh, python.sh, osx.sh, vagrant.sh (option
 bin/                     on PATH via zshrc
   dev-auth.sh            check / log in to gh, acli (Jira), Bitbucket, az (Azure DevOps)
   vault                  encrypt/decrypt vault/ <-> vault-key/
-  symlink.sh             create/restore symlinks (*.symlink, vim, karabiner, cursor, --file lists)
+  symlink.sh             create/restore symlinks (*.symlink, vim, karabiner, vscode, --file lists)
   repo.sh                clone repo lists, install the right Node + package manager per repo
   ssh-setup.sh           load SSH keys into the agent/keychain
   workenv.sh             switch work environments (`workenv <name>`)
@@ -66,7 +66,6 @@ bash/                    bash_profile.symlink / bashrc.symlink → ~/.bash_profi
 git/                     gitconfig (included by a local ~/.gitconfig), gitignore_global
 vim/                     .vimrc, init.vim, plugins, coc settings, darcula theme
 karabiner/               → ~/.config/karabiner (caps lock = esc on tap, ctrl on hold)
-cursor/                  → ~/Library/Application Support/Cursor/User/{settings,keybindings}.json
 webstorm/                ideavimrc.symlink → ~/.ideavimrc, settings/ (exported backup)
 vscode/                  settings.json → ~/Library/Application Support/Code/User/ (legacy/: old Windows settings, not linked)
 vault/                   encrypted secrets (committed)
@@ -170,8 +169,6 @@ always moves it to the **end** of `~/.zshrc`, so keep it last and add nothing af
   big settings changes and commit.
 - **Karabiner:** the whole `~/.config/karabiner` directory links to `karabiner/`. Linking only
   `karabiner.json` doesn't survive, because Karabiner rewrites that file atomically and replaces the link.
-- **Cursor:** `settings.json` and `keybindings.json` are linked from `cursor/`, so changes made in Cursor's
-  UI land in the repo.
 - **VS Code:** `settings.json` is linked from `vscode/`. The terminal defaults to zsh, and there's a
   `bash` profile in the terminal dropdown (both login shells, so they load the same config as a terminal tab).
 - **iTerm2:** not managed yet (see TODO).

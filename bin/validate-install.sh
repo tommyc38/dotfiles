@@ -112,7 +112,6 @@ validate_symlinks() {
         "$HOME/.ideavimrc"
         "$HOME/.vimrc"
         "$HOME/.config/karabiner"
-        "$HOME/Library/Application Support/Cursor/User/settings.json"
         "$HOME/Library/Application Support/Code/User/settings.json"
         "$HOME/.npmrc"
         "$HOME/.ssh/config"
