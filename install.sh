@@ -1,149 +1,239 @@
 #!/bin/bash
+#
+# Set up a new Mac (or re-converge an existing one) from this dotfiles repo.
+#
+#   ./install.sh                       # prompts for the vault password
+#   VAULT_PASSWORD=... ./install.sh    # non-interactive
+#   ./install.sh --only brew,auth      # run a subset of steps
+#   ./install.sh --skip fonts,repos    # run everything except some steps
+#   ./install.sh --list                # list the steps
+#
+# Every step is idempotent, so re-running after a failure (or months later) is safe.
 
-# Exit on error, undefined variables, and pipe failures
-set -e
-set -u
-set -o pipefail
+set -uo pipefail
 
-script_path="$(dirname -- "$( readlink -f -- "$0")")"
+DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export DOTFILES
+cd "$DOTFILES" || exit 1
 
-# Error handler
-trap 'echo "Error on line $LINENO. Exit code: $?" >&2' ERR
+STEPS=(xcode brew vault symlinks ssh node python vault-install fonts macos shell base16 repos auth)
 
-# Vault password is REQUIRED for initial setup
-if [ $# -eq 0 ]; then
-   echo "ERROR: Vault password is required as the first argument" >&2
-   echo "Usage: ./install.sh <vault_password>" >&2
-   exit 1
-fi
+describe() {
+  case "$1" in
+    xcode)         echo "Xcode Command Line Tools" ;;
+    brew)          echo "Homebrew + Brewfile packages and apps" ;;
+    vault)         echo "Decrypt vault/ to vault-key/ (SSH keys, env files, repo lists)" ;;
+    symlinks)      echo "Symlink dotfiles, vim, karabiner, Cursor, and vault-key/symlinks.txt" ;;
+    ssh)           echo "Load SSH keys into the agent / macOS keychain" ;;
+    node)          echo "nvm + Node versions" ;;
+    python)        echo "pyenv + Python versions + nvim-provider" ;;
+    vault-install) echo "Run vault-key/install.sh (machine-specific extras)" ;;
+    fonts)         echo "Google, Nerd and Powerline fonts" ;;
+    macos)         echo "macOS defaults (Finder, key repeat, ...)" ;;
+    shell)         echo "Make Homebrew zsh the login shell" ;;
+    base16)        echo "Clone base16-shell themes" ;;
+    repos)         echo "Clone repos from vault-key/**/*.repos.txt and install their packages" ;;
+    auth)          echo "Log in to GitHub, GHE, Jira, Bitbucket, Azure DevOps (bin/dev-auth.sh)" ;;
+  esac
+}
 
-VAULT_PASSWORD="$1"
+usage() {
+  cat <<EOF
+Usage: ./install.sh [--only a,b] [--skip a,b] [--list] [-h|--help] [vault_password]
 
-# Verify we're on macOS
+The vault password can also come from \$VAULT_PASSWORD or vault-key/password.txt; otherwise you're
+prompted. Passing it as an argument still works but leaves it in your shell history.
+
+Steps (in order):
+EOF
+  for s in "${STEPS[@]}"; do printf '  %-14s %s\n' "$s" "$(describe "$s")"; done
+}
+
+only=
+skip=
+password_arg=
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --only) only="${2:-}"; shift 2 ;;
+    --only=*) only="${1#*=}"; shift ;;
+    --skip) skip="${2:-}"; shift 2 ;;
+    --skip=*) skip="${1#*=}"; shift ;;
+    --list|-h|--help) usage; exit 0 ;;
+    -*) echo "Unknown option: $1" >&2; usage; exit 1 ;;
+    *) password_arg="$1"; shift ;;
+  esac
+done
+
+for s in ${only//,/ } ${skip//,/ }; do
+  [[ " ${STEPS[*]} " == *" $s "* ]] || { echo "Unknown step: $s (see --list)" >&2; exit 1; }
+done
+
+should_run() {
+  local s="$1"
+  [ -n "$only" ] && [[ ",$only," != *",$s,"* ]] && return 1
+  [ -n "$skip" ] && [[ ",$skip," == *",$s,"* ]] && return 1
+  return 0
+}
+
 if [ "$(uname)" != "Darwin" ]; then
-    echo "ERROR: This script is designed for macOS only" >&2
-    exit 1
+  echo "ERROR: This script is designed for macOS only" >&2
+  exit 1
 fi
 
-# Do NOT run this script with sudo - we'll use sudo only when needed
 if [ "$(id -u)" = 0 ]; then
-   echo "ERROR: Do not run this script with sudo" >&2
-   echo "The script will request sudo access only when needed (Xcode and shell setup)" >&2
-   exit 1
+  echo "ERROR: Do not run this script with sudo; it asks for sudo only where needed." >&2
+  exit 1
 fi
 
+load_brew() {
+  if [[ -x /opt/homebrew/bin/brew ]]; then HOMEBREW_PREFIX=/opt/homebrew; else HOMEBREW_PREFIX=/usr/local; fi
+  [[ -x "$HOMEBREW_PREFIX/bin/brew" ]] && eval "$("$HOMEBREW_PREFIX/bin/brew" shellenv)"
+  # bin/vault and friends need GNU getopt/coreutils, which the shell rc normally puts on PATH.
+  export PATH="$HOMEBREW_PREFIX/opt/gnu-getopt/bin:$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin:$PATH"
+}
+load_brew
+
+failed=()
+run_step() {
+  local s="$1"; shift
+  should_run "$s" || return 0
+  echo
+  echo "========================================"
+  echo "▶ $s — $(describe "$s")"
+  echo "========================================"
+  if ! "$@"; then
+    echo "✗ step '$s' failed (continuing; re-run with --only $s)" >&2
+    failed+=("$s")
+  fi
+}
+
+# --- Steps ----------------------------------------------------------------------------------------
+
+step_xcode() {
+  if xcode-select -p &>/dev/null; then
+    echo "Xcode Command Line Tools already installed"
+    return 0
+  fi
+  echo "Installing Xcode Command Line Tools — finish the dialog, then re-run ./install.sh"
+  xcode-select --install
+  exit 0
+}
+
+step_brew() { bash "$DOTFILES/install/brew.sh" && load_brew; }
+
+vault_password() {
+  if [ -n "$password_arg" ]; then
+    VAULT_PASSWORD="$password_arg"
+  elif [ -z "${VAULT_PASSWORD:-}" ] && [ -s "$DOTFILES/vault-key/password.txt" ]; then
+    VAULT_PASSWORD="$(cat "$DOTFILES/vault-key/password.txt")"
+  fi
+  if [ -z "${VAULT_PASSWORD:-}" ]; then
+    read -rsp "Vault password: " VAULT_PASSWORD </dev/tty
+    echo
+  fi
+  [ -n "$VAULT_PASSWORD" ]
+}
+
+step_vault() {
+  vault_password || { echo "A vault password is required" >&2; return 1; }
+  mkdir -p "$DOTFILES/vault-key"
+  # Passed via the environment, not argv, so it never shows up in `ps`.
+  VAULT_PASSWORD="$VAULT_PASSWORD" bash "$DOTFILES/bin/vault"
+}
+
+step_symlinks() {
+  bash "$DOTFILES/bin/symlink.sh" --include-vim --include-karabiner --include-editors || return 1
+  if [ -f "$DOTFILES/vault-key/symlinks.txt" ]; then
+    bash "$DOTFILES/bin/symlink.sh" --file "$DOTFILES/vault-key/symlinks.txt"
+  else
+    echo "No vault-key/symlinks.txt found, skipping vault symlinks"
+  fi
+}
+
+step_ssh() { bash "$DOTFILES/bin/ssh-setup.sh"; }
+step_node() { bash "$DOTFILES/install/node.sh"; }
+step_python() { bash "$DOTFILES/install/python.sh"; }
+
+step_vault_install() {
+  if [ -f "$DOTFILES/vault-key/install.sh" ]; then
+    bash "$DOTFILES/vault-key/install.sh"
+  else
+    echo "No vault-key/install.sh found, skipping"
+  fi
+}
+
+step_fonts() {
+  bash "$DOTFILES/bin/fonts.sh" --google-fonts-light --nerd-fonts-light --powerline-fonts-light
+}
+
+step_macos() { bash "$DOTFILES/install/osx.sh"; }
+
+step_shell() {
+  local zsh_path="$HOMEBREW_PREFIX/bin/zsh" bash_path="$HOMEBREW_PREFIX/bin/bash" sh
+  [ -x "$zsh_path" ] || { echo "Homebrew zsh not installed (run the brew step)"; return 1; }
+  for sh in "$bash_path" "$zsh_path"; do
+    if [ -x "$sh" ] && ! grep -qxF "$sh" /etc/shells; then
+      echo "Adding $sh to /etc/shells (requires sudo)"
+      echo "$sh" | sudo tee -a /etc/shells >/dev/null
+    fi
+  done
+  if [ "$(dscl . -read "/Users/$USER" UserShell | awk '{print $2}')" = "$zsh_path" ]; then
+    echo "Login shell is already $zsh_path"
+  else
+    chsh -s "$zsh_path"
+  fi
+}
+
+step_base16() {
+  if [ -d "$HOME/.config/base16-shell" ]; then
+    echo "base16-shell already installed"
+  else
+    git clone https://github.com/chriskempson/base16-shell.git "$HOME/.config/base16-shell"
+  fi
+}
+
+step_repos() {
+  # repo.sh needs nvm and the SSH keys/agent from the earlier steps.
+  local repos_file rc=0
+  # Give package installs the npm env a login shell gets: the Tungsten Artifactory mirror and CA chain
+  # (the `tng dev:setup` block in zsh/zshrc.symlink; ~/.npmrc and the cert come from the vault).
+  eval "$(sed -n '/^# >>> tng dev:setup >>>$/,/^# <<< tng dev:setup <<<$/p' "$DOTFILES/zsh/zshrc.symlink")"
+  [ -f "${NODE_EXTRA_CA_CERTS:-}" ] || unset NODE_EXTRA_CA_CERTS
+  while IFS= read -r -d '' repos_file; do
+    echo "Processing repositories from ${repos_file#"$DOTFILES"/}..."
+    bash "$DOTFILES/bin/repo.sh" --file "$repos_file" --default-directory "$HOME/dev" --npm-install || rc=1
+  done < <(find "$DOTFILES/vault-key" -path '*/vault_backups' -prune -o -name '*.repos.txt' -type f -print0 2>/dev/null)
+  return $rc
+}
+
+step_auth() {
+  if [ -t 0 ]; then
+    bash "$DOTFILES/bin/dev-auth.sh"
+  else
+    bash "$DOTFILES/bin/dev-auth.sh" --check
+  fi
+}
+
+# --- Run ------------------------------------------------------------------------------------------
+
+echo "Dotfiles: $DOTFILES"
+for s in "${STEPS[@]}"; do
+  run_step "$s" "step_${s//-/_}"
+done
+
+echo
 echo "========================================"
-echo "Dotfiles Installation Starting"
-echo "========================================"
-echo ""
-
-if [ "$(uname)" == "Darwin" ]; then
-    echo "Running on macOS"
-
-    # Check for Xcode Command Line Tools and install/update if needed
-    echo "Checking Xcode Command Line Tools..."
-    if ! xcode-select -p &>/dev/null; then
-        echo "Installing Xcode Command Line Tools (requires sudo)..."
-        sudo xcode-select --install
-        echo "Please complete the Xcode installation dialog, then re-run this script"
-        exit 0
-    else
-        echo "Xcode Command Line Tools already installed"
-    fi
-
-    echo "Installing System Packages & Desktop Applications..."
-    sh install/brew.sh
-
-    echo "Decrypting Vault Files..."
-    # Ensure vault-key directory exists before decryption
-    mkdir -p "$script_path/vault-key"
-    sh bin/vault "$VAULT_PASSWORD"
-
-    echo "Creating Dotfile Symlinks..."
-    sh bin/symlink.sh -v -k
-
-    echo "Processing Vault Symlinks..."
-    # Check for vault-specific symlinks configuration
-    if [ -f "$script_path/vault-key/symlinks.txt" ]; then
-      sh bin/symlink.sh -f "$script_path/vault-key/symlinks.txt" -v
-    else
-      echo "No vault-key/symlinks.txt found, skipping vault symlinks"
-    fi
-
-    echo "Setting up SSH agent and keys..."
-    if [ -f "$script_path/bin/ssh-setup.sh" ]; then
-      sh "$script_path/bin/ssh-setup.sh"
-    else
-      echo "No SSH setup script found, skipping SSH agent setup"
-    fi
-
-    echo "Installing Node..."
-    sh install/node.sh
-
-    echo "Installing Python..."
-    sh install/python.sh
-
-    echo "Running Vault-Specific Installations..."
-    if [ -e "$script_path/vault-key/install.sh" ]; then
-      sh "$script_path/vault-key/install.sh"
-    else
-      echo "No vault-key/install.sh found, skipping"
-    fi
-
-    echo "Installing Fonts..."
-    sh install/fonts.sh --google-fonts-light --nerd-fonts-light --powerline-fonts-light
-
-    echo "Updating OSX settings"
-    sh install/osx.sh
-
-    echo "Setting ZSH as the Default Terminal"
-    # Detect Homebrew prefix
-    if [[ -x "/opt/homebrew/bin/brew" ]]; then
-      HOMEBREW_PREFIX="/opt/homebrew"
-    else
-      HOMEBREW_PREFIX="/usr/local"
-    fi
-    
-    # Add homebrew shells to /etc/shells (requires sudo)
-    echo "Adding Homebrew shells to /etc/shells (requires sudo)..."
-    grep -qxF "${HOMEBREW_PREFIX}/bin/bash" /etc/shells || echo "${HOMEBREW_PREFIX}/bin/bash" | sudo tee -a /etc/shells > /dev/null
-    grep -qxF "${HOMEBREW_PREFIX}/bin/zsh" /etc/shells || echo "${HOMEBREW_PREFIX}/bin/zsh" | sudo tee -a /etc/shells > /dev/null
-    
-    # Change default shell to zsh
-    echo "Changing default shell to zsh..."
-    chsh -s "${HOMEBREW_PREFIX}/bin/zsh"
-
-    echo "Installing Base16 Themes"
-    [ ! -e ~/.config/base16-shell ] && git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
-
-    # Sourcing bash_profile before cloning repos
-    echo "Loading shell configuration..."
-    if [ -f ~/.bash_profile ]; then
-        source ~/.bash_profile
-    fi
-
-    echo "Cloning Repositories..."
-    # Find and process all .repos.txt files in vault-key
-    if [ -d "$script_path/vault-key" ]; then
-      find "$script_path/vault-key" -name "*.repos.txt" -type f | while read repos_file; do
-        echo "Processing repositories from $(basename "$repos_file")..."
-        sh bin/repo.sh --file "$repos_file" --default-directory "$HOME/dev" --npm-install
-      done
-    else
-      echo "No .repos.txt files found in vault-key, skipping repository cloning"
-    fi
-
+if [ ${#failed[@]} -eq 0 ]; then
+  echo "✅ Done."
+else
+  echo "⚠️  Done with failures in: ${failed[*]}"
+  echo "   Fix and re-run: ./install.sh --only $(IFS=,; echo "${failed[*]}")"
 fi
-
-echo ""
 echo "========================================"
-echo "✅ Dotfiles Installation Complete!"
-echo "========================================"
-echo ""
+echo
 echo "Next steps:"
-echo "  1. Close and reopen your terminal (or run: source ~/.zshrc)"
-echo "  2. Verify installation with: vault --help"
-echo "  3. If you have a vault password, it should auto-load on next shell"
-echo ""
-echo "For help, see: ~/dotfiles/plan/README.md"
-echo ""
+echo "  1. Open a new terminal (or: exec zsh)"
+echo "  2. ./bin/validate-install.sh"
+echo "  3. WebStorm: sign in to your JetBrains account and turn on Settings Sync (see README)"
+echo "  4. Tungsten repos: run 'pnpm dev:setup' in one of them (npm mirror, CA chain, CodeArtifact)"
+[ ${#failed[@]} -eq 0 ]

@@ -1,0 +1,5 @@
+# Global gitignore (core.excludesfile in git/gitconfig.symlink)
+.DS_Store
+._*
+*.swp
+*~

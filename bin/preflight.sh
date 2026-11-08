@@ -33,13 +33,13 @@ print_check() {
     
     if [ "$status" = "pass" ]; then
         echo -e "${GREEN}✓${NC} $message"
-        ((CHECKS_PASSED++))
+        CHECKS_PASSED=$((CHECKS_PASSED + 1))
     elif [ "$status" = "fail" ]; then
         echo -e "${RED}✗${NC} $message"
-        ((CHECKS_FAILED++))
+        CHECKS_FAILED=$((CHECKS_FAILED + 1))
     elif [ "$status" = "warn" ]; then
         echo -e "${YELLOW}⚠${NC} $message"
-        ((CHECKS_WARNING++))
+        CHECKS_WARNING=$((CHECKS_WARNING + 1))
     fi
 }
 
@@ -72,7 +72,7 @@ check_disk_space() {
     print_header "Disk Space"
     
     # Check available disk space (in GB)
-    local available=$(df -g / | awk 'NR==2 {print $4}')
+    local available=$(/bin/df -g / | awk 'NR==2 {print $4}')  # BSD df; GNU df (gnubin) has no -g
     
     if [ "$available" -ge 10 ]; then
         print_check "pass" "Available disk space: ${available}GB (sufficient)"
@@ -87,7 +87,8 @@ check_internet() {
     print_header "Network Connectivity"
     
     # Check internet connection
-    if ping -c 1 -t 2 github.com >/dev/null 2>&1; then
+    # HTTPS rather than ping: ICMP is often blocked on corporate networks/VPNs.
+    if curl -sS -o /dev/null -m 10 https://github.com 2>/dev/null; then
         print_check "pass" "Internet connection active (github.com reachable)"
     else
         print_check "fail" "No internet connection (cannot reach github.com)"
@@ -228,7 +229,11 @@ check_vault_password() {
     print_header "Vault Configuration"
     
     # Remind about vault password requirement
-    print_check "warn" "Vault password required as first argument to install.sh"
+    if [ -s "$DOTFILES_DIR/vault-key/password.txt" ] || [ -n "${VAULT_PASSWORD:-}" ]; then
+        print_check "pass" "Vault password available (vault-key/password.txt or \$VAULT_PASSWORD)"
+    else
+        print_check "warn" "install.sh will prompt for the vault password"
+    fi
     
     # Check if vault directory exists
     if [ -d "$DOTFILES_DIR/vault" ]; then

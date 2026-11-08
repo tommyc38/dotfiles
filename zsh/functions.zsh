@@ -41,7 +41,7 @@ function f() {
 # take this repo and copy it to somewhere else minus the .git stuff.
 function gitexport(){
     mkdir -p "$1"
-    git archive master | tar -x -C "$1"
+    git archive HEAD | tar -x -C "$1"
 }
 
 # get gzipped size
@@ -112,17 +112,6 @@ function light() {
 function dark() {
     export BACKGROUND="dark" && source ~/.zshrc 
 }
-function changez(){
-    if grep -inE '^#\sbase16*|^#\s\[ -n "\$PS1*' $HOME/.zshrc &> /dev/null; then
-        sed -i --follow-symlinks "s/# BASE/BASE/" $HOME/.zshrc
-        sed -i --follow-symlinks "s/# \[ -n \"\$PS/\[ -n \"\$PS/" $HOME/.zshrc
-    elif grep -inE '^base16*|^\[ -n "\$PS1*' $HOME/.zshrc &> /dev/null; then
-        sed -i --follow-symlinks "s/BASE/# BASE/" $HOME/.zshrc
-        sed -i --follow-symlinks "s/\[ -n \"\$PS/# \[ -n \"\$PS/" $HOME/.zshrc
-    else
-        echo "Check you .zshrc file, something is wrong."
-    fi
-}
 
 load-nvmrc() {
   if command -v nvm &>/dev/null; then
@@ -133,7 +122,8 @@ load-nvmrc() {
       local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
 
       if [ "$nvmrc_node_version" = "N/A" ]; then
-        nvm install
+        # Don't install on cd: old versions (< 16) have no arm64 binaries and compile from source.
+        echo "Node $(cat "${nvmrc_path}") (from ${nvmrc_path/#$HOME/~}) isn't installed — run: nvm install"
       elif [ "$nvmrc_node_version" != "$node_version" ]; then
         nvm use
       fi
@@ -144,21 +134,4 @@ load-nvmrc() {
   fi
 }
 
-workenv() {
-  # We have to run the command in the current environment to set/unset variables
-  . workenv.sh "$@"
-}
 
-function changeu(){
-    #TODO remove autojump from dotfiles
-    #TODO change zsh-sytax-highlight path in .zshrc
-    if grep -inE '^#\sbase16*|^#\s\[ -n "\$PS1*' $HOME/.zshrc &> /dev/null; then
-        sed -i --follow-symlinks "s/# BASE/BASE/" $HOME/.zshrc
-        sed -i --follow-symlinks "s/# \[ -n \"\$PS/\[ -n \"\$PS/" $HOME/.zshrc
-    elif grep -inE '^base16*|^\[ -n "\$PS1*' $HOME/.zshrc &> /dev/null; then
-        sed -i --follow-symlinks "s/BASE/# BASE/" $HOME/.zshrc
-        sed -i --follow-symlinks "s/\[ -n \"\$PS/# \[ -n \"\$PS/" $HOME/.zshrc
-    else
-        echo "Check you .zshrc file, something is wrong."
-    fi
-}

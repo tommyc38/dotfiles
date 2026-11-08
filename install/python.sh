@@ -11,20 +11,24 @@
 # - The path is referenced in vim/init.vim as g:python3_host_prog
 #
 # To change the Neovim Python version:
-# 1. Update the version number in the special handling section (line 69)
+# 1. Update NVIM_PYTHON_VERSION below
 # 2. Update vim/init.vim to point to the new nvim-provider path
 # 3. Run this script to create the new environment
 #
 # Choose the Python versions you want (latest patch for each will be picked by pyenv).
+# 3.7/3.8 are end-of-life and no longer build cleanly on Apple Silicon.
 PYTHON_VERSIONS=(
-  3.7 3.8 3.9 3.10 3.11 3.12 3.13
+  3.11 3.12 3.13
 )
+
+# Version whose virtualenv becomes "nvim-provider" (vim/init.vim's g:python3_host_prog).
+NVIM_PYTHON_VERSION=3.13
 
 # Ensure build deps for pyenv (macOS example; adjust for your OS)
 install_build_deps() {
   if command -v brew >/dev/null 2>&1; then
     brew update || true
-    brew install openssl readline sqlite3 xz zlib bzip2 || true
+    brew install openssl readline sqlite3 xz zlib bzip2 pyenv-virtualenv || true
   else
     echo "Tip: Install Python build deps for your OS (e.g., OpenSSL, zlib, readline)."
   fi
@@ -82,7 +86,7 @@ install_one_version() {
   # Currently using Python 3.13 for the nvim-provider environment
   # This environment is referenced in vim/init.vim
   local venv_name
-  if [ "$short" = "3.13" ]; then
+  if [ "$short" = "$NVIM_PYTHON_VERSION" ]; then
     venv_name="nvim-provider"
   else
     venv_name="py${full//./_}"
@@ -109,7 +113,7 @@ install_one_version() {
 
     # Install pynvim for Neovim Python provider environment
     # This is required by Neovim plugins that use Python
-    if [ "$short" = "3.13" ]; then
+    if [ "$short" = "$NVIM_PYTHON_VERSION" ]; then
       echo "Installing pynvim for nvim-provider environment..."
       python -m pip install pynvim || true
       

@@ -56,7 +56,7 @@ if [ ! -d "$SSH_DIR" ]; then
 fi
 
 # Verify .ssh directory has correct permissions
-if [ "$(stat -f %A "$SSH_DIR" 2>/dev/null || stat -c %a "$SSH_DIR" 2>/dev/null)" != "700" ]; then
+if [ "$(/usr/bin/stat -f %Lp "$SSH_DIR" 2>/dev/null || stat -c %a "$SSH_DIR" 2>/dev/null)" != "700" ]; then
   chmod 700 "$SSH_DIR"
 fi
 

@@ -28,9 +28,25 @@ default_directory=
 source_file=
 npm_install=
 
-# We need to have access to nvm
-export NVM_DIR=$HOME/.nvm;
-source $NVM_DIR/nvm.sh;
+# nvm is a shell function, so it has to be sourced (only needed with --npm-install).
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+# shellcheck disable=SC1091
+[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+
+# Reduce a git URL to host/path so equivalent spellings compare equal:
+#   tungstencloud@tungstencloud.ghe.com:Org/repo.git == tungstencloud.ghe.com:Org/repo
+#   ...Cloud%20Services/... == ...Cloud Services/...    https://host/path == git@host:path
+function normalize_git_url() {
+  local url="$1"
+  url="${url//%20/ }"
+  url="${url#ssh://}"
+  url="${url#https://}"
+  url="${url#http://}"
+  url="${url#*@}"
+  url="${url%/}"
+  url="${url%.git}"
+  echo "${url/://}" | tr '[:upper:]' '[:lower:]'
+}
 
 # Detect and install the appropriate Node version and package manager, then install packages
 function npm_install() {
@@ -211,8 +227,9 @@ function clone_repos() {
         existing_remote=$(cd "$install_dir" && git config --get remote.origin.url 2>/dev/null)
         
         # Normalize URLs for comparison (remove trailing .git, handle SSH vs HTTPS)
-        local repo_normalized="${repo%.git}"
-        local existing_normalized="${existing_remote%.git}"
+        local repo_normalized existing_normalized
+        repo_normalized="$(normalize_git_url "$repo")"
+        existing_normalized="$(normalize_git_url "$existing_remote")"
         
         if [ "$repo_normalized" = "$existing_normalized" ]; then
           echo "Repository ~${install_dir//$HOME/} already cloned ($count/$line_count). Clone skipped! -- $repo"
@@ -340,7 +357,7 @@ Features:
 # Parse the options passed to the script.
 function main() {
   local short="dhif:D:"
-  local long="dry-run,npm-install,npm-install,help,default-directory:,file:"
+  local long="dry-run,npm-install,help,default-directory:,file:"
   local options
 
   if [ "$(uname)" == "Darwin" ]; then
@@ -370,7 +387,7 @@ function main() {
 
       -d|--dry-run|-dry-run) dry_run=true; shift;;
       -i|--npm-install|-npm-install) npm_install=true; shift;;
-      -D|--default-directory|--default-directory) shift
+      -D|--default-directory) shift
         # Expand $HOME and ~ in the path
         default_directory="${1//'$HOME'/$HOME}"
         default_directory="${default_directory//'~'/$HOME}"

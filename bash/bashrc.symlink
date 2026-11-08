@@ -1,31 +1,8 @@
-# Auto-load vault password if file exists
-# This password corresponds to the encrypted files in /vault
-# Try to find dotfiles directory (supports multiple possible locations)
-if [ -n "$DOTFILES" ]; then
-    VAULT_PASSWORD_FILE="$DOTFILES/vault-key/password.txt"
-elif [ -d "$HOME/dotfiles" ]; then
-    VAULT_PASSWORD_FILE="$HOME/dotfiles/vault-key/password.txt"
-elif [ -d "$HOME/.dotfiles" ]; then
-    VAULT_PASSWORD_FILE="$HOME/.dotfiles/vault-key/password.txt"
-fi
+DOTFILES="${DOTFILES:-$HOME/dotfiles}"
 
-if [ -n "$VAULT_PASSWORD_FILE" ] && [ -f "$VAULT_PASSWORD_FILE" ]; then
-    export VAULT_PASSWORD=$(cat "$VAULT_PASSWORD_FILE" 2>/dev/null)
-    if [ -n "$VAULT_PASSWORD" ]; then
-        echo "Vault password loaded from $VAULT_PASSWORD_FILE"
-    fi
-fi
-
-# Setup SSH agent and add keys (only if needed)
-# With macOS keychain (--apple-use-keychain), keys are automatically loaded when needed
-# Only run setup if: agent isn't running OR no keys are loaded
-if [ -f "$DOTFILES/bin/ssh-setup.sh" ] && [ -d "$DOTFILES/vault-key" ] && [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-    # Check if ssh-agent is running and has keys
-    if ! ssh-add -l >/dev/null 2>&1; then
-        # Agent not running or no keys loaded - run setup
-        echo "Running ssh-setup.sh from .bashrc"
-        source "$DOTFILES/bin/ssh-setup.sh"
-    fi
+# Load SSH keys after a reboot/login (the launchd agent is shared by every shell).
+if [ -d "$DOTFILES/vault-key" ] && [ -z "$INTELLIJ_ENVIRONMENT_READER" ] && ! ssh-add -l >/dev/null 2>&1; then
+  bash "$DOTFILES/bin/ssh-setup.sh" >/dev/null 2>&1
 fi
 
 # Depending on how configurable the terminal is we may need to source .bash-profile manually.
@@ -54,19 +31,7 @@ set -o vi
 # Load bash-completion and bash-git-prompt
 if [[ "$(uname)" == "Darwin" ]]; then
 
-  # Set HOMEBREW_PREFIX if not already set
-  if [[ -z "$HOMEBREW_PREFIX" ]]; then
-    if [[ -x "/opt/homebrew/bin/brew" ]]; then
-      # Apple Silicon Macs
-      HOMEBREW_PREFIX="/opt/homebrew"
-      export PATH="$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin:$PATH"
-    elif [[ -x "/usr/local/bin/brew" ]]; then
-      # Intel Macs
-      HOMEBREW_PREFIX="/usr/local"
-    fi
-  fi
-
-  [[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && source "/usr/local/etc/profile.d/bash_completion.sh"
+  [[ -r "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh" ]] && source "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh"
   if [[ -f "$HOMEBREW_PREFIX/opt/bash-git-prompt/share/gitprompt.sh" ]]; then
     __GIT_PROMPT_DIR="$HOMEBREW_PREFIX/opt/bash-git-prompt/share"
     GIT_PROMPT_ONLY_IN_REPO=1
@@ -78,7 +43,7 @@ fi
 # Post install for the autojump package.
 
 if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-  [[ "$(uname)" == "Darwin" && -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+  [[ -s "$HOMEBREW_PREFIX/etc/profile.d/autojump.sh" ]] && . "$HOMEBREW_PREFIX/etc/profile.d/autojump.sh"
 fi
 
 # Shell themes
@@ -97,12 +62,12 @@ export NVM_SYMLINK_CURRENT=true # This allows IDEs to use a single place to set 
 
 # Python
 export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
+[ -d "$PYENV_ROOT/bin" ] && export PATH="$PYENV_ROOT/bin:$PATH"
 
-if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+if [ -z "$INTELLIJ_ENVIRONMENT_READER" ] && command -v pyenv >/dev/null; then
   eval "$(pyenv init --path)"
-  eval "$(pyenv init -)"      # This makes pyenv functions available in the shell
-  eval "$(pyenv virtualenv-init -)" # This enables pyenv-virtualenv functionality
+  eval "$(pyenv init -)"
+  pyenv commands 2>/dev/null | grep -qx virtualenv-init && eval "$(pyenv virtualenv-init -)"
 fi
 
 # Java
@@ -124,7 +89,7 @@ unset _java_home
 
 # workenv function wrapper for easier environment switching
 workenv() {
-  . $DOTFILES/bin/workenv.sh "$@"
+  . "$DOTFILES/bin/workenv.sh" "$@"
 }
 
 # Always export DOTFILES_LOADED, even for INTELLIJ_ENVIRONMENT_READER

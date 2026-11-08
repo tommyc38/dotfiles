@@ -33,13 +33,13 @@ print_check() {
     
     if [ "$status" = "pass" ]; then
         echo -e "${GREEN}✓${NC} $message"
-        ((CHECKS_PASSED++))
+        CHECKS_PASSED=$((CHECKS_PASSED + 1))
     elif [ "$status" = "fail" ]; then
         echo -e "${RED}✗${NC} $message"
-        ((CHECKS_FAILED++))
+        CHECKS_FAILED=$((CHECKS_FAILED + 1))
     elif [ "$status" = "warn" ]; then
         echo -e "${YELLOW}⚠${NC} $message"
-        ((CHECKS_WARNING++))
+        CHECKS_WARNING=$((CHECKS_WARNING + 1))
     fi
 }
 
@@ -56,15 +56,15 @@ validate_homebrew() {
             print_check "warn" "Homebrew reports warnings (run 'brew doctor' for details)"
         fi
         
-        # Check for common packages
-        local packages=("git" "zsh" "vim" "tmux" "openssl")
-        for pkg in "${packages[@]}"; do
-            if brew list "$pkg" >/dev/null 2>&1; then
-                print_check "pass" "$pkg installed via Homebrew"
-            else
-                print_check "warn" "$pkg not installed"
-            fi
-        done
+        # Everything in the Brewfile installed?
+        local missing
+        missing="$(brew bundle check --file "$DOTFILES_DIR/Brewfile" --verbose 2>/dev/null | grep '^→' | sed 's/^→ //')"
+        if [ -z "$missing" ]; then
+            print_check "pass" "Everything in the Brewfile is installed"
+        else
+            print_check "warn" "Brewfile entries missing/outdated ($(echo "$missing" | wc -l | tr -d ' ')) — run: brew bundle --file $DOTFILES_DIR/Brewfile"
+            echo "$missing" | sed 's/^/    /' | head -10
+        fi
     else
         print_check "fail" "Homebrew not installed"
     fi
@@ -79,13 +79,19 @@ validate_vault() {
         
         # Check for password.txt
         if [ -f "$DOTFILES_DIR/vault-key/password.txt" ]; then
-            print_check "pass" "Vault password file exists"
-            
-            # Check if VAULT_PASSWORD is set
-            if [ -n "$VAULT_PASSWORD" ]; then
-                print_check "pass" "VAULT_PASSWORD environment variable is set"
-            else
-                print_check "warn" "VAULT_PASSWORD not set (may need to source shell config)"
+            print_check "pass" "Vault password file exists (vault-key/password.txt)"
+
+            # vault-key/ edited but never re-encrypted? (anything newer than the newest vault/ file)
+            local newest_vault newer
+            newest_vault="$(find "$DOTFILES_DIR/vault" -type f -not -name .DS_Store -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -1)"
+            if [ -n "$newest_vault" ]; then
+                newer="$(find "$DOTFILES_DIR/vault-key" -path '*/vault_backups' -prune -o -type f -not -name .DS_Store -newer "$newest_vault" -print 2>/dev/null | head -5)"
+                if [ -z "$newer" ]; then
+                    print_check "pass" "vault/ is up to date with vault-key/"
+                else
+                    print_check "warn" "vault-key/ has changes not encrypted into vault/ — run: vault -e"
+                    echo "$newer" | sed "s#$DOTFILES_DIR/#    #"
+                fi
             fi
         else
             print_check "warn" "password.txt not found (vault may not be decrypted)"
@@ -102,17 +108,27 @@ validate_symlinks() {
     local symlinks=(
         "$HOME/.zshrc"
         "$HOME/.bashrc"
+        "$HOME/.bash_profile"
+        "$HOME/.gitconfig"
+        "$HOME/.ideavimrc"
         "$HOME/.vimrc"
+        "$HOME/.config/karabiner"
+        "$HOME/Library/Application Support/Cursor/User/settings.json"
+        "$HOME/.npmrc"
+        "$HOME/.ssh/config"
+        "$HOME/.certs/tungsten-ca-chain.pem"
     )
     
     for link in "${symlinks[@]}"; do
-        if [ -L "$link" ]; then
-            local target=$(readlink "$link")
-            print_check "pass" "$(basename $link) → $target"
-        elif [ -f "$link" ]; then
-            print_check "warn" "$(basename $link) exists but is not a symlink"
+        local name="${link/#$HOME/~}"
+        if [ -L "$link" ] && [ -e "$link" ]; then
+            print_check "pass" "$name → $(readlink "$link")"
+        elif [ -L "$link" ]; then
+            print_check "fail" "$name is a broken symlink → $(readlink "$link")"
+        elif [ -e "$link" ]; then
+            print_check "warn" "$name exists but is not a symlink (run: bin/symlink.sh, see README)"
         else
-            print_check "fail" "$(basename $link) not found"
+            print_check "fail" "$name not found"
         fi
     done
     
@@ -132,7 +148,7 @@ validate_ssh() {
         print_check "pass" "~/.ssh directory exists"
         
         # Check SSH directory permissions
-        local ssh_perms=$(stat -f "%A" "$HOME/.ssh" 2>/dev/null || stat -c "%a" "$HOME/.ssh" 2>/dev/null)
+        local ssh_perms=$(/usr/bin/stat -f "%Lp" "$HOME/.ssh" 2>/dev/null)  # BSD stat; GNU stat may be first on PATH
         if [ "$ssh_perms" = "700" ]; then
             print_check "pass" "~/.ssh permissions correct (700)"
         else
@@ -178,7 +194,7 @@ validate_node() {
         . "$NVM_DIR/nvm.sh"
         
         # Check installed Node versions
-        local node_versions=$(nvm list 2>/dev/null | grep -c "v" || echo "0")
+        local node_versions=$(ls -d "$NVM_DIR"/versions/node/v* 2>/dev/null | wc -l | tr -d ' ')
         if [ "$node_versions" -gt 0 ]; then
             print_check "pass" "Node.js: $node_versions version(s) installed"
             
@@ -262,11 +278,13 @@ validate_shell() {
         print_check "warn" "DOTFILES not set (may need to source shell config)"
     fi
     
-    # Check HOMEBREW_PREFIX
-    if [ -n "$HOMEBREW_PREFIX" ]; then
-        print_check "pass" "HOMEBREW_PREFIX set: $HOMEBREW_PREFIX"
+    # This script runs in bash, so ask a real interactive zsh what it ends up with.
+    local zsh_prefix
+    zsh_prefix="$(zsh -i -c 'echo $HOMEBREW_PREFIX' 2>/dev/null </dev/null | tail -1)"
+    if [ -n "$zsh_prefix" ]; then
+        print_check "pass" "zsh sets HOMEBREW_PREFIX: $zsh_prefix"
     else
-        print_check "warn" "HOMEBREW_PREFIX not set (may need to source shell config)"
+        print_check "warn" "zsh doesn't set HOMEBREW_PREFIX (is ~/.zshrc linked?)"
     fi
 }
 
@@ -300,7 +318,7 @@ validate_workenv() {
     print_header "Work Environment (workenv)"
     
     # Check if workenv function exists
-    if type workenv >/dev/null 2>&1; then
+    if zsh -i -c 'whence -w workenv' 2>/dev/null </dev/null | grep -q function; then
         print_check "pass" "workenv function is available"
     else
         print_check "warn" "workenv function not found (may need to source shell config)"
@@ -308,7 +326,7 @@ validate_workenv() {
     
     # Check for environment files
     if [ -d "$DOTFILES_DIR/vault-key" ]; then
-        local env_count=$(find "$DOTFILES_DIR/vault-key" -name "*.env" -type f 2>/dev/null | wc -l | tr -d ' ')
+        local env_count=$(find "$DOTFILES_DIR/vault-key" -path '*/vault_backups' -prune -o -name "*.env" -type f -print 2>/dev/null | wc -l | tr -d ' ')
         if [ "$env_count" -gt 0 ]; then
             print_check "pass" "Found $env_count environment file(s)"
         else
@@ -317,18 +335,31 @@ validate_workenv() {
     fi
 }
 
+validate_auth() {
+    print_header "Code Hosts & Work Tools (bin/dev-auth.sh --check)"
+
+    local line
+    while IFS= read -r line; do
+        case "$line" in
+            *✓*) print_check "pass" "${line#*✓ }" ;;
+            *✗*) print_check "fail" "${line#*✗ }" ;;
+            *"! "*) print_check "warn" "${line#*! }" ;;
+        esac
+    done < <(NO_COLOR=1 bash "$SCRIPT_DIR/dev-auth.sh" --check 2>&1 </dev/null | cat)
+}
+
 validate_repos() {
     print_header "Repository Cloning"
     
     # Check for .repos.txt files
     if [ -d "$DOTFILES_DIR/vault-key" ]; then
-        local repos_count=$(find "$DOTFILES_DIR/vault-key" -name "*.repos.txt" -type f 2>/dev/null | wc -l | tr -d ' ')
+        local repos_count=$(find "$DOTFILES_DIR/vault-key" -path '*/vault_backups' -prune -o -name "*.repos.txt" -type f -print 2>/dev/null | wc -l | tr -d ' ')
         if [ "$repos_count" -gt 0 ]; then
             print_check "pass" "Found $repos_count .repos.txt file(s)"
             
             # Check if ~/dev directory exists (common repo location)
             if [ -d "$HOME/dev" ]; then
-                local cloned_repos=$(find "$HOME/dev" -maxdepth 2 -name ".git" -type d 2>/dev/null | wc -l | tr -d ' ')
+                local cloned_repos=$(find "$HOME/dev" -maxdepth 3 -name ".git" -type d 2>/dev/null | wc -l | tr -d ' ')
                 if [ "$cloned_repos" -gt 0 ]; then
                     print_check "pass" "Found $cloned_repos cloned repositories in ~/dev"
                 else
@@ -394,6 +425,7 @@ main() {
     validate_vim
     validate_workenv
     validate_repos
+    validate_auth
     
     print_summary
 }

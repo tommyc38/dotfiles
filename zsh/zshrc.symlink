@@ -1,167 +1,130 @@
+# ~/.zshrc — managed in ~/dotfiles/zsh/zshrc.symlink
+#
+# IntelliJ/WebStorm source this file with INTELLIJ_ENVIRONMENT_READER set just to harvest the
+# environment (PATH, JAVA_HOME, NVM, ...). Anything interactive or slow is skipped in that case.
+
 export DOTFILES=$HOME/dotfiles
 export ZSH=$DOTFILES/zsh
 
-# Auto-load vault password if file exists (after DOTFILES is set)
-# This password corresponds to the encrypted files in /vault
-VAULT_PASSWORD_FILE="$DOTFILES/vault-key/password.txt"
-if [ -f "$VAULT_PASSWORD_FILE" ]; then
-    export VAULT_PASSWORD=$(cat "$VAULT_PASSWORD_FILE" 2>/dev/null)
-    if [ -n "$VAULT_PASSWORD" ]; then
-        echo "Vault password loaded from $VAULT_PASSWORD_FILE"
-    fi
+# --- Homebrew & GNU tools -------------------------------------------------------------------------
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /usr/local/bin/brew ]]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+if [[ -n "$HOMEBREW_PREFIX" ]]; then
+  # GNU versions without the g prefix (bin/ scripts rely on GNU getopt, readlink -f, sed -i, ...).
+  for _gnu in coreutils findutils gnu-sed gnu-tar gnu-which gnu-indent grep; do
+    [[ -d "$HOMEBREW_PREFIX/opt/$_gnu/libexec/gnubin" ]] && export PATH="$HOMEBREW_PREFIX/opt/$_gnu/libexec/gnubin:$PATH"
+  done
+  unset _gnu
+  export PATH="$HOMEBREW_PREFIX/opt/gnu-getopt/bin:$PATH"
 fi
 
-# Setup SSH agent and add keys (only if needed)
-# With macOS keychain (--apple-use-keychain), keys are automatically loaded when needed
-# Only run setup if: agent isn't running OR no keys are loaded
-if [ -f "$DOTFILES/bin/ssh-setup.sh" ] && [ -d "$DOTFILES/vault-key" ] && [ -z "$INTELLIJ_ENVIRONMENT_READER" ] ; then
-    # Check if ssh-agent is running and has keys
-    if ! ssh-add -l >/dev/null 2>&1; then
-        # Agent not running or no keys loaded - run setup
-        echo "Running ssh-setup.sh from .zshrc"
-        source "$DOTFILES/bin/ssh-setup.sh"
-    fi
-fi
-
+# --- Paths & editor -------------------------------------------------------------------------------
 export NVIM=$HOME/.config/nvim
 export VIM_PLUGINS=$HOME/.vim/plugged
 export VIM_THEME_FILE=$DOTFILES/vim/custom-plugins/darcula/colors/darcula.vim
 export CUSTOM_BIN=$DOTFILES/bin/
 export VMS=$HOME/vagrant_boxes/
-export ANDROID_HOME=/Users/tomconley/Library/Android/sdk
-
-# Load ZSH files
-for config in $ZSH/**/*.zsh; do
-    if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-      source $config
-    fi
-done
-
-# Add work environments - See workenv.sh script to make env switching easier.
-if [[ -f ~/.workrc ]]; then
-    if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-        source $HOME/.workrc
-    fi
-fi
-
-# workenv function wrapper for easier environment switching
-workenv() {
-    . $DOTFILES/bin/workenv.sh "$@"
-}
-
-# check for custom bin directory and add to path
-if [[ -d ~/bin ]]; then
-    export PATH=~/bin:$PATH
-fi
-
-if [[ -d ~/.local/bin ]]; then
-    export PATH="$HOME/.local/bin:$PATH"
-fi
-
-# Add custom scripts
-export PATH=$DOTFILES/bin:$PATH
-
-
-# Webstorm command line tools
-export PATH="/Applications/WebStorm.app/Contents/MacOS:$PATH"
-
-# Use coreutiles without the prefix g
-if [[ "$(uname)" == "Darwin" && "$(command -v brew)" ]]; then
-  if [[ -z "$HOMEBREW_PREFIX" ]]; then
-    if [[ -x "/opt/homebrew/bin/brew" ]]; then
-      # Apple Silicon Macs
-      HOMEBREW_PREFIX="/opt/homebrew"
-      export PATH="$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin:$PATH"
-    elif [[ -x "/usr/local/bin/brew" ]]; then
-      # Intel Macs
-      HOMEBREW_PREFIX="/usr/local"
-      export PATH="/usr/local/bin:$PATH"
-    fi
-  fi
-fi
-
-# Make vim your default editor
+export ANDROID_HOME=$HOME/Library/Android/sdk
 export EDITOR="nvim"
 
-# make output of ls color code file/dir types
+[[ -d ~/bin ]] && export PATH=~/bin:$PATH
+[[ -d ~/.local/bin ]] && export PATH="$HOME/.local/bin:$PATH"
+export PATH="$DOTFILES/bin:$PATH"
+export PATH="/Applications/WebStorm.app/Contents/MacOS:$PATH"   # `webstorm .`
+
+# --- SSH keys -------------------------------------------------------------------------------------
+# macOS's launchd agent is shared by every shell, so this only does work after a reboot/login, and
+# ~/.ssh/config (AddKeysToAgent + UseKeychain) covers anything it misses.
+if [[ -z "$INTELLIJ_ENVIRONMENT_READER" && -d "$DOTFILES/vault-key" ]] && ! ssh-add -l >/dev/null 2>&1; then
+  bash "$DOTFILES/bin/ssh-setup.sh" >/dev/null 2>&1
+fi
+
+# --- Zsh config files (aliases, functions, prompt, ...) -------------------------------------------
+if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
+  for config in $ZSH/**/*.zsh; do
+    source $config
+  done
+  unset config
+fi
+
+# --- Work environments (vault-key/**/*.env) — see `workenv --help` --------------------------------
+if [[ -f ~/.workrc && -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
+  source $HOME/.workrc
+fi
+workenv() {
+  . "$DOTFILES/bin/workenv.sh" "$@"
+}
+
+# --- Interactive niceties -------------------------------------------------------------------------
 alias ls="ls --color"
 export LS_COLORS='or=5;31:mi=5:ow=01;91'
-
 alias info='info --vi-keys'
-#this will allow vi navigation when using the info command
 
-
-if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
   autoload -U compinit add-zsh-hook
-  compinit -i
+  # Full security audit at most once a day; otherwise reuse the cached dump (-C).
+  if [[ -n ${ZDOTDIR:-$HOME}/.zcompdump(#qN.mh+24) ]]; then compinit -i; else compinit -C -i; fi
+
   BASE16_SHELL="$HOME/.config/base16-shell/"
-  [ -n "$PS1" ] && \
-      [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
-          eval "$("$BASE16_SHELL/profile_helper.sh")"
+  [[ -n "$PS1" && -s "$BASE16_SHELL/profile_helper.sh" ]] && eval "$("$BASE16_SHELL/profile_helper.sh")"
+
+  [[ -s "$HOMEBREW_PREFIX/etc/profile.d/autojump.sh" ]] && . "$HOMEBREW_PREFIX/etc/profile.d/autojump.sh"
+
+  if [[ -z ${DOTFILES_LOADED+x} ]]; then
+    for _plugin in zsh-syntax-highlighting zsh-autosuggestions; do
+      for _dir in "$HOMEBREW_PREFIX/share/$_plugin" /usr/share/$_plugin; do
+        [[ -f "$_dir/$_plugin.zsh" ]] && { source "$_dir/$_plugin.zsh"; break; }
+      done
+    done
+    unset _plugin _dir
+  fi
+
+  for config ($ZSH/**/*completion.sh) source $config
+  unset config
 fi
 
-# Post install for the autojump package.
-if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-    [[ "$(uname)" == "Darwin" && -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
-fi
-
-# initialize autocomplete and syntax highlighting
-if [ -z ${DOTFILES_LOADED+x} ]; then
-
-    if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-      if [[ "$(uname)" == "Darwin" ]]; then
-        # install zsh-syntax-highlighting
-        source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-        # install zsh autosuggestions -(TIP -in vi mode use standard motions to expend suggestions)
-        source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-      else
-        source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-        source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-      fi
-    fi
-fi
-
+# --- Node (nvm) -----------------------------------------------------------------------------------
 export NVM_DIR="$HOME/.nvm"
-if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-    [ -s "$NVM_DIR/nvm.sh"  ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+export NVM_SYMLINK_CURRENT=true # gives IDEs one stable path for the current node version
+if [[ -z "$INTELLIJ_ENVIRONMENT_READER" && -s "$NVM_DIR/nvm.sh" ]]; then
+  # `--no-use` skips nvm's own default-version lookup, which costs ~1.5s per shell. Resolve the default
+  # alias ourselves for the common cases (node/stable, "22", "v22.1.0"); anything else (lts/*, ...)
+  # falls back to `nvm use`.
+  \. "$NVM_DIR/nvm.sh" --no-use
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+  _nvm_default="$(<"$NVM_DIR/alias/default" 2>/dev/null)"
+  case "$_nvm_default" in
+    node|stable|"") _nvm_bin=("$NVM_DIR"/versions/node/v*(N/On[1])) ;;
+    v[0-9]*|[0-9]*) _nvm_bin=("$NVM_DIR"/versions/node/v${_nvm_default#v}(|.*)(N/On[1])) ;;
+    *) _nvm_bin=() ;;
+  esac
+  if [[ -x "${_nvm_bin[1]}/bin/node" ]]; then
+    export PATH="${_nvm_bin[1]}/bin:$PATH"
+    export NVM_BIN="${_nvm_bin[1]}/bin"
+  else
+    nvm use --silent default >/dev/null 2>&1
+  fi
+  unset _nvm_default _nvm_bin
+  add-zsh-hook chpwd load-nvmrc # switch node versions on cd (zsh/functions.zsh)
 fi
 
-export NVM_SYMLINK_CURRENT=true # This allows IDEs to use a single place to set your node version
-
-export DOTFILES_LOADED=1
-
-# Functions that require a zsh hook should be added here
-
-if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-    for config ($ZSH/**/*completion.sh) source $config
-fi
-
-# https://stackoverflow.com/questions/30840651/what-does-autoload-do-in-zsh
-if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-    autoload -U add-zsh-hook
-fi
-
-if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-  add-zsh-hook chpwd load-nvmrc # Runs this function every time to the pwd changes.
-fi
-
+# --- Python (pyenv) -------------------------------------------------------------------------------
 export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-
-if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-    eval "$(pyenv init --path)"
-    eval "$(pyenv init -)"      # This makes pyenv functions available in the shell
-    eval "$(pyenv virtualenv-init -)" # This enables pyenv-virtualenv functionality
+[[ -d "$PYENV_ROOT/bin" ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]] && command -v pyenv >/dev/null; then
+  eval "$(pyenv init --path)"
+  eval "$(pyenv init -)"
+  pyenv commands 2>/dev/null | grep -qx virtualenv-init && eval "$(pyenv virtualenv-init -)"
 fi
 
-# Java
-# Gradle needs a launch JVM on PATH before it can honour a project's toolchain,
-# and Homebrew's openjdk is keg-only so it is never linked into PATH for us.
-# This lives here rather than in $ZSH/java.zsh because the $ZSH/**/*.zsh loop
-# above is skipped for INTELLIJ_ENVIRONMENT_READER — and IntelliJ harvests this
-# file to build the env for its Gradle sync and its Nx plugin, both of which
-# shell out to ./gradlew and need to find java.
+# --- Java -----------------------------------------------------------------------------------------
+# Gradle needs a launch JVM on PATH before it can honour a project's toolchain, and Homebrew's
+# openjdk is keg-only so it is never linked into PATH for us. This is deliberately outside the
+# INTELLIJ_ENVIRONMENT_READER guards: IntelliJ harvests this file for its Gradle sync and its Nx
+# plugin, both of which shell out to ./gradlew and need to find java.
 for _java_home in \
     /opt/homebrew/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home \
     /usr/local/opt/openjdk@25/libexec/openjdk.jdk/Contents/Home; do
@@ -172,3 +135,15 @@ for _java_home in \
     fi
 done
 unset _java_home
+
+export DOTFILES_LOADED=1
+
+# --- Tungsten Cloud -------------------------------------------------------------------------------
+# The marked block below is owned by `pnpm dev:setup` in the Tungsten eng-* repos (tools/dev/setup.sh).
+# Every run deletes it and re-appends it at the END of this file, so keep it last and add nothing
+# after it. install.sh also reads it so first-time package installs can reach the Artifactory mirror.
+# The CA chain it points at is symlinked from the vault (vault-key/symlinks.txt).
+# >>> tng dev:setup >>>
+export COREPACK_NPM_REGISTRY="https://us01cmsysart01.kofax.com:443/artifactory/api/npm/npm-registry"
+export NODE_EXTRA_CA_CERTS="$HOME/.certs/tungsten-ca-chain.pem"
+# <<< tng dev:setup <<<
