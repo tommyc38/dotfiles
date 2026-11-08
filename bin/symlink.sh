@@ -66,6 +66,23 @@ function set_dotfiles_root_dir() {
 
 }
 
+# Where a target is backed up: its path relative to $HOME, mirrored under the backup directory
+# (e.g. ~/Library/Application Support/Code/User/settings.json -> dotfiles_backup/Library/.../settings.json),
+# so same-named files (Cursor's and VS Code's settings.json) can't collide.
+function backup_path_for() {
+  local target="$1"
+  case "$target" in
+    "$HOME"/*) echo "$backup_directory/${target#"$HOME"/}" ;;
+    *) echo "$backup_directory/$(basename "$target")" ;;
+  esac
+}
+
+# Prune empty directories left in the backup tree after a restore.
+function remove_empty_dirs() {
+  [ -z "$dry_run" ] && [ -d "$backup_directory" ] && find "$backup_directory" -mindepth 1 -type d -empty -delete 2>/dev/null
+  return 0
+}
+
 # Creates a backup directory.
 function create_backup_directory() {
   if [ ! -e "$backup_directory" ]; then
@@ -97,7 +114,7 @@ function backup_file() {
   local target_file="$1" # The target path of a symlink.
   local backup_file
   local message
-  backup_file="$backup_directory/$(basename "$target_file")"
+  backup_file="$(backup_path_for "$target_file")"
 
   local backup_file_name
   backup_file_name="$(get_message_file_name "$target_file")"
@@ -111,7 +128,7 @@ function backup_file() {
     message="$message_indent$backup_file_name (symlinked from source: $(readlink -f "$target_file"))\n"
     backups_created_msg=$backups_created_msg$message
     if [ -z "$dry_run" ]; then
-      create_backup_directory
+      mkdir -p "$(dirname "$backup_file")"
       ln -s "$(readlink "$target_file")" "$backup_file" &> /dev/null
       rm -r "$target_file"
     fi
@@ -121,8 +138,7 @@ function backup_file() {
   else
     message="$message_indent$backup_file_name|-->|$backup_file\n"
     backups_created_msg=$backups_created_msg$message
-    create_backup_directory
-    [ -z "$dry_run" ] && mv "$target_file" "$backup_file"
+    [ -z "$dry_run" ] && mkdir -p "$(dirname "$backup_file")" && mv "$target_file" "$backup_file"
     true
     return
   fi
@@ -145,7 +161,7 @@ function restore_file() {
   local target_file="$2"
   local backup_file
   local message
-  backup_file="$backup_directory/$(basename "$target_file")"
+  backup_file="$(backup_path_for "$target_file")"
 
   if [ -n "$source_target_file" ];then
     symlink_destination_dir="${target_file%/*}"
@@ -228,6 +244,7 @@ function get_target(){
   local neovim_directory=$symlink_destination_dir/.config/nvim
   local plugins_directory=$vim_directory/plugged/custom-plugins
   local cursor_user_directory="$symlink_destination_dir/Library/Application Support/Cursor/User"
+  local vscode_user_directory="$symlink_destination_dir/Library/Application Support/Code/User"
 
   if [ "$(basename "$source")" == "darcula" ]; then
       target="$plugins_directory/darcula"
@@ -248,6 +265,9 @@ function get_target(){
 
   elif [[ "$source" == */cursor/settings.json || "$source" == */cursor/keybindings.json ]]; then
       target="$cursor_user_directory/$(basename "$source")"
+
+  elif [[ "$source" == */vscode/settings.json ]]; then
+      target="$vscode_user_directory/settings.json"
 
   elif [ "$(basename "$source")" == ".vimrc" ]; then
       target="$symlink_destination_dir/.vimrc"
@@ -446,7 +466,7 @@ Options:
   -v, --include-vim              Include sym-linking vim files.
   -f, --file <file>              A file containing the source and target paths for symlinks. See example.
   -k, --include-karabiner        Include sym-linking the karabiner directory to ~/.config/karabiner.
-  -c, --include-editors          Include sym-linking Cursor settings.json and keybindings.json.
+  -c, --include-editors          Include sym-linking Cursor settings.json/keybindings.json and VS Code settings.json.
   -h, --help                     Get help on running this script.
 
 Examples:
@@ -565,7 +585,8 @@ function main() {
     "$dotfiles_directory/vim/coc-settings.json" "$dotfiles_directory/vim/plugins.vim" "$dotfiles_directory/vim/.vimrc")
 
     local karabiner_sources=("$dotfiles_directory/karabiner")
-    local editor_sources=("$dotfiles_directory/cursor/settings.json" "$dotfiles_directory/cursor/keybindings.json")
+    local editor_sources=("$dotfiles_directory/cursor/settings.json" "$dotfiles_directory/cursor/keybindings.json"
+      "$dotfiles_directory/vscode/settings.json")
 
     files_to_symlink=("${dot_symlink_ext_sources[@]}") # Default files to symlink.
 

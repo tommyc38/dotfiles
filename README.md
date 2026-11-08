@@ -68,13 +68,14 @@ vim/                     .vimrc, init.vim, plugins, coc settings, darcula theme
 karabiner/               → ~/.config/karabiner (caps lock = esc on tap, ctrl on hold)
 cursor/                  → ~/Library/Application Support/Cursor/User/{settings,keybindings}.json
 webstorm/                ideavimrc.symlink → ~/.ideavimrc, settings/ (exported backup)
-vscode/                  old VS Code settings, kept for reference — not linked
+vscode/                  settings.json → ~/Library/Application Support/Code/User/ (legacy/: old Windows settings, not linked)
 vault/                   encrypted secrets (committed)
 vault-key/               decrypted secrets (gitignored — never commit)
 ```
 
 Symlinks: any `*.symlink` file links to `~/.<name>` automatically. Existing files are moved to
-`~/dotfiles_backup/` first, and `bin/symlink.sh --restore` puts them back.
+`~/dotfiles_backup/` first, at the same path relative to `$HOME`, so same-named files don't collide.
+`bin/symlink.sh --restore` puts them back.
 
 ## Vault (secrets in a public repo)
 
@@ -171,7 +172,9 @@ always moves it to the **end** of `~/.zshrc`, so keep it last and add nothing af
   `karabiner.json` doesn't survive, because Karabiner rewrites that file atomically and replaces the link.
 - **Cursor:** `settings.json` and `keybindings.json` are linked from `cursor/`, so changes made in Cursor's
   UI land in the repo.
-- **iTerm2, VS Code:** not managed yet (see TODO).
+- **VS Code:** `settings.json` is linked from `vscode/`. The terminal defaults to zsh, and there's a
+  `bash` profile in the terminal dropdown (both login shells, so they load the same config as a terminal tab).
+- **iTerm2:** not managed yet (see TODO).
 
 ## Shell notes
 
@@ -204,5 +207,6 @@ always moves it to the **end** of `~/.zshrc`, so keep it last and add nothing af
 ## TODO
 
 - iTerm2 preferences (`defaults` export or iTerm's "load preferences from a folder").
-- Decide whether `vscode/` is still wanted. It's from an old Windows machine and isn't linked.
+- Decide whether anything in `vscode/legacy/` (old Windows settings: vim keybindings, Darcula colours) should
+  move into `vscode/settings.json`.
 - Claude Code / Codex config (`~/.claude/settings.json`, `CLAUDE.md`, ...).
