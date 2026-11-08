@@ -109,7 +109,6 @@ validate_symlinks() {
         "$HOME/.zshrc"
         "$HOME/.bashrc"
         "$HOME/.bash_profile"
-        "$HOME/.gitconfig"
         "$HOME/.ideavimrc"
         "$HOME/.vimrc"
         "$HOME/.config/karabiner"
@@ -132,6 +131,13 @@ validate_symlinks() {
         fi
     done
     
+    # ~/.gitconfig is a local file that includes the shared one (not a symlink).
+    if git config --global --get-all include.path 2>/dev/null | grep -qxF "$DOTFILES_DIR/git/gitconfig"; then
+        print_check "pass" "~/.gitconfig includes git/gitconfig"
+    else
+        print_check "fail" "~/.gitconfig doesn't include git/gitconfig (run: ./install.sh --only symlinks)"
+    fi
+
     # Check .workrc for workenv
     if [ -L "$HOME/.workrc" ] || [ -f "$HOME/.workrc" ]; then
         print_check "pass" ".workrc exists (required for workenv)"

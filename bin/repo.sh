@@ -27,6 +27,7 @@ dry_run=
 default_directory=
 source_file=
 npm_install=
+clone_failures=0
 
 # nvm is a shell function, so it has to be sourced (only needed with --npm-install).
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
@@ -253,7 +254,10 @@ function clone_repos() {
         [ -z "$dry_run" ] && mkdir -p "$parent_dir"
         echo "Created parent directory: ~${parent_dir//$HOME/}"
       fi
-      [ -z "$dry_run" ] && git clone "$repo" "$install_dir"
+      if [ -z "$dry_run" ] && ! git clone "$repo" "$install_dir"; then
+        echo "✗ Clone failed -- $repo"
+        clone_failures=$((clone_failures + 1))
+      fi
       npm_install "$install_dir"
     fi
     ((count++))
@@ -408,6 +412,10 @@ function main() {
   done;
 
   clone_repos
+  if [ "$clone_failures" -gt 0 ]; then
+    echo "$clone_failures clone(s) failed."
+    exit 1
+  fi
   exit 0
 }
 

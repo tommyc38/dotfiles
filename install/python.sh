@@ -129,10 +129,9 @@ install_one_version() {
       fi
     fi
 
-    # Ensure pipx path is set up
-    if command -v pipx >/dev/null 2>&1; then
-      pipx ensurepath || true
-    fi
+    # pipx installs into ~/.local/bin, which zshrc/bash_profile put on PATH whenever it exists.
+    # (Not `pipx ensurepath`: it would append to ~/.zshrc, a file in this repo.)
+    mkdir -p "$HOME/.local/bin"
 
     echo "Installed for $full:"
     python -V || true

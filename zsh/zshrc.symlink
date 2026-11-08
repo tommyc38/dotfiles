@@ -44,7 +44,7 @@ fi
 
 # --- Zsh config files (aliases, functions, prompt, ...) -------------------------------------------
 if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
-  for config in $ZSH/**/*.zsh; do
+  for config in $ZSH/**/*.zsh(N); do
     source $config
   done
   unset config
@@ -65,8 +65,17 @@ alias info='info --vi-keys'
 
 if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
   autoload -U compinit add-zsh-hook
-  # Full security audit at most once a day; otherwise reuse the cached dump (-C).
-  if [[ -n ${ZDOTDIR:-$HOME}/.zcompdump(#qN.mh+24) ]]; then compinit -i; else compinit -C -i; fi
+  # Full security audit at most once a day; otherwise reuse the cached dump (-C). The glob qualifier
+  # needs extendedglob, and touch makes "once a day" hold even when compinit doesn't rewrite the dump.
+  () {
+    setopt local_options extended_glob
+    local dump=${ZDOTDIR:-$HOME}/.zcompdump
+    if [[ ! -f $dump || -n $dump(#qN.mh+24) ]]; then
+      compinit -i && touch $dump
+    else
+      compinit -C -i
+    fi
+  }
 
   BASE16_SHELL="$HOME/.config/base16-shell/"
   [[ -n "$PS1" && -s "$BASE16_SHELL/profile_helper.sh" ]] && eval "$("$BASE16_SHELL/profile_helper.sh")"
@@ -82,34 +91,34 @@ if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
     unset _plugin _dir
   fi
 
-  for config ($ZSH/**/*completion.sh) source $config
+  for config ($ZSH/**/*completion.sh(N)) source $config
   unset config
 fi
 
 # --- Node (nvm) -----------------------------------------------------------------------------------
 export NVM_DIR="$HOME/.nvm"
 export NVM_SYMLINK_CURRENT=true # gives IDEs one stable path for the current node version
+# Put the default node on PATH without nvm's ~1.5s default-version lookup — also for IntelliJ's env
+# reader, so Gradle sync / Nx get the same node as the terminal. Handles node/stable, "22", "v22.1.0"
+# (numeric sort: v22.20 > v22.9); anything else (lts/*, ...) falls back to `nvm use` below.
+_nvm_default=""; [[ -f "$NVM_DIR/alias/default" ]] && _nvm_default="$(<"$NVM_DIR/alias/default")"
+case "$_nvm_default" in
+  node|stable|"") _nvm_bin=("$NVM_DIR"/versions/node/v*(N/nOn[1])) ;;
+  v[0-9]*|[0-9]*) _nvm_bin=("$NVM_DIR"/versions/node/v${_nvm_default#v}(|.*)(N/nOn[1])) ;;
+  *) _nvm_bin=() ;;
+esac
+if [[ -x "${_nvm_bin[1]}/bin/node" ]]; then
+  export PATH="${_nvm_bin[1]}/bin:$PATH"
+  export NVM_BIN="${_nvm_bin[1]}/bin"
+fi
+
 if [[ -z "$INTELLIJ_ENVIRONMENT_READER" && -s "$NVM_DIR/nvm.sh" ]]; then
-  # `--no-use` skips nvm's own default-version lookup, which costs ~1.5s per shell. Resolve the default
-  # alias ourselves for the common cases (node/stable, "22", "v22.1.0"); anything else (lts/*, ...)
-  # falls back to `nvm use`.
   \. "$NVM_DIR/nvm.sh" --no-use
   [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-  _nvm_default="$(<"$NVM_DIR/alias/default" 2>/dev/null)"
-  case "$_nvm_default" in
-    node|stable|"") _nvm_bin=("$NVM_DIR"/versions/node/v*(N/On[1])) ;;
-    v[0-9]*|[0-9]*) _nvm_bin=("$NVM_DIR"/versions/node/v${_nvm_default#v}(|.*)(N/On[1])) ;;
-    *) _nvm_bin=() ;;
-  esac
-  if [[ -x "${_nvm_bin[1]}/bin/node" ]]; then
-    export PATH="${_nvm_bin[1]}/bin:$PATH"
-    export NVM_BIN="${_nvm_bin[1]}/bin"
-  else
-    nvm use --silent default >/dev/null 2>&1
-  fi
-  unset _nvm_default _nvm_bin
+  [[ -x "${_nvm_bin[1]}/bin/node" ]] || nvm use --silent default >/dev/null 2>&1
   add-zsh-hook chpwd load-nvmrc # switch node versions on cd (zsh/functions.zsh)
 fi
+unset _nvm_default _nvm_bin
 
 # --- Python (pyenv) -------------------------------------------------------------------------------
 export PYENV_ROOT="$HOME/.pyenv"

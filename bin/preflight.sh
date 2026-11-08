@@ -202,7 +202,7 @@ check_existing_config() {
     
     # Check for existing dotfiles
     local existing_files=0
-    for file in ~/.zshrc ~/.bashrc ~/.vimrc ~/.gitconfig; do
+    for file in ~/.zshrc ~/.bashrc ~/.vimrc; do
         if [ -f "$file" ]; then
             if [ -L "$file" ]; then
                 print_check "pass" "$file exists (symlink)"
@@ -258,7 +258,7 @@ print_summary() {
         echo -e "${GREEN}✓ System ready for installation!${NC}"
         echo ""
         echo "Run installation with:"
-        echo "  ./install.sh your_vault_password"
+        echo "  ./install.sh            # prompts for the vault password"
         echo ""
         return 0
     else

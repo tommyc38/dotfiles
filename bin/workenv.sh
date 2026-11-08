@@ -90,13 +90,15 @@ function update_and_load_workrc () {
       local pattern="^source"
       local new_line="source $new_env_file"
       
-      # macOS sed requires empty string after -i for in-place edit
-      # Use @ as delimiter since paths contain slashes
-      if [ "$(uname)" = "Darwin" ]; then
-        sed -i '' "s@$pattern.*@$new_line@" "$workrc"
-      else
-        sed -i "s@$pattern.*@$new_line@" "$workrc"
+      # Rewrite via a temp file: works with BSD and GNU sed alike (GNU sed is first on PATH in
+      # our shells, and `sed -i ''` means something else to it), and writing with `cat >` keeps
+      # ~/.workrc a symlink into the vault. Use @ as delimiter since paths contain slashes.
+      local tmp
+      tmp="$(mktemp)"
+      if sed "s@$pattern.*@$new_line@" "$workrc" > "$tmp"; then
+        cat "$tmp" > "$workrc"
       fi
+      rm -f "$tmp"
       
       source "$workrc"
       echo "Now using environment: $env"

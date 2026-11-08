@@ -19,9 +19,15 @@ else
 fi
 
 if [[ ! -x "$HOMEBREW_PREFIX/bin/brew" ]]; then
-  echo "Installing Homebrew..."
-  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  # Interactive on purpose: the installer needs sudo, and in NONINTERACTIVE mode it only tries
+  # `sudo -n` (ignoring cached credentials), which fails on a fresh Mac.
+  echo "Installing Homebrew (asks for your password and to press RETURN)..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   [[ -x /opt/homebrew/bin/brew ]] && HOMEBREW_PREFIX=/opt/homebrew
+fi
+if [[ ! -x "$HOMEBREW_PREFIX/bin/brew" ]]; then
+  echo "ERROR: Homebrew is not installed; every later step depends on it." >&2
+  exit 1
 fi
 
 # A freshly installed brew isn't on PATH yet (Apple Silicon puts it in /opt/homebrew).

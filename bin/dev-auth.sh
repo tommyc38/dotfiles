@@ -69,7 +69,8 @@ interactive() { [ -z "$check_only" ] && [ -t 0 ]; }
 # ssh -T never gives a shell on these hosts, so the exit code is useless; the greeting tells us.
 ssh_check() {
   local target="$1" expect="$2" out
-  out="$(ssh -T -o BatchMode=yes -o ConnectTimeout=10 "$target" 2>&1)"
+  # accept-new: on a fresh machine known_hosts is empty; still refuses a CHANGED host key.
+  out="$(ssh -T -o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new "$target" 2>&1)"
   if grep -qiE "$expect" <<<"$out" && ! grep -qi 'permission denied' <<<"$out"; then
     ok "ssh $target"
   else
@@ -171,7 +172,8 @@ check_azure() {
     ok "az logged in as $(az account show --query user.name -o tsv 2>/dev/null)"
   elif interactive; then
     warn "az is not logged in — opening browser login"
-    az login --only-show-errors >/dev/null && ok "az logged in" || bad "az login failed"
+    # Not silenced: newer az shows an interactive subscription picker after the browser login.
+    if az login --only-show-errors; then ok "az logged in"; else bad "az login failed"; fi
   else
     bad "az not logged in — run: az login"
   fi

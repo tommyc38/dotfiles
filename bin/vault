@@ -276,9 +276,8 @@ function main() {
     # Password.txt was decrypted from vault/ - just set permissions
     if [ -f "$target_directory/$password_filename" ]; then
       chmod 600 "$target_directory/$password_filename"
-      export VAULT_PASSWORD="$password"
       echo "Password file decrypted to: $target_directory/$password_filename"
-      echo "Shell configs will auto-load this password on next session"
+      echo "'vault' and 'vault -e' will use it from now on"
     fi
   elif [ "$operation" == "encrypt" ]; then
     # Password.txt was just encrypted - set proper permissions on source

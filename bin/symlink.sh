@@ -111,7 +111,8 @@ function backup_file() {
     message="$message_indent$backup_file_name (symlinked from source: $(readlink -f "$target_file"))\n"
     backups_created_msg=$backups_created_msg$message
     if [ -z "$dry_run" ]; then
-      ln -s "$(readlink -f "$target_file")" "$backup_file" &> /dev/null
+      create_backup_directory
+      ln -s "$(readlink "$target_file")" "$backup_file" &> /dev/null
       rm -r "$target_file"
     fi
     true
@@ -207,7 +208,7 @@ function restore() {
     if [ "$(readlink -f "$target_file")"  == "$source_file" ]; then
       # Remove dotfile symlinks.
       local source_file_name
-      source_file_name="$(get_message_file_name "$source_file_name")"
+      source_file_name="$(get_message_file_name "$source_file")"
       message="$message_indent$source_file_name|-->|$target_file\n"
       restored_removed_msg=$restored_removed_msg$message
       [ -z "$dry_run" ] && rm "$target_file"
@@ -336,7 +337,8 @@ function symlink_dotfiles(){
       echo "$(color_red "Check your source is correct and/or update the target in the get_target function.")"
       exit 1
     fi
-    if [ -e "$target_file" ]; then
+    # -L too: a dangling symlink fails -e, and ln -s would then fail with "File exists".
+    if [ -e "$target_file" ] || [ -L "$target_file" ]; then
       local source_file_name
       source_file_name="$(get_message_file_name "$source_file")"
 
@@ -592,7 +594,9 @@ function main() {
   done
 
   run_type "$type" "$skip"
-  exit 0
+  # Non-zero when anything couldn't be linked/restored, so install.sh reports the step as failed.
+  [ -z "$symlinks_failed_msg" ] && [ -z "$restored_failed_msg" ]
+  exit $?
 }
 
 main "$@"

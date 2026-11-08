@@ -127,21 +127,55 @@ vault_password() {
   elif [ -z "${VAULT_PASSWORD:-}" ] && [ -s "$DOTFILES/vault-key/password.txt" ]; then
     VAULT_PASSWORD="$(cat "$DOTFILES/vault-key/password.txt")"
   fi
-  if [ -z "${VAULT_PASSWORD:-}" ]; then
+  if [ -z "${VAULT_PASSWORD:-}" ] && { : </dev/tty; } 2>/dev/null; then
     read -rsp "Vault password: " VAULT_PASSWORD </dev/tty
     echo
   fi
-  [ -n "$VAULT_PASSWORD" ]
+  [ -n "${VAULT_PASSWORD:-}" ]
 }
 
 step_vault() {
+  # Decrypting replaces vault-key/ wholesale. If it holds edits that were never encrypted (workenv
+  # rewrites ~/.workrc, `pnpm dev:setup` rewrites ~/.npmrc — both link into vault-key/), a re-run
+  # would silently swap them for the older vault/ copies. Keep them and say so instead.
+  local newest unsaved
+  newest="$(find "$DOTFILES/vault" -type f -not -name .DS_Store -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -1)"
+  if [ -n "$newest" ] && [ -d "$DOTFILES/vault-key" ]; then
+    unsaved="$(find "$DOTFILES/vault-key" -path '*/vault_backups' -prune -o -type f -not -name .DS_Store -newer "$newest" -print 2>/dev/null)"
+    if [ -n "$unsaved" ]; then
+      echo "vault-key/ has changes newer than vault/ — NOT decrypting over them:"
+      echo "$unsaved" | sed "s#^$DOTFILES/#  #"
+      echo "Keep them: 'vault -e' and commit. Discard them: 'vault' (old copies go to vault-key/vault_backups/)."
+      return 0
+    fi
+  fi
   vault_password || { echo "A vault password is required" >&2; return 1; }
   mkdir -p "$DOTFILES/vault-key"
   # Passed via the environment, not argv, so it never shows up in `ps`.
   VAULT_PASSWORD="$VAULT_PASSWORD" bash "$DOTFILES/bin/vault"
 }
 
+# ~/.gitconfig stays a real, local file whose first lines include git/gitconfig.
+ensure_gitconfig() {
+  local shared="$DOTFILES/git/gitconfig" gc="$HOME/.gitconfig" tmp
+  [ -L "$gc" ] && rm "$gc"   # older setups symlinked it into the repo
+  if [ -f "$gc" ] && git config --file "$gc" --get-all include.path 2>/dev/null | grep -qxF "$shared"; then
+    echo "~/.gitconfig already includes ${shared/#$HOME/~}"
+    return 0
+  fi
+  tmp="$(mktemp)"
+  printf '# Machine-local git config. Shared settings come from the include below (dotfiles repo).
+[include]
+	path = %s
+
+' "$shared" > "$tmp"
+  [ -f "$gc" ] && cat "$gc" >> "$tmp"
+  mv "$tmp" "$gc"
+  echo "~/.gitconfig now includes ${shared/#$HOME/~}"
+}
+
 step_symlinks() {
+  ensure_gitconfig
   bash "$DOTFILES/bin/symlink.sh" --include-vim --include-karabiner --include-editors || return 1
   if [ -f "$DOTFILES/vault-key/symlinks.txt" ]; then
     bash "$DOTFILES/bin/symlink.sh" --file "$DOTFILES/vault-key/symlinks.txt"

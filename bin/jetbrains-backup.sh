@@ -20,7 +20,7 @@ DEST="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/webstorm/settings"
 if [ $# -gt 0 ]; then
   SRC="$JB/$1"
 else
-  SRC="$(ls -d "$JB"/WebStorm* 2>/dev/null | sort -V | tail -1)"
+  SRC="$( (ls -d "$JB"/WebStorm* 2>/dev/null || true) | sort -V | tail -1)"
 fi
 [ -d "$SRC" ] || { echo "No WebStorm config directory found (looked for: ${SRC:-$JB/WebStorm*})" >&2; exit 1; }
 

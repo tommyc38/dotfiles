@@ -42,7 +42,7 @@ Each step is idempotent: a failed step is reported, the rest continue, and you r
 VAULT_PASSWORD=... ./install.sh     # non-interactive
 ```
 
-Never run it with `sudo`; it asks for sudo only for Xcode and `/etc/shells`.
+Never run it with `sudo`. It asks for your password when it needs it: the Homebrew installer, some cask installers, `/etc/shells`, and `chsh`.
 
 ## Layout
 
@@ -61,7 +61,7 @@ bin/                     on PATH via zshrc
   preflight.sh, validate-install.sh, fonts.sh, e
 zsh/                     zshrc.symlink → ~/.zshrc, plus *.zsh (aliases, functions, prompt, ...)
 bash/                    bashrc / bash_profile (backup shell)
-git/                     gitconfig.symlink → ~/.gitconfig, gitignore_global
+git/                     gitconfig (included by a local ~/.gitconfig), gitignore_global
 vim/                     .vimrc, init.vim, plugins, coc settings, darcula theme
 karabiner/               → ~/.config/karabiner (caps lock = esc on tap, ctrl on hold)
 cursor/                  → ~/Library/Application Support/Cursor/User/{settings,keybindings}.json
