@@ -292,8 +292,10 @@ function main() {
     echo "Setting permissions on decrypted files..."
     # SSH directory
     [ -d "$HOME/.ssh" ] && chmod 700 "$HOME/.ssh"
-    # SSH keys (files without extension, excluding .pub files)
-    find "$target_directory" -type f ! -name "*.pub" ! -name "*.txt" ! -name "*.sh" ! -name "*.env" -exec chmod 600 {} \; 2>/dev/null || true
+    # Everything decrypted is owner-only (SSH keys, .env tokens, npmrc, ...); public keys stay readable.
+    find "$target_directory" -path '*/vault_backups' -prune -o -type f ! -name "*.pub" -exec chmod 600 {} \; 2>/dev/null || true
+    find "$target_directory" -path '*/vault_backups' -prune -o -type f -name "*.pub" -exec chmod 644 {} \; 2>/dev/null || true
+    find "$target_directory" -path '*/vault_backups' -prune -o -type d -exec chmod 700 {} \; 2>/dev/null || true
     # SSH config if it exists
     [ -f "$target_directory/config" ] && chmod 600 "$target_directory/config"
     echo "Permissions set successfully"
