@@ -1,5 +1,6 @@
 .DS_Store
 .idea/
+.mcp.json
 playground/
 vault-key/
 test-env/
