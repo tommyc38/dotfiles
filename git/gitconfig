@@ -6,14 +6,14 @@
 	name = Tom Conley
 	email = tommyc38@gmail.com
 
-# Enterprise (Tungsten Cloud) identity — auto-applied to any repo under ~/dev/tungsten-cloud/
-# (the included file lives in the encrypted vault).
-[includeIf "gitdir:~/dev/tungsten-cloud/"]
-	path = ~/dotfiles/vault-key/tungsten-cloud/gitconfig
+# Work identities, auto-applied by folder (the included files live in the encrypted vault).
+# Tungsten Cloud GHE — any repo under ~/dev/tungsten/tungsten-cloud/
+[includeIf "gitdir:~/dev/tungsten/tungsten-cloud/"]
+	path = ~/dotfiles/vault-key/tungsten/tungsten-cloud.gitconfig
 
-# Printix identity — auto-applied to any repo under ~/dev/printix/ (Printix + Tungsten Automation PM orgs).
-[includeIf "gitdir:~/dev/printix/"]
-	path = ~/dotfiles/vault-key/kofax/gitconfig
+# Printix + Tungsten Automation PM (github.com) — work email and the printix SSH key, under ~/dev/tungsten/printix/
+[includeIf "gitdir:~/dev/tungsten/printix/"]
+	path = ~/dotfiles/vault-key/tungsten/printix.gitconfig
 
 [core]
 	excludesfile = ~/dotfiles/git/gitignore_global

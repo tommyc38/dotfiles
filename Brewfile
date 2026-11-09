@@ -58,7 +58,6 @@ brew "git"
 brew "openssl@3"
 brew "gh"                  # GitHub + Tungsten Cloud GHE (bin/dev-auth.sh logs both in)
 brew "atlassian/acli/acli" # Atlassian CLI: Jira / Confluence (bin/dev-auth.sh)
-brew "azure-cli"           # Azure DevOps (cs-infrastructure) — `az extension add -n azure-devops`
 
 # --- Languages & runtimes (Node is managed by nvm, Python by pyenv — see install/) ----------------
 brew "pyenv"
