@@ -287,7 +287,7 @@ Two roots — **personal** (everything I own) and **tungsten** (work) — each g
 | tungsten | Printix + Tungsten Automation PM (github.com, `tommyc38`) | `~/dev/tungsten/printix` | `vault-key/tungsten/printix.repos.txt` | `printix` |
 | tungsten | Tungsten Cloud (GHE) | `~/dev/tungsten/tungsten-cloud` | `vault-key/tungsten/tungsten-cloud.repos.txt` | `tungsten-cloud` |
 
-`repo.sh` skips anything already cloned. It compares remotes loosely, so `user@host:` vs `host:` or `%20` vs a
+`repo.sh` skips anything already cloned, and if a list moves a repo (like the personal/tungsten reorganization), it **moves** your existing checkout from anywhere under `~/dev` instead of cloning it again: branches, stashes, untracked files and `node_modules` come along, and emptied old folders are removed. The `symlinks` step likewise deletes `~/.ssh`/`~/.certs` links into `vault-key/` whose source was renamed or removed. It compares remotes loosely, so `user@host:` vs `host:` or `%20` vs a
 space still count as the same repo. With `--npm-install` it installs the repo's `.nvmrc` Node and its package
 manager (pnpm/yarn/npm, from the lockfile). After you start working in a new repo, add it to the right list
 and run `vault -e`. Preview with `repo.sh --dry-run --file <list> -D ~/dev`.
