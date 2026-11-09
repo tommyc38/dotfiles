@@ -16,7 +16,7 @@ DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export DOTFILES
 cd "$DOTFILES" || exit 1
 
-STEPS=(xcode brew vault symlinks ssh node python vault-install fonts macos shell base16 repos auth)
+STEPS=(xcode brew vault symlinks ssh node python vault-install claude fonts macos shell base16 repos auth)
 
 describe() {
   case "$1" in
@@ -28,6 +28,7 @@ describe() {
     node)          echo "nvm + Node versions" ;;
     python)        echo "pyenv + Python versions + nvim-provider" ;;
     vault-install) echo "Run vault-key/install.sh (machine-specific extras)" ;;
+    claude)        echo "Claude Code CLI + user plugins (Nx) + MCP servers (Atlassian, Playwright, Context7)" ;;
     fonts)         echo "Google, Nerd and Powerline fonts" ;;
     macos)         echo "macOS defaults (Finder, key repeat, ...)" ;;
     shell)         echo "Make Homebrew zsh the login shell" ;;
@@ -195,6 +196,8 @@ step_vault_install() {
     echo "No vault-key/install.sh found, skipping"
   fi
 }
+
+step_claude() { bash "$DOTFILES/install/claude.sh"; }
 
 step_fonts() {
   bash "$DOTFILES/bin/fonts.sh" --google-fonts-light --nerd-fonts-light --powerline-fonts-light

@@ -374,6 +374,36 @@ validate_workenv_dirs() {
     done < "$map"
 }
 
+validate_claude() {
+    print_header "Claude Code"
+    local claude_bin
+    claude_bin="$(command -v claude || echo "$HOME/.local/bin/claude")"
+    if [ -x "$claude_bin" ]; then
+        print_check "pass" "Claude Code $("$claude_bin" --version 2>/dev/null | cut -d' ' -f1)"
+    else
+        print_check "fail" "Claude Code not installed (run: ./install.sh --only claude)"
+        return
+    fi
+    if [ -L "$HOME/.claude/settings.json" ] && [ "$(readlink "$HOME/.claude/settings.json")" = "$DOTFILES_DIR/vault-key/claude/settings.json" ]; then
+        print_check "pass" "~/.claude/settings.json → vault-key/claude/settings.json"
+    else
+        print_check "warn" "~/.claude/settings.json isn't linked from the vault (run: ./install.sh --only symlinks)"
+    fi
+    if jq -e '.plugins["nx@nx-claude-plugins"][]? | select(.scope == "user")' "$HOME/.claude/plugins/installed_plugins.json" >/dev/null 2>&1; then
+        print_check "pass" "Plugin nx@nx-claude-plugins (user)"
+    else
+        print_check "warn" "Plugin nx@nx-claude-plugins not installed at user scope (run: ./install.sh --only claude)"
+    fi
+    local mcp
+    for mcp in atlassian playwright context7; do
+        if jq -e --arg n "$mcp" '.mcpServers[$n]' "$HOME/.claude.json" >/dev/null 2>&1; then
+            print_check "pass" "MCP server $mcp (user) — health: claude mcp list"
+        else
+            print_check "warn" "MCP server $mcp missing (run: ./install.sh --only claude)"
+        fi
+    done
+}
+
 validate_repos() {
     print_header "Repository Cloning"
     
@@ -452,6 +482,7 @@ main() {
     validate_workenv
     validate_workenv_dirs
     validate_repos
+    validate_claude
     validate_auth
     
     print_summary

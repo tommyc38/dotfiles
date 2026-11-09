@@ -49,7 +49,7 @@ Never run it with `sudo`. It asks for your password when it needs it: the Homebr
 ```
 Brewfile                 every formula, cask and tap (brew bundle)
 install.sh               orchestrator (above)
-install/                 brew.sh, node.sh, python.sh, osx.sh, vagrant.sh (optional, not run by install.sh)
+install/                 brew.sh, node.sh, python.sh, claude.sh, osx.sh, vagrant.sh (optional, not run by install.sh)
 bin/                     on PATH in both shells (shell/env.sh)
   dev-auth.sh            check / log in to gh, acli (Jira), Bitbucket, az (Azure DevOps)
   vault                  encrypt/decrypt vault/ <-> vault-key/
@@ -110,6 +110,7 @@ What's in `vault-key/`:
 | `workrc`                             | `~/.workrc` — the default work environment outside mapped folders (`workenv <name>` changes it) |
 | `workenv-dirs.txt`                   | folder → work environment mapping (`workenv --dirs`)                     |
 | `install.sh`                         | private extras for the `vault-install` step                              |
+| `claude/settings.json`               | `~/.claude/settings.json`: personal Claude Code defaults                  |
 
 ## Logins: gh, Jira, Bitbucket, Azure DevOps
 
@@ -189,6 +190,39 @@ always moves it to the **end** of `~/.zshrc`, so keep it last and add nothing af
   `bash` profile in the terminal dropdown (both login shells, so they load the same config as a terminal tab).
 - **iTerm2:** not managed yet (see TODO).
 
+## Claude Code
+
+| What | Where it lives | Synced how |
+| --- | --- | --- |
+| CLI | `~/.local/bin/claude` (native installer, auto-updates) | `claude` step (`install/claude.sh`) |
+| Personal settings | `~/.claude/settings.json` → `vault-key/claude/settings.json` | vault (it holds internal auto-mode context) |
+| Nx plugin (`nx@nx-claude-plugins`: skills, CI-monitor subagent, `nx-mcp`) | user scope | `claude` step + `enabledPlugins` in settings |
+| MCP servers: `atlassian`, `playwright`, `context7` | user scope, in `~/.claude.json` | `claude` step (`claude mcp add --scope user`) |
+| Project config | each repo's `.claude/settings.json` (committed) and `.claude/settings.local.json` (yours, git-ignored) | comes with the repos |
+
+**Layering** (highest wins): managed → `--settings` → project `settings.local.json` → project `settings.json` →
+your `~/.claude/settings.json`. Lists such as permission rules are **combined** across levels, so projects add
+to your defaults rather than replacing them. `autoMode` can only be set at user level.
+
+**What the personal defaults contain:**
+- your model and auto-mode rules;
+- `allow` rules for read-only `gh` / `acli` / `nx` / `npm` / `pnpm` / `brew` commands;
+- `ask` rules before Claude reads the vault, `~/.ssh`, `~/.npmrc`, AWS credentials or `.env` files, and before
+  force-pushes, `git reset --hard` and `git clean`;
+- the Nx plugin.
+
+`/model` and `/config` write through the link into the vault, so run `vault -e` afterwards; `validate-install.sh`
+reminds you.
+
+**Once per machine:** run `claude`, sign in, then `/mcp` → atlassian → authenticate.
+
+**Never synced** (machine state): `~/.claude.json`, `~/.claude/projects/`, `history.jsonl`, `sessions/`,
+`file-history/`, and credentials (in the macOS keychain).
+
+**`npx` MCP servers and the Tungsten mirror.** `~/.npmrc` sends all npm traffic through the Tungsten Artifactory
+mirror (the `dev:setup` block). So `playwright` and the Nx plugin's `nx-mcp`, which start via `npx …@latest`, need
+the VPN, and they fail if the mirror can't serve a package. `claude mcp list` shows their health.
+
 ## Shell notes
 
 - **zsh is the default shell; bash is fully supported** (e.g. a terminal profile that opens bash) and kept
@@ -224,4 +258,4 @@ always moves it to the **end** of `~/.zshrc`, so keep it last and add nothing af
 - iTerm2 preferences (`defaults` export or iTerm's "load preferences from a folder").
 - Decide whether anything in `vscode/legacy/` (old Windows settings: vim keybindings, Darcula colours) should
   move into `vscode/settings.json`.
-- Claude Code / Codex config (`~/.claude/settings.json`, `CLAUDE.md`, ...).
+- Optional personal `~/.claude/CLAUDE.md` (standing instructions for every project).
