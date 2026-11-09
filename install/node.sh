@@ -36,12 +36,11 @@ install_for_major() {
     return 0
   fi
 
+  # version-remote prints just the version. Don't parse `nvm ls-remote`: it puts "->" in front of the
+  # version in use, so awk '{print $1}' dropped it and re-runs installed the previous patch alongside it.
   local latest
-  if ! latest="$(nvm ls-remote "v${major}.*" | awk '{print $1}' | grep -E "^v${major}\." | tail -n1)"; then
-    echo "No versions found for major ${major}, skipping."
-    return 0
-  fi
-  if [ -z "$latest" ]; then
+  latest="$(nvm version-remote "$major" 2>/dev/null)"
+  if [[ "$latest" != "v${major}."* ]]; then
     echo "No versions found for major ${major}, skipping."
     return 0
   fi
@@ -58,11 +57,16 @@ install_for_major() {
     return 0
   fi
 
-  npm install -g npm@latest || true
-  npm install -g yarn pnpm || {
-    echo "Warning: Failed to install yarn/pnpm for ${latest}." >&2
-    return 0
-  }
+  # npm@latest only supports recent Node majors (npm 12 needs 22.22+). On older ones, stay on the newest
+  # release of the bundled npm major instead (e.g. npm@^10 on Node 18/20).
+  if ! npm install -g npm@latest --loglevel=error 2>/dev/null; then
+    npm install -g "npm@^$(npm -v | cut -d. -f1)" --loglevel=error || true
+  fi
+  # npm 11.19+ blocks package install scripts unless they're allowed; pnpm uses one to set up its binary.
+  npm install -g --allow-scripts=pnpm,yarn yarn pnpm || true
+  if ! pnpm -v >/dev/null 2>&1 || ! yarn -v >/dev/null 2>&1; then
+    echo "Warning: yarn/pnpm don't run under Node ${latest}. Fix the error above, then re-run: ./install.sh --only node" >&2
+  fi
 
   echo "Installed:"
   node -v || true
