@@ -192,6 +192,33 @@ function npm_install() {
   fi
 }
 
+# Existing checkouts under the search root, as "<normalized remote>\t<path>" lines (built once per run).
+# Lets a repo that moved in a list (e.g. ~/dev/printix -> ~/dev/tungsten/printix) be relocated instead of
+# cloned a second time, with its branches, stashes, untracked files and node_modules intact.
+checkout_index=
+function find_existing_checkout() {
+  local wanted="$1" gitdir dir remote
+  if [ -z "$checkout_index" ]; then
+    checkout_index="$(mktemp)"
+    while IFS= read -r gitdir; do
+      dir="${gitdir%/.git}"
+      remote="$(git -C "$dir" config --get remote.origin.url 2>/dev/null)" || continue
+      [ -n "$remote" ] && printf '%s\t%s\n' "$(normalize_git_url "$remote")" "$dir" >> "$checkout_index"
+    done < <(find "${RELOCATE_ROOT:-$HOME/dev}" -maxdepth 5 -name node_modules -prune -o -name .git -print 2>/dev/null)
+  fi
+  awk -F '\t' -v w="$wanted" '$1 == w { print $2; exit }' "$checkout_index"
+}
+
+# Remove now-empty parent directories of a moved checkout, stopping at the search root.
+function prune_empty_parents() {
+  local dir="$1" root="${RELOCATE_ROOT:-$HOME/dev}"
+  while [ "$dir" != "$root" ] && [ "$dir" != "/" ] && [[ "$dir" == "$root"/* ]]; do
+    rmdir "$dir" 2>/dev/null || break
+    echo "Removed empty directory: ~${dir//$HOME/}"
+    dir="$(dirname "$dir")"
+  done
+}
+
 # Clone each entry in the source file.
 function clone_repos() {
   local line
@@ -258,13 +285,29 @@ function clone_repos() {
         echo "    Skipping to avoid overwriting. -- $repo"
       fi
     else
-      echo "Cloning ($count/$line_count) - $repo ~${install_dir//$HOME/}"
       # Create parent directory if it doesn't exist
       parent_dir="$(dirname "$install_dir")"
       if [ ! -d "$parent_dir" ]; then
         [ -z "$dry_run" ] && mkdir -p "$parent_dir"
         echo "Created parent directory: ~${parent_dir//$HOME/}"
       fi
+      local existing_checkout
+      existing_checkout="$(find_existing_checkout "$(normalize_git_url "$repo")")"
+      if [ -n "$existing_checkout" ] && [ -d "$existing_checkout" ] && [ "$existing_checkout" != "$DOTFILES" ]; then
+        echo "Moving ($count/$line_count) - ~${existing_checkout//$HOME/} -> ~${install_dir//$HOME/} (already cloned there) -- $repo"
+        if [ -z "$dry_run" ]; then
+          if mv "$existing_checkout" "$install_dir"; then
+            prune_empty_parents "$(dirname "$existing_checkout")"
+          else
+            echo "✗ Move failed -- $repo"
+            clone_failures=$((clone_failures + 1))
+          fi
+        fi
+        npm_install "$install_dir"
+        ((count++))
+        continue
+      fi
+      echo "Cloning ($count/$line_count) - $repo ~${install_dir//$HOME/}"
       if [ -z "$dry_run" ] && ! git clone "$repo" "$install_dir"; then
         echo "✗ Clone failed -- $repo"
         clone_failures=$((clone_failures + 1))
@@ -362,6 +405,8 @@ Supported Package Managers:
 Features:
   - Parent directories created automatically
   - Skips cloning if repo already exists (verified by git remote URL)
+  - Moves an existing checkout of the same remote found elsewhere under ~/dev (\$RELOCATE_ROOT) to
+    its listed location instead of cloning it again (e.g. after a list reorganization)
   - Re-installs packages for existing repos if node_modules missing (with --npm-install)
   - Never overwrites existing repos or unrelated directories
   - Warns if directory exists but contains different repository

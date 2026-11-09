@@ -183,6 +183,22 @@ step_symlinks() {
   else
     echo "No vault-key/symlinks.txt found, skipping vault symlinks"
   fi
+  prune_dangling_vault_links
+}
+
+# Links into vault-key/ whose source no longer exists (a key or file was renamed or removed in the vault,
+# e.g. ~/.ssh/main -> vault-key/main after the personal/tungsten reorganization). Only our own links go.
+prune_dangling_vault_links() {
+  local link dir
+  for dir in "$HOME/.ssh" "$HOME/.certs"; do
+    [ -d "$dir" ] || continue
+    for link in "$dir"/* "$dir"/.[!.]*; do
+      [ -L "$link" ] && [ ! -e "$link" ] || continue
+      case "$(readlink "$link")" in
+        "$DOTFILES/vault-key/"*) rm "$link" && echo "Removed stale link: ${link/#$HOME/~}" ;;
+      esac
+    done
+  done
 }
 
 step_ssh() { bash "$DOTFILES/bin/ssh-setup.sh"; }
