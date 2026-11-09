@@ -101,7 +101,7 @@ What's in `vault-key/`:
 | `symlinks.txt`                       | `source \| target` pairs linked by the `symlinks` step (full target paths) |
 | `ssh-keys.txt`                       | key names (in `~/.ssh`) to load into the agent, one per line             |
 | `config`                             | `~/.ssh/config` — one Host block per code host                           |
-| `main`, `gotomconley/`, `kofax/`, `tungsten-cloud/`, `azure-devops/` | SSH keys, `.env` files, repo lists per org   |
+| `main` (key), `gotomconley/`, `kofax/`, `tungsten-cloud/`, `azure-devops/` | SSH keys, `.env` files, repo lists per org |
 | `npmrc`                              | `~/.npmrc` — auth for Printix Azure Artifacts, GitHub Packages, Tungsten GHE |
 | `tungsten-cloud/tungsten-ca-chain.pem` | `~/.certs/` — CA chain for the Tungsten Artifactory npm mirror         |
 | `tungsten-cloud/gitconfig`, `kofax/gitconfig` | work git identities, included for repos under `~/dev/tungsten-cloud/` and `~/dev/printix/` |
@@ -130,7 +130,7 @@ API tokens you choose to keep (Jira/Bitbucket) belong in a `vault-key/*.env` fil
 
 ## Work environments (tokens, API keys)
 
-Each org's secrets live in its own `vault-key/**/<name>.env` (`printix`, `tungsten-cloud`, `gotomconley`, `main`).
+Each org's secrets live in its own `vault-key/**/<name>.env` (`printix`, `tungsten-cloud`, `gotomconley`).
 Shells load **one** of them, chosen by folder:
 
 | You're in | Loaded env |
