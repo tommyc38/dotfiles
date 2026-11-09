@@ -92,7 +92,7 @@ export DOTFILES_LOADED=1
 # The marked block below is owned by `pnpm dev:setup` in the Tungsten eng-* repos (tools/dev/setup.sh).
 # Every run deletes it and re-appends it at the END of this file, so keep it last and add nothing
 # after it. bash/bashrc.symlink evaluates it from here (dotfiles_load_tng_block). Registries are NOT set
-# here: workenv layers them per folder (shell/workenv-auto.sh) — run dev:setup with TNG_SETUP_REGISTRY=public.
+# here: workenv picks them per folder and network (shell/workenv-auto.sh) — run dev:setup with TNG_SETUP_REGISTRY=public.
 # The CA chain it points at is symlinked from the vault (vault-key/symlinks.txt).
 # >>> tng dev:setup >>>
 export NODE_EXTRA_CA_CERTS="$HOME/.certs/tungsten-ca-chain.pem"
