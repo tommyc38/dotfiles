@@ -3,16 +3,109 @@
 Set up a new Mac — tools, apps, shell, editor/IDE settings, SSH keys, work credentials and every repo
 I work on — with one command, and keep an existing Mac converged with the same command.
 
+## Getting started
+
+Two ways to set up a new Mac. Both end in the same state, and both are safe to re-run.
+
+**You'll need:** the vault password, an internet connection, the **Tungsten VPN** (for Tungsten repos and
+npm installs), and time. The first run is long, mostly downloads: Homebrew apps, Node/Python builds, and
+installing every repo's packages.
+
+**Steps only you can do** (passwords, dialogs, browser logins), whichever path you take:
+
+| Step | Why it needs you |
+| --- | --- |
+| `xcode` | macOS shows an install dialog for the Command Line Tools |
+| `brew` | Homebrew's installer asks for your password and RETURN; the VirtualBox and Karabiner installers ask for an admin password |
+| `vault` | the vault password (typed, never pasted into a chat) |
+| `shell` | `sudo` for `/etc/shells`, and your password for `chsh` |
+| `auth` | browser logins: GitHub, Tungsten GHE, Jira, Azure |
+| afterwards | approve Karabiner in System Settings → Privacy & Security; sign in to WebStorm (Settings Sync), Docker Desktop and Claude Code (`/mcp` → atlassian) |
+
+Everything else (symlinks, SSH keys, Node, Python, Claude plugins/MCPs, fonts, macOS defaults, cloning and
+installing every repo, validation) runs unattended.
+
+### A. From nothing, by hand
+
 ```bash
-git clone https://github.com/tommyc38/dotfiles.git ~/dotfiles   # HTTPS: no SSH key on a new machine yet
+# 1. Command Line Tools (gives you git). Finish the dialog before continuing.
+xcode-select --install
+
+# 2. Get the repo. HTTPS, because your SSH keys are still inside the vault.
+git clone https://github.com/tommyc38/dotfiles.git ~/dotfiles
 cd ~/dotfiles
-./bin/preflight.sh        # optional: checks disk, network, Xcode CLT, Homebrew, conflicts
-./install.sh              # prompts for the vault password
+
+# 3. Optional sanity check: disk, network, Xcode CLT, conflicting files.
+./bin/preflight.sh
+
+# 4. Everything. Prompts for the vault password, your sudo password and browser logins as it goes.
+#    Connect the VPN first, or add --skip repos and run `./install.sh --only repos` later on VPN.
+./install.sh
+
+# 5. Load the new shell and check the result.
 exec zsh
-./bin/validate-install.sh # confirms everything, including logins
+./bin/validate-install.sh
+
+# 6. Switch this repo to SSH now that the keys are in place.
+git remote set-url origin git@github.com:tommyc38/dotfiles.git
 ```
 
-After the first run, switch the remote to SSH: `git remote set-url origin git@github.com:tommyc38/dotfiles.git`.
+Then do the "afterwards" items from the table above.
+(Its `vault` step won't decrypt over local `vault-key/` edits you haven't encrypted yet. It lists them
+and tells you to `vault -e` first.)
+If a step fails, fix it and run `./install.sh --only <step>`. Nothing else re-runs.
+
+### B. With an agent (Claude Code) doing the work
+
+You do the few interactive steps in a terminal. The agent runs the long, unattended rest, reads the
+output, and fixes or reports failures.
+
+```bash
+# 1. You, in Terminal: Command Line Tools, Claude Code itself, and the repo.
+xcode-select --install                                  # finish the dialog first
+curl -fsSL https://claude.ai/install.sh | bash          # official native installer → ~/.local/bin/claude
+git clone https://github.com/tommyc38/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+
+# 2. You: the steps that need a password (Homebrew + apps, then the vault).
+./install.sh --only xcode,brew,vault
+
+# 3. You: start the agent here and sign in.
+~/.local/bin/claude
+```
+
+Connect the VPN, then paste this prompt into Claude Code:
+
+> Read README.md in this repo. Then run `./install.sh --skip xcode,brew,vault,shell,auth` (it can take a
+> while; run it in the background and check on it). When it finishes, run `./bin/validate-install.sh` and
+> `./bin/dev-auth.sh --check`. For each failed step, find the cause, fix it if it's a problem in this repo
+> or a missing dependency, and re-run it with `./install.sh --only <step>`. Don't change git, npm or
+> registry configuration to work around a failure, and never print the contents of `vault-key/`. Finish
+> with a list of what passed, what you fixed, and what I still need to do myself.
+
+```bash
+# 4. You, in a terminal: the last two interactive steps.
+./install.sh --only shell,auth
+exec zsh
+```
+
+Then do the "afterwards" items. In Claude Code, run `/mcp` → atlassian → authenticate.
+
+Why split it this way:
+- **Password prompts need a real terminal.** The vault prompt reads from your terminal, which the
+  agent's commands don't have. It's also a secret that shouldn't pass through a chat. You decrypt in
+  step 2, and the agent's run skips the `vault` step, so it never needs the password.
+- **Your Claude settings arrive mid-session.** The `symlinks` step links `~/.claude/settings.json` from
+  the vault. Claude Code picks up the change without a restart, including the `ask` rules that make it
+  prompt before reading secrets.
+
+### Already set up? Keep a Mac current
+
+```bash
+cd ~/dotfiles && git pull
+./install.sh --skip fonts       # converge: decrypt vault updates, new Brewfile entries, links, repos, plugins, ...
+./bin/validate-install.sh
+```
 
 ## What `install.sh` does
 
