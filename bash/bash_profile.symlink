@@ -1,68 +1,13 @@
-export DOTFILES=$HOME/dotfiles
-export NVIM=$HOME/.config/nvim
-export VIM_PLUGINS=$HOME/.vim/plugged
-export VIM_THEME_FILE=$DOTFILES/vim/custom-plugins/darcula/colors/darcula.vim
-export CUSTOM_BIN=$DOTFILES/bin/
-export VMS=$HOME/vagrant_boxes/
+# ~/.bash_profile — managed in ~/dotfiles/bash/bash_profile.symlink
+#
+# Login bash (what a terminal profile that runs bash starts). Environment only — the same
+# shell/env.sh zsh uses, so PATH, node, JAVA_HOME, ... are identical in both shells. Interactive
+# setup lives in ~/.bashrc, sourced at the end.
+
+export DOTFILES="$HOME/dotfiles"
+source "$DOTFILES/shell/env.sh"
 export BASH_PROFILE_SOURCED=1
 
-# Homebrew package paths
-# Use coreutiles without the prefix g
-if [[ "$(uname)" == "Darwin" && "$(command -v brew)" ]]; then
-  if [[ -z "$HOMEBREW_PREFIX" ]]; then
-    if [[ -x "/opt/homebrew/bin/brew" ]]; then
-      # Apple Silicon Macs
-      HOMEBREW_PREFIX="/opt/homebrew"
-      export PATH="$HOMEBREW_PREFIX/bin:$PATH"
-      export PATH="$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin:$PATH"
-      export PATH="$HOMEBREW_PREFIX/opt/grep/libexec/gnubin:$PATH"
-      export MANPATH="$HOMEBREW_PREFIX/opt/grep/libexec/gnuman:$MANPATH"
-      export PATH="$HOMEBREW_PREFIX/opt/gnu-indent/libexec/gnubin:$PATH"
-      export MANPATH="$HOMEBREW_PREFIX/opt/gnu-indent/libexec/gnuman:$MANPATH"
-      export PATH="$HOMEBREW_PREFIX/opt/gnu-tar/libexec/gnubin:$PATH"
-      export MANPATH="$HOMEBREW_PREFIX/opt/gnu-tar/libexec/gnuman:$MANPATH"
-      export PATH="$HOMEBREW_PREFIX/opt/gnu-sed/libexec/gnubin:$PATH"
-      export MANPATH="$HOMEBREW_PREFIX/opt/gnu-sed/libexec/gnuman:$MANPATH"
-      export PATH="$HOMEBREW_PREFIX/opt/gnu-which/libexec/gnubin:$PATH"
-      export MANPATH="$HOMEBREW_PREFIX/opt/gnu-which/libexec/gnuman:$MANPATH"
-      export PATH="$HOMEBREW_PREFIX/opt/findutils/libexec/gnubin:$PATH"
-      export MANPATH="$HOMEBREW_PREFIX/opt/findutils/libexec/gnuman:$MANPATH"
-      export PATH="$HOMEBREW_PREFIX/opt/gnu-getopt/bin:$PATH"
-    elif [[ -x "/usr/local/bin/brew" ]]; then
-      # Intel Macs
-      HOMEBREW_PREFIX="/usr/local"
-      export PATH="/usr/local/bin:$PATH"
-      export PATH="/usr/local/opt/openssl@3/bin:$PATH"
-      export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-      export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
-      export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"
-      export MANPATH="/usr/local/opt/grep/libexec/gnuman:$MANPATH"
-      export PATH="/usr/local/opt/gnu-indent/libexec/gnubin:$PATH"
-      export MANPATH="/usr/local/opt/gnu-indent/libexec/gnuman:$MANPATH"
-      export PATH="/usr/local/opt/gnu-tar/libexec/gnubin:$PATH"
-      export MANPATH="/usr/local/opt/gnu-tar/libexec/gnuman:$MANPATH"
-      export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
-      export MANPATH="/usr/local/opt/gnu-sed/libexec/gnuman:$MANPATH"
-      export PATH="/usr/local/opt/gnu-which/libexec/gnubin:$PATH"
-      export MANPATH="/usr/local/opt/gnu-which/libexec/gnuman:$MANPATH"
-      export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH"
-      export MANPATH="/usr/local/opt/findutils/libexec/gnuman:$MANPATH"
-      export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
-      export GUILE_TLS_CERTIFICATE_DIRECTORY=/usr/local/etc/gnutls/
-    fi
-  fi
-fi
-
-if [[ -d ~/.local/bin ]]; then
-    export PATH="$HOME/.local/bin:$PATH"
-fi
-
-# Allows the system to find your executable scripts
-export PATH="$PATH:$HOME/dotfiles/bin/"
-
-# Webstorm command line tools
-export PATH="/Applications/WebStorm.app/Contents/MacOS:$PATH "
-
 if [[ -f "$HOME/.bashrc" && -z "$BASHRC_SOURCED" ]]; then
-    source "$HOME/.bashrc"
+  source "$HOME/.bashrc"
 fi

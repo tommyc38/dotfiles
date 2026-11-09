@@ -1,0 +1,24 @@
+<templateSet group="bootstrap">
+  <template name="b4-badge-button" value="&lt;button class=&quot;btn&quot;&gt;&#10;        $1$ &lt;span class=&quot;badge badge-$3$&quot;&gt;$2$&lt;/span&gt;&#10;&lt;/button&gt;$END$" description="badge button" toReformat="true" toShortenFQNames="false">
+    <variable name="1" expression="&quot;Notification&quot;" defaultValue="" alwaysStopAt="true" />
+    <variable name="2" expression="" defaultValue="" alwaysStopAt="true" />
+    <variable name="3" expression="enum(&quot;primary&quot;,&quot;secondary&quot;,&quot;success&quot;,&quot;danger&quot;,&quot;warning&quot;,&quot;info&quot;,&quot;light&quot;,&quot;dark&quot;)" defaultValue="" alwaysStopAt="true" />
+    <context>
+      <option name="GSP" value="true" />
+      <option name="JSP" value="true" />
+      <option name="PHP" value="true" />
+    </context>
+  </template>
+  <template name="b4-card-background" value="&lt;div class=&quot;card text-white bg-$1$&quot;&gt;&#10;  &lt;img class=&quot;card-img-top&quot; src=&quot;$2$&quot; alt=&quot;$3$&quot;&gt;&#10;  &lt;div class=&quot;card-body&quot;&gt;&#10;    &lt;h4 class=&quot;card-title&quot;&gt;$4$&lt;/h4&gt;&#10;    &lt;p class=&quot;card-text&quot;&gt;$5$&lt;/p&gt;&#10;  &lt;/div&gt;&#10;&lt;/div&gt;$END$" description="card background" toReformat="true" toShortenFQNames="false">
+    <variable name="1" expression="enum(&quot;primary&quot;,&quot;secondary&quot;,&quot;success&quot;,&quot;danger&quot;,&quot;warning&quot;,&quot;info&quot;,&quot;light&quot;,&quot;dark&quot;,&quot;link&quot;)" defaultValue="" alwaysStopAt="true" />
+    <variable name="2" expression="&quot;holder.js/100px180/&quot;" defaultValue="" alwaysStopAt="true" />
+    <variable name="3" expression="" defaultValue="" alwaysStopAt="true" />
+    <variable name="4" expression="&quot;Title&quot;" defaultValue="" alwaysStopAt="true" />
+    <variable name="5" expression="&quot;Text&quot;" defaultValue="" alwaysStopAt="true" />
+    <context>
+      <option name="GSP" value="true" />
+      <option name="JSP" value="true" />
+      <option name="PHP" value="true" />
+    </context>
+  </template>
+</templateSet>

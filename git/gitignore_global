@@ -1,0 +1,9 @@
+# Global gitignore (core.excludesfile in git/gitconfig)
+.DS_Store
+._*
+*.swp
+*~
+
+# Claude Code: personal per-project settings (permission approvals etc.). Claude Code adds this line to
+# git's global excludes file itself; since core.excludesfile points here, it has to live here.
+**/.claude/settings.local.json

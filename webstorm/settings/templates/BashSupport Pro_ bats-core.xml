@@ -1,0 +1,7 @@
+<templateSet group="BashSupport Pro: bats-core">
+  <template name="@test" value="@test &quot;$DESCRIPTION$&quot; {&#10;    $END$&#10;}" description="bats-core test" toReformat="false" toShortenFQNames="true">
+    <variable name="DESCRIPTION" expression="" defaultValue="description" alwaysStopAt="true" />
+  </template>
+  <template name="setup" value="# executed before each test&#10;setup() {&#10;    $END$&#10;}" description="Executed before each bats-core @test" toReformat="false" toShortenFQNames="true" />
+  <template name="teardown" value="# executed after each test&#10;teardown() {&#10;    $END$&#10;}" description="Executed after each bats-core @test" toReformat="false" toShortenFQNames="true" />
+</templateSet>

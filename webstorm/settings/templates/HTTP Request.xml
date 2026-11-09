@@ -1,0 +1,9 @@
+<templateSet group="HTTP Request">
+  <template name="var" value="$COMMA_BEFORE$&quot;$VAR_NAME$&quot;: &quot;$VAR_VALUE$&quot;$COMMA_AFTER$" description="Environment variable" toReformat="true" toShortenFQNames="false">
+    <variable name="COMMA_BEFORE" expression="jsonAddComma()" defaultValue="" alwaysStopAt="false" />
+    <variable name="VAR_NAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true" />
+    <variable name="VAR_VALUE" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true" />
+    <variable name="COMMA_AFTER" expression="jsonAddComma()" defaultValue="" alwaysStopAt="false" />
+    <context />
+  </template>
+</templateSet>

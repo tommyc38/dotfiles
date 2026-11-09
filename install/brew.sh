@@ -1,89 +1,50 @@
 #!/bin/bash
+#
+# Install Homebrew (if missing), trust the third-party taps, and install everything in ../Brewfile.
+# Safe to re-run: `brew bundle` only installs/upgrades what's missing.
 
-# Xcode
-echo "Installing Xcode Command Line Tools"
+set -uo pipefail
 
-xcode_path="$(xcode-select -p)"
-if [ "$xcode_path" == "/Applications/Xcode.app/Contents/Developer" ] ||
-   [ "$xcode_path" == "Library/Developer/CommandLineTools" ]; then
-    echo "Xcode already installed"
+DOTFILES="${DOTFILES:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+BREWFILE="$DOTFILES/Brewfile"
+
+# Taps whose formulae/casks Homebrew refuses to load until they're trusted (`brew trust`).
+# Keep in sync with the `tap` lines in the Brewfile.
+TRUSTED_TAPS=(atlassian/acli hashicorp/tap terraform-linters/tap)
+
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  HOMEBREW_PREFIX=/opt/homebrew
 else
-    echo "Installing Xcode..."
-    xcode-select --install
- fi
- 
-echo "Installing Homebrew packages..."
-if [ ! -x "$(command -v brew)"  ]; then
-    # see https://brew.sh/
-    echo "Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  HOMEBREW_PREFIX=/usr/local
 fi
 
-# Core tools
-brew install coreutils
-brew install binutils
-brew install diffutils
-brew install findutils
+if [[ ! -x "$HOMEBREW_PREFIX/bin/brew" ]]; then
+  # Interactive on purpose: the installer needs sudo, and in NONINTERACTIVE mode it only tries
+  # `sudo -n` (ignoring cached credentials), which fails on a fresh Mac.
+  echo "Installing Homebrew (asks for your password and to press RETURN)..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  [[ -x /opt/homebrew/bin/brew ]] && HOMEBREW_PREFIX=/opt/homebrew
+fi
+if [[ ! -x "$HOMEBREW_PREFIX/bin/brew" ]]; then
+  echo "ERROR: Homebrew is not installed; every later step depends on it." >&2
+  exit 1
+fi
 
-# Key commands
-brew install gawk
-brew install gnu-indent
-brew install gnu-sed
-brew install gnu-tar
-brew install gnu-which
-brew install gnu-getopt
-brew install gnutls
-brew install grep
-brew install gzip
-brew install watch
-brew install wget
+# A freshly installed brew isn't on PATH yet (Apple Silicon puts it in /opt/homebrew).
+eval "$("$HOMEBREW_PREFIX/bin/brew" shellenv)"
 
+for tap in "${TRUSTED_TAPS[@]}"; do
+  brew tap "$tap" >/dev/null
+  # `brew trust` only exists on newer Homebrew; older versions load taps without it.
+  if brew commands 2>/dev/null | grep -qx trust; then
+    brew trust "$tap" >/dev/null
+  fi
+done
 
-# Development tools
-brew install git
-brew install openssh
-brew install openssl@3
-brew install neovim
-brew install vim
-brew install bash
-brew install zsh
-brew install autojump           # helps you move much quicker than 'cd' command: https://github.com/wting/autojump
-brew install html2text          # tool for gathering the readable parts of a webpage
-
-# Media tools
-brew install ffmpeg
-brew install imagemagick
-brew install graphicsmagick
-
-# Databases
-brew install postgresql@14 # TODO create zsh alias to postgres vs postgers@14
-brew install redis@6.2 # TODO create zsh alias to redis vs redis@6.2
-brew install --cask pgadmin4
-brew services start postgresql@14
-brew services start redis@6.2
-
-# Desktop programs
-brew install --cask karabiner-elements # map capslock to escape (tap) and control (press) on MacOS
-brew install --cask google-chrome
-brew install --cask virtualbox
-brew install --cask vagrant
-brew install --cask docker
-brew install --cask cursor
-brew install --cask spotify
-brew install --cask webstorm
-brew install --cask iterm2
-brew install --cask visual-studio-code
-brew install --cask MonitorControl # needed to control display volume via mac (https://github.com/MonitorControl/MonitorControl)
-
-
-# Shell tools
-brew install zsh-syntax-highlighting
-brew install zsh-autosuggestions
-brew install bash-completion@2
-brew install bash-git-prompt
-brew install tmux
-
-# Go
-brew install go # needed for vim-hexokinase
+echo "Installing packages from $BREWFILE..."
+# Don't abort the whole install if one cask fails (e.g. an app that was installed by hand).
+if ! brew bundle --file "$BREWFILE"; then
+  echo "WARNING: some Brewfile entries failed; re-run 'brew bundle --file $BREWFILE' to see which." >&2
+fi
 
 exit 0

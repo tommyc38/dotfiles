@@ -1,0 +1,65 @@
+<application>
+  <component name="FileTypeManager" version="19">
+    <extensionMap>
+      <mapping pattern="" type="AUTO_DETECTED" />
+      <mapping pattern="pre-commit" type="AUTO_DETECTED" />
+      <mapping pattern="foo_Wed_Mar_22_00:11:01_MDT_2023" type="AUTO_DETECTED" />
+      <mapping pattern="scratch" type="AUTO_DETECTED" />
+      <mapping pattern="workenv" type="AUTO_DETECTED" />
+      <mapping pattern="player-names-form" type="AUTO_DETECTED" />
+      <mapping pattern="config" type="AUTO_DETECTED" />
+      <mapping pattern="imagemagick-static.dockerfile" type="Dockerfile" />
+      <mapping ext="transcoder_base" type="Dockerfile" />
+      <mapping ext="mp4" type="Native" />
+      <mapping pattern=".nycc" type="PLAIN_TEXT" />
+      <mapping pattern=".gcloudignore" type="PLAIN_TEXT" />
+      <mapping pattern=".npmrc" type="PLAIN_TEXT" />
+      <mapping pattern="vault.symlink" type="PLAIN_TEXT" />
+      <mapping pattern=".nvmrc" type="PLAIN_TEXT" />
+      <mapping pattern="Dockerfiles" type="PLAIN_TEXT" />
+      <mapping pattern="txt" type="PLAIN_TEXT" />
+      <mapping pattern="account" type="PLAIN_TEXT" />
+      <mapping ext="key" type="PLAIN_TEXT" />
+      <mapping ext="enc" type="PLAIN_TEXT" />
+      <mapping ext="plist" type="PLAIN_TEXT" />
+      <mapping pattern="dbinit.sql" type="SQL" />
+      <mapping pattern="build-imagemagick" type="Shell Script" />
+      <mapping pattern="build-ffmpeg" type="Shell Script" />
+      <mapping pattern="build-fonts" type="Shell Script" />
+      <mapping pattern="build-nodejs" type="Shell Script" />
+      <mapping ext="symlink" type="Shell Script" />
+      <mapping pattern="job-process" type="TypeScript" />
+      <mapping pattern="viewport-ruler" type="TypeScript" />
+      <mapping pattern="collor-pallete" type="TypeScript" />
+      <mapping pattern="index" type="TypeScript" />
+      <mapping pattern="transcode-configs" type="TypeScript" />
+      <mapping pattern="link" type="TypeScript" />
+      <mapping pattern="hammerjs" type="TypeScript" />
+      <mapping pattern="avatar" type="TypeScript" />
+      <mapping pattern="text-constants" type="TypeScript" />
+      <mapping ext="module" type="TypeScript" />
+      <mapping ext="serivce" type="TypeScript" />
+      <mapping ext="vts" type="TypeScript" />
+      <removed_mapping ext="bat" approved="true" type="PLAIN_TEXT" />
+      <removed_mapping ext="cmd" approved="true" type="PLAIN_TEXT" />
+      <removed_mapping ext="dockerfile" approved="true" type="textmate" />
+      <removed_mapping ext="dockerignore" approved="true" type="DockerIgnore file" />
+      <removed_mapping ext="env" approved="true" type=".env file" />
+      <removed_mapping ext="ignore" approved="true" type="IgnoreLang file" />
+      <removed_mapping ext="json" approved="true" type="JSON5" />
+      <removed_mapping ext="log" approved="true" type="PLAIN_TEXT" />
+      <removed_mapping ext="makefile" approved="true" type="textmate" />
+      <removed_mapping ext="properties" approved="true" type="PLAIN_TEXT" />
+      <removed_mapping ext="rules" approved="true" type="PLAIN_TEXT" />
+      <removed_mapping ext="snakefile" approved="true" type="textmate" />
+      <removed_mapping pattern=".env" approved="true" type=".env file" />
+      <removed_mapping pattern=".gcloudignore" approved="true" type="Google Cloud File" />
+      <removed_mapping pattern=".json" approved="true" type="JSON5" />
+      <mapping pattern=".env.*$" type="BashPro Shell Script" />
+      <mapping pattern="bash_aliases.symlink" type="BashPro Shell Script" />
+      <mapping pattern="bash_profile.symlink" type="BashPro Shell Script" />
+      <mapping pattern="bashrc.symlink" type="BashPro Shell Script" />
+      <mapping pattern="zshrc.symlink" type="BashPro Shell Script" />
+    </extensionMap>
+  </component>
+</application>

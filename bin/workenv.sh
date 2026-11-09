@@ -28,8 +28,9 @@ function remove_current_env() {
    local line
    local variable_name=""
    local current_env_file=""
-   current_env_file="$(get_current_env_file)"
-   if [ -n "$current_env_file" ]; then
+   # Whatever THIS shell loaded (folder-based switching may differ from the ~/.workrc default).
+   current_env_file="${WORKENV_FILE:-$(get_current_env_file)}"
+   if [ -n "$current_env_file" ] && [ -f "$current_env_file" ]; then
      while IFS= read -r line; do
        if [[ $line == export* ]]; then
          variable_name=${line#export }
@@ -90,16 +91,22 @@ function update_and_load_workrc () {
       local pattern="^source"
       local new_line="source $new_env_file"
       
-      # macOS sed requires empty string after -i for in-place edit
-      # Use @ as delimiter since paths contain slashes
-      if [ "$(uname)" = "Darwin" ]; then
-        sed -i '' "s@$pattern.*@$new_line@" "$workrc"
-      else
-        sed -i "s@$pattern.*@$new_line@" "$workrc"
+      # Rewrite via a temp file: works with BSD and GNU sed alike (GNU sed is first on PATH in
+      # our shells, and `sed -i ''` means something else to it), and writing with `cat >` keeps
+      # ~/.workrc a symlink into the vault. Use @ as delimiter since paths contain slashes.
+      local tmp
+      tmp="$(mktemp)"
+      if sed "s@$pattern.*@$new_line@" "$workrc" > "$tmp"; then
+        cat "$tmp" > "$workrc"
       fi
+      rm -f "$tmp"
       
-      source "$workrc"
-      echo "Now using environment: $env"
+      # shellcheck disable=SC1090
+      source "$new_env_file"
+      # Pin this shell: folder-based switching (shell/workenv-auto.sh) leaves it alone until `workenv --auto`.
+      export WORKENV_NAME="$env" WORKENV_FILE="$new_env_file" WORKENV_PINNED=1
+      echo "Now using environment: $env (also the default for new shells outside mapped folders)"
+      echo "This shell is pinned to it; 'workenv --auto' goes back to following folders."
     else
       echo "Couldn't find environment: $env"
       echo "Use 'workenv --list' to see available environments"
@@ -167,58 +174,46 @@ function list_environments() {
 
 # Show the script usage.
 function usage() {
-echo "
+  cat <<EOF
 Usage:
-  . $script [-h|--help] [-e|--env] [-l|--list] [environment]
+  workenv [-h|--help] [-e|--env] [-l|--list] [-d|--dirs] [-a|--auto] [environment]
 
 Description:
-  If you work on multiple projects, you often need to load global project variables (e.g. NPM_REGISTRY, NPM_TOKEN,
-  etc.). This script simplifies the process of switching between project environments. Because scripts are ran in a
-  child process, you can't run this script without a \".\" before calling the script (e.g. . $script [options] args).
-  It's recommended that you use a shell function (e.g. .bashrc, .zshrc, etc.) as a wrapper to make it easier. Moreover,
-  this script also assumes you source a ~/.workrc file from within your shell configuration (e.g. .bashrc, zshrc) to
-  load your project environment. See example for more details.
+  Each org's tokens and API keys live in one vault-key/**/<name>.env file. Shells load exactly one of
+  them, chosen by folder (shell/workenv-auto.sh), and switch on every cd in zsh and bash:
 
-Args:
-  environment   The name of the environment file without the .env extension.
+    - inside a folder listed in vault-key/workenv-dirs.txt (longest match wins) -> that folder's env
+    - anywhere else -> the default named in ~/.workrc
+
+  Switching unsets the previous env's exported variables before loading the next one.
+
+  workenv <name> sets the ~/.workrc default AND pins the current shell to <name>, so it stops
+  following folders (e.g. to use one org's tokens inside another org's folder) until 'workenv --auto'.
+
+  'workenv' is a shell function that sources this script, because a child process can't change the
+  calling shell's environment.
 
 Options:
-  -h, --help    Show this help message and exit.
-  -e, --env     Show the currently loaded environment name.
-  -l, --list    List all available environments in \$DOTFILES/vault-key directory.
+  environment   Env name (the .env file name without the extension): set default + pin this shell.
+  -e, --env     Show this shell's env (and the default, if different).
+  -l, --list    List the available envs (vault-key/**/*.env).
+  -d, --dirs    Show the folder -> env mapping.
+  -a, --auto    Unpin this shell and follow folders again.
+  -h, --help    Show this help.
 
-Example Files:
-  ~/dotfiles/vault-key/org_one/org_one.env:
-    export NPM_REGISTRY='registry'
-    export NPM_TOKEN='token'
+Files:
+  vault-key/**/<name>.env      export NAME=value lines (keep them plain exports so they can be unloaded)
+  vault-key/workenv-dirs.txt   "<directory> <name>" lines; \$HOME and ~ are expanded
+  ~/.workrc                    "source <path to default .env>" (symlinked from vault-key/workrc)
 
-  ~/dotfiles/vault-key/org_two/org_two.env:
-    export NPM_REGISTRY='org_two_registry'
-    export NPM_TOKEN='org_two_token'
+  After editing any of them: vault -e, then commit vault/.
 
-  ~/some/path/org/org.env:
-    export NPM_REGISTRY='org_registry'
-    export NPM_TOKEN='org_token'
-
-  ~/.zshrc OR ~/.bashrc:
-    source ~/.workrc
-    workenv() {
-      . $script \"\$@\"
-    }
-
-  ~/.workrc:
-    source ~/dotfiles/env/org_one.env
-
-Example Usage:
-  workenv --list                            # List all available environments.
-  workenv org_two                           # Switch to org_two environment.
-  workenv --env                             # Show current environment name.
-  workenv --help                            # Show the help menu.
-
-  ** The .workrc file must contain only one source command but can have commented lines (e.g. # comment).  Moreover,
-  this file must be in the home directory and the source command will be updated to the new environment_name.env file
-  when switching environments. Lastly, you can use the following wildcards when defining the sourced file path: ~,
-  \$DOTFILES, \$HOME."
+Examples:
+  workenv --dirs              # which folder uses which env
+  workenv printix             # Printix tokens here (pinned) and as the default for new shells
+  workenv --auto              # back to folder-based
+  workenv --env
+EOF
 }
 
 # Update the shell environment with a new work env file.
@@ -226,11 +221,13 @@ function main() {
   local env_option=""
   local help_option=""
   local list_option=""
+  local auto_option=""
+  local dirs_option=""
   local env=""
   local current_env_file=""
   local current_env=""
-  local short="hel"
-  local long="help,env,list"
+  local short="helad"
+  local long="help,env,list,auto,dirs"
   local options
 
   if [ "$(uname)" = "Darwin" ]; then
@@ -258,6 +255,8 @@ function main() {
       -e|--env) env_option="true"; shift;;
       -h|--help) help_option="true"; shift;;
       -l|--list) list_option="true"; shift;;
+      -a|--auto) auto_option="true"; shift;;
+      -d|--dirs) dirs_option="true"; shift;;
       --) shift;;
       *)
         env="$1"
@@ -275,8 +274,29 @@ function main() {
     usage
   elif [ -n "$list_option" ]; then
     list_environments
+  elif [ -n "$auto_option" ]; then
+    unset WORKENV_PINNED
+    if command -v _workenv_auto >/dev/null 2>&1; then
+      _workenv_auto
+      echo "Following folders again: ${WORKENV_NAME:-none} for $PWD"
+    else
+      echo "Folder-based switching isn't loaded in this shell (shell/workenv-auto.sh)."
+    fi
+  elif [ -n "$dirs_option" ]; then
+    local dirs_file="${WORKENV_DIRS_FILE:-$DOTFILES/vault-key/workenv-dirs.txt}"
+    if [ -f "$dirs_file" ]; then
+      echo "Folder → environment (${dirs_file/#$HOME/~}):"
+      grep -v -E '^\s*(#|$)' "$dirs_file" | sed 's/^/  /'
+      echo "  (anywhere else)     ${current_env:-none}   ← default from ~/.workrc"
+    else
+      echo "No folder mapping: ${dirs_file/#$HOME/~} doesn't exist."
+    fi
   elif [ -n "$env_option" ]; then
-    if [ -e "$current_env_file" ]; then
+    if [ -n "${WORKENV_NAME:-}" ]; then
+      echo "$WORKENV_NAME"
+      if [ -n "${WORKENV_PINNED:-}" ]; then echo "(pinned — 'workenv --auto' to follow folders)" >&2; fi
+      if [ "$WORKENV_NAME" != "$current_env" ]; then echo "(default for new shells: ${current_env:-none})" >&2; fi
+    elif [ -e "$current_env_file" ]; then
       echo "$current_env"
     else
       echo "Please ensure you have a ~/.workrc and the source command points to an existing .env file! See --help."
@@ -284,7 +304,7 @@ function main() {
   elif [ -z "$env" ]; then
     echo "No environment defined! Use 'workenv --list' to see available environments."
   else
-    if [ "$env" = "$current_env" ]; then
+    if [ "$env" = "$current_env" ] && [ "$env" = "${WORKENV_NAME:-$current_env}" ] && [ -n "${WORKENV_PINNED:-}" ]; then
       echo "Already using $env"
     else
       remove_current_env

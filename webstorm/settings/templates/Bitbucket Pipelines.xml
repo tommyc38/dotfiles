@@ -1,0 +1,8 @@
+<templateSet group="Bitbucket Pipelines">
+  <template name="pipeline" value="$NAME_PATTERN$:&#10;    - step:&#10;        name: $STEP_NAME$&#10;        script:&#10;            - $COMMAND$$END$" description="Configure pipeline" toReformat="true" toShortenFQNames="true">
+    <variable name="NAME_PATTERN" expression="" defaultValue="&quot;name_or_pattern&quot;" alwaysStopAt="true" />
+    <variable name="STEP_NAME" expression="" defaultValue="&quot;Build&quot;" alwaysStopAt="true" />
+    <variable name="COMMAND" expression="" defaultValue="&quot;echo \&quot;Hello world\&quot;&quot;" alwaysStopAt="true" />
+    <context />
+  </template>
+</templateSet>

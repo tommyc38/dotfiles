@@ -1,14 +1,18 @@
 #!/bin/bash
 
-# Node
-NODE_MAJOR_VERSIONS=(10 12 14 16 18 20 22)
+# Node majors to preinstall (latest patch of each). Older versions a repo pins in .nvmrc are installed
+# on demand by bin/repo.sh --npm-install; anything below 16 has no arm64 build and compiles from source.
+NODE_MAJOR_VERSIONS=(18 20 22 24)
+NVM_VERSION="v0.40.3"
 
 # Install nvm if not present
-if ! command -v nvm >/dev/null 2>&1; then
+# (nvm is a shell function, so `command -v nvm` is always false in a fresh bash — check the files.)
+if [ ! -s "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]; then
   echo "nvm not found. Installing..."
   export NVM_DIR="${HOME}/.nvm"
   mkdir -p "$NVM_DIR"
-  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+  # PROFILE=/dev/null stops the installer appending to ~/.zshrc (a file in this repo).
+  curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | PROFILE=/dev/null bash
   # shellcheck disable=SC1090
   [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
   # shellcheck disable=SC1090
@@ -71,6 +75,9 @@ install_for_major() {
 for major in "${NODE_MAJOR_VERSIONS[@]}"; do
   install_for_major "$major"
 done
+
+# New shells use the newest installed version (zshrc resolves this alias without loading nvm's slow path).
+command -v nvm >/dev/null 2>&1 && nvm alias default node >/dev/null
 
 echo "Node Install Done."
 

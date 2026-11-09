@@ -1,0 +1,5 @@
+com.intellij.angularjs
+com.intellij.aqua
+mdx.js
+org.jetbrains.IdeaVim-EasyMotion
+pro.bashsupport

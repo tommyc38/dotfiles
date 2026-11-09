@@ -1,0 +1,5 @@
+<templateSet group="React">
+  <template name="con" value="constructor(props) {&#10; super(props);&#10; $END$&#10;}&#10;" description="Adds a default constructor for the class that contains props as arguments" toReformat="true" toShortenFQNames="true">
+    <context />
+  </template>
+</templateSet>

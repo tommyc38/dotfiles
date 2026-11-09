@@ -52,33 +52,35 @@ clear='\033[0m' # Terminal output color terminator.
 # Set the dotfiles root directory.
 function set_dotfiles_root_dir() {
   local script_path
-  local git_top_level_path
   dotfiles_directory=  # Root dotfiles directory.
 
-  script_path="$(dirname -- "$( readlink -f -- "$0")")"
-  git_top_level_path="$(git rev-parse --show-toplevel 2>/dev/null)"
-
-  # Assume the dotfiles are always in a repo for backup and use the repo root path.
-  if [ -n "$git_top_level_path" ]; then
-   dotfiles_directory="$git_top_level_path"
-
-  # Check the script directory.
-  elif [ "$(basename "$script_path")" == "dotfiles" ]; then
-   dotfiles_directory="$script_path"
-
-  # Check the script directory's parent directory.
-  elif [ "$(basename "${script_path%/*}")" == "dotfiles" ]; then
-   dotfiles_directory="${script_path%/*}"
-  else
-   echo "The dotfiles directory couldn't be established! See the script's set_dotfiles_root_dir function."
-   exit 1
-  fi
+  # Resolve from this script's own location (bin/..), never from the caller's working directory —
+  # `git rev-parse` there would pick up whatever repo you happen to be standing in.
+  script_path="$(dirname -- "$(readlink -f -- "$0")")"
+  dotfiles_directory="$(cd "$script_path/.." && pwd)"
 
   if [ ! -d "$dotfiles_directory" ]; then
    echo "The dotfiles directory doesn't exist!"
    exit 1
   fi
 
+}
+
+# Where a target is backed up: its path relative to $HOME, mirrored under the backup directory
+# (e.g. ~/Library/Application Support/Code/User/settings.json -> dotfiles_backup/Library/.../settings.json),
+# so same-named files (e.g. two apps' settings.json) can't collide.
+function backup_path_for() {
+  local target="$1"
+  case "$target" in
+    "$HOME"/*) echo "$backup_directory/${target#"$HOME"/}" ;;
+    *) echo "$backup_directory/$(basename "$target")" ;;
+  esac
+}
+
+# Prune empty directories left in the backup tree after a restore.
+function remove_empty_dirs() {
+  [ -z "$dry_run" ] && [ -d "$backup_directory" ] && find "$backup_directory" -mindepth 1 -type d -empty -delete 2>/dev/null
+  return 0
 }
 
 # Creates a backup directory.
@@ -112,7 +114,7 @@ function backup_file() {
   local target_file="$1" # The target path of a symlink.
   local backup_file
   local message
-  backup_file="$backup_directory/$(basename "$target_file")"
+  backup_file="$(backup_path_for "$target_file")"
 
   local backup_file_name
   backup_file_name="$(get_message_file_name "$target_file")"
@@ -126,7 +128,8 @@ function backup_file() {
     message="$message_indent$backup_file_name (symlinked from source: $(readlink -f "$target_file"))\n"
     backups_created_msg=$backups_created_msg$message
     if [ -z "$dry_run" ]; then
-      ln -s "$(readlink -f "$target_file")" "$backup_file" &> /dev/null
+      mkdir -p "$(dirname "$backup_file")"
+      ln -s "$(readlink "$target_file")" "$backup_file" &> /dev/null
       rm -r "$target_file"
     fi
     true
@@ -135,8 +138,7 @@ function backup_file() {
   else
     message="$message_indent$backup_file_name|-->|$backup_file\n"
     backups_created_msg=$backups_created_msg$message
-    create_backup_directory
-    [ -z "$dry_run" ] && mv "$target_file" "$backup_file"
+    [ -z "$dry_run" ] && mkdir -p "$(dirname "$backup_file")" && mv "$target_file" "$backup_file"
     true
     return
   fi
@@ -159,7 +161,7 @@ function restore_file() {
   local target_file="$2"
   local backup_file
   local message
-  backup_file="$backup_directory/$(basename "$target_file")"
+  backup_file="$(backup_path_for "$target_file")"
 
   if [ -n "$source_target_file" ];then
     symlink_destination_dir="${target_file%/*}"
@@ -222,7 +224,7 @@ function restore() {
     if [ "$(readlink -f "$target_file")"  == "$source_file" ]; then
       # Remove dotfile symlinks.
       local source_file_name
-      source_file_name="$(get_message_file_name "$source_file_name")"
+      source_file_name="$(get_message_file_name "$source_file")"
       message="$message_indent$source_file_name|-->|$target_file\n"
       restored_removed_msg=$restored_removed_msg$message
       [ -z "$dry_run" ] && rm "$target_file"
@@ -241,6 +243,7 @@ function get_target(){
   local vim_directory=$symlink_destination_dir/.vim
   local neovim_directory=$symlink_destination_dir/.config/nvim
   local plugins_directory=$vim_directory/plugged/custom-plugins
+  local vscode_user_directory="$symlink_destination_dir/Library/Application Support/Code/User"
 
   if [ "$(basename "$source")" == "darcula" ]; then
       target="$plugins_directory/darcula"
@@ -254,8 +257,13 @@ function get_target(){
   elif [ "$(basename "$source")" == "plugins.vim" ];then
       target="$vim_directory/plugins.vim"
 
-  elif [ "$(basename "$source")" == "karabiner.json" ]; then
-      target="$symlink_destination_dir/.config/karabiner/$(basename "$source")"
+  # Karabiner rewrites karabiner.json atomically, which replaces a symlinked file with a regular one,
+  # so link the whole ~/.config/karabiner directory instead (what Karabiner's docs recommend).
+  elif [ "$(basename "$source")" == "karabiner" ] && [ -d "$source" ]; then
+      target="$symlink_destination_dir/.config/karabiner"
+
+  elif [[ "$source" == */vscode/settings.json ]]; then
+      target="$vscode_user_directory/settings.json"
 
   elif [ "$(basename "$source")" == ".vimrc" ]; then
       target="$symlink_destination_dir/.vimrc"
@@ -345,7 +353,8 @@ function symlink_dotfiles(){
       echo "$(color_red "Check your source is correct and/or update the target in the get_target function.")"
       exit 1
     fi
-    if [ -e "$target_file" ]; then
+    # -L too: a dangling symlink fails -e, and ln -s would then fail with "File exists".
+    if [ -e "$target_file" ] || [ -L "$target_file" ]; then
       local source_file_name
       source_file_name="$(get_message_file_name "$source_file")"
 
@@ -432,7 +441,7 @@ function usage() {
   echo "
 Usage:
   $script [-h|--help] [-d|--dry-run] [-s|--skip] [-b|--backup-directory <backup-directory>] [-f|--file <directory>]
-  [-v|--include-vim] [-k|--include-karabiner] [-R|--restore]
+  [-v|--include-vim] [-k|--include-karabiner] [-c|--include-editors] [-R|--restore]
 
 Description:
   Symlink configuration files in the dotfiles directory to their respective target directories. Dotfiles with a .symlink
@@ -452,12 +461,13 @@ Options:
                                  are required to perform a restore.
   -v, --include-vim              Include sym-linking vim files.
   -f, --file <file>              A file containing the source and target paths for symlinks. See example.
-  -k, --include-karabiner        Include sym-linking karabiner.json.
+  -k, --include-karabiner        Include sym-linking the karabiner directory to ~/.config/karabiner.
+  -c, --include-editors          Include sym-linking VS Code settings.json.
   -h, --help                     Get help on running this script.
 
 Examples:
   $script                                               # Symlink all files with a .symlink extension to \$HOME.
-  $script --include-vim --include-karabiner             # Symlink all files.
+  $script --include-vim --include-karabiner --include-editors  # Symlink all files.
   $script --backup-directory dot-backups                # Using a custom backup directory. Relative or absolute paths.
   $script --dry-run --include-vim --include-karabiner   # See which files will be affected before running file operations.
   $script --restore                                     # Restore all files from the default backup directory.
@@ -483,6 +493,7 @@ Examples:
 function main() {
   local include_vim
   local include_karabiner
+  local include_editors
   local skip
   local type="symlink"
 
@@ -534,6 +545,10 @@ function main() {
         include_karabiner="true"
         shift
         ;;
+      -c|--include-editors)
+        include_editors="true"
+        shift
+        ;;
       -h|--help)
         usage
         exit 0
@@ -565,19 +580,20 @@ function main() {
     local vim_sources=("$dotfiles_directory/vim/custom-plugins/darcula" "$dotfiles_directory/vim/init.vim"
     "$dotfiles_directory/vim/coc-settings.json" "$dotfiles_directory/vim/plugins.vim" "$dotfiles_directory/vim/.vimrc")
 
-    local karabiner_sources=("$dotfiles_directory/karabiner/karabiner.json")
+    local karabiner_sources=("$dotfiles_directory/karabiner")
+    local editor_sources=("$dotfiles_directory/vscode/settings.json")
 
     files_to_symlink=("${dot_symlink_ext_sources[@]}") # Default files to symlink.
 
-    if [ "$type" == "symlink" ]; then
-      [ -n "$include_vim" ] && [ -z "$include_karabiner" ] && files_to_symlink=("${dot_symlink_ext_sources[@]}" "${vim_sources[@]}")
-      [ -z "$include_vim" ] && [ -n "$include_karabiner" ] && files_to_symlink=("${dot_symlink_ext_sources[@]}" "${karabiner_sources[@]}")
-      [ -n "$include_vim" ] && [ -n "$include_karabiner" ] && files_to_symlink=("${dot_symlink_ext_sources[@]}" "${karabiner_sources[@]}" "${vim_sources[@]}")
-      [ -z "$include_vim" ] && [ -z "$include_karabiner" ] && files_to_symlink=("${dot_symlink_ext_sources[@]}")
-
-    # Restore targets are built off of sources, so we need to include all sources here.
-    else
-      files_to_symlink=("${dot_symlink_ext_sources[@]}" "${karabiner_sources[@]}" "${vim_sources[@]}")
+    # Restore targets are built off of sources, so a restore always includes every source.
+    if [ "$type" == "restore" ] || [ -n "$include_vim" ]; then
+      files_to_symlink+=("${vim_sources[@]}")
+    fi
+    if [ "$type" == "restore" ] || [ -n "$include_karabiner" ]; then
+      files_to_symlink+=("${karabiner_sources[@]}")
+    fi
+    if [ "$type" == "restore" ] || [ -n "$include_editors" ]; then
+      files_to_symlink+=("${editor_sources[@]}")
     fi
   fi
 
@@ -594,7 +610,9 @@ function main() {
   done
 
   run_type "$type" "$skip"
-  exit 0
+  # Non-zero when anything couldn't be linked/restored, so install.sh reports the step as failed.
+  [ -z "$symlinks_failed_msg" ] && [ -z "$restored_failed_msg" ]
+  exit $?
 }
 
 main "$@"

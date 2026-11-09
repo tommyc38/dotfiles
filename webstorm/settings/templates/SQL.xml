@@ -1,0 +1,7 @@
+<templateSet group="SQL">
+  <template name="view" value="create view $view$ as select * from $table$ $END$;" description="new view definition" toReformat="true" toShortenFQNames="false">
+    <variable name="view" expression="" defaultValue="&quot;new_view&quot;" alwaysStopAt="true" />
+    <variable name="table" expression="dbOsbjectName()" defaultValue="" alwaysStopAt="true" />
+    <context />
+  </template>
+</templateSet>

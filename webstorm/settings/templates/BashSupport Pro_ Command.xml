@@ -1,0 +1,74 @@
+<templateSet group="BashSupport Pro: Command">
+  <template name="if" value="if [ $CONDITION$ ]; then&#10;    $END$$SELECTION$&#10;fi" description="if statement" toReformat="false" toShortenFQNames="false">
+    <variable name="CONDITION" expression="" defaultValue="" alwaysStopAt="true" />
+  </template>
+  <template name="for" value="for $INDEX$ in $LOOP_ITEMS$ ; do&#10;    $END$$SELECTION$&#10;done" description="For loop in list" toReformat="false" toShortenFQNames="false">
+    <variable name="INDEX" expression="" defaultValue="&quot;i&quot;" alwaysStopAt="true" />
+    <variable name="LOOP_ITEMS" expression="" defaultValue="&quot;a&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="fori" value="for (( $INDEX$ = $INIT_VALUE$; $INDEX$ &lt; $LIMIT$; $INDEX$++ )); do&#10;    $END$$SELECTION$&#10;done" description="For loop by index" toReformat="false" toShortenFQNames="false">
+    <variable name="INDEX" expression="" defaultValue="&quot;i&quot;" alwaysStopAt="true" />
+    <variable name="INIT_VALUE" expression="" defaultValue="&quot;0&quot;" alwaysStopAt="true" />
+    <variable name="LIMIT" expression="" defaultValue="&quot;n&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="select" value="select $VARIABLE_1$ in $VARIABLE_2$; do&#10;    $END$$SELECTION$&#10;done" description="Select expression" toReformat="false" toShortenFQNames="false">
+    <variable name="VARIABLE_1" expression="" defaultValue="&quot;item&quot;" alwaysStopAt="true" />
+    <variable name="VARIABLE_2" expression="" defaultValue="&quot;*&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="case" value="case $VALUE$ in&#10;$PATTERN$)&#10;  $END$$SELECTION$&#10;  ;;&#10;esac" description="Case statement" toReformat="false" toShortenFQNames="false">
+    <variable name="VALUE" expression="" defaultValue="&quot;$x&quot;" alwaysStopAt="true" />
+    <variable name="PATTERN" expression="" defaultValue="&quot;pattern&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="while" value="while [ $CONDITION$ ]; do&#10;    $END$$SELECTION$&#10;done" description="While loop by condition" toReformat="false" toShortenFQNames="false">
+    <variable name="CONDITION" expression="" defaultValue="" alwaysStopAt="true" />
+  </template>
+  <template name="until" value="until [ $CONDITION$ ]; do&#10;    $END$$SELECTION$&#10;done" description="Until loop by condition" toReformat="false" toShortenFQNames="false">
+    <variable name="CONDITION" expression="" defaultValue="" alwaysStopAt="true" />
+  </template>
+  <template name="function" value="$KEYWORD$$FUNCNAME$() {&#10;    $END$$SELECTION$&#10;}" description="Define a function" toReformat="false" toShortenFQNames="false">
+    <variable name="KEYWORD" expression="bashFunction()" defaultValue="" alwaysStopAt="false" />
+    <variable name="FUNCNAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="cmd" value="`$COMMAND$`" description="Command substitution" toReformat="false" toShortenFQNames="false">
+    <variable name="COMMAND" expression="" defaultValue="&quot;command&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="cmd_success_check" value="if [[ $? == 0 ]]; then&#10;    echo &quot;Success&quot;$END$&#10;else&#10;    echo &quot;Failure&quot;&#10;fi" description="Cmd success check" toReformat="false" toShortenFQNames="false" />
+  <template name="curl" value="curl --request &quot;$METHOD$&quot; -sL \&#10;     --url '$URL$'\&#10;     --output &quot;$FILE$&quot;" description="Http request" toReformat="false" toShortenFQNames="false">
+    <variable name="METHOD" expression="" defaultValue="&quot;GET&quot;" alwaysStopAt="true" />
+    <variable name="URL" expression="" defaultValue="&quot;http://example.com&quot;" alwaysStopAt="true" />
+    <variable name="FILE" expression="" defaultValue="&quot;./path/to/file&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="git_branch_create" value="git checkout -b &quot;$BRANCH$&quot;$END$" description="Create branch" toReformat="false" toShortenFQNames="false">
+    <variable name="BRANCH" expression="" defaultValue="&quot;branch_name&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="git_commit" value="git commit -m &quot;$MESSAGE$&quot;" description="Commit changes" toReformat="false" toShortenFQNames="false">
+    <variable name="MESSAGE" expression="" defaultValue="&quot;commit_message&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="git_push" value="git push origin &quot;$BRANCH$&quot;$END$" description="Push branch to remote" toReformat="false" toShortenFQNames="false">
+    <variable name="BRANCH" expression="" defaultValue="&quot;branch_name&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="heredoc" value="&lt;&lt;EOF&#10;    $TEXT$$END$&#10;EOF" description="Multiline string" toReformat="false" toShortenFQNames="false">
+    <variable name="TEXT" expression="" defaultValue="&quot;text&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="mkdir" value="mkdir &quot;$DIRECTORY$&quot;" description="Create directory" toReformat="false" toShortenFQNames="false">
+    <variable name="DIRECTORY" expression="" defaultValue="&quot;dirname&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="rm" value="rm $PARAM$ &quot;$PATH$&quot;" description="Remove file or dir" toReformat="false" toShortenFQNames="false">
+    <variable name="PARAM" expression="enum(&quot;-f&quot;,&quot;-d&quot;)" defaultValue="" alwaysStopAt="true" />
+    <variable name="PATH" expression="" defaultValue="&quot;./path/file&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="system_info_linux" value="lsb_release -a" description="Linux system information" toReformat="false" toShortenFQNames="false" />
+  <template name="system_info_mac" value="sw_vers" description="Mac OS system information" toReformat="false" toShortenFQNames="false" />
+  <template name="system_kernel_info" value="uname -a" description="Kernel information" toReformat="false" toShortenFQNames="false" />
+  <template name="tar_compress" value="tar -czvf &quot;$ARCHIVE$.tar.gz&quot; &quot;$DIRECTORY$&quot;" description="tar compress" toReformat="false" toShortenFQNames="false">
+    <variable name="ARCHIVE" expression="" defaultValue="&quot;/path/to/archive&quot;" alwaysStopAt="true" />
+    <variable name="DIRECTORY" expression="" defaultValue="&quot;/path/to/directory&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="tar_decompress" value="tar -C &quot;$DIRECTORY$&quot; -xzvf &quot;$ARCHIVE$.tar.gz&quot;" description="tar decompress" toReformat="false" toShortenFQNames="false">
+    <variable name="DIRECTORY" expression="" defaultValue="&quot;/extract/to/path&quot;" alwaysStopAt="true" />
+    <variable name="ARCHIVE" expression="" defaultValue="&quot;/path/to/archive&quot;" alwaysStopAt="true" />
+  </template>
+  <template name="xargs" value="| xargs $COMMAND$" description="Execute commands from standard input" toReformat="false" toShortenFQNames="false">
+    <variable name="COMMAND" expression="" defaultValue="&quot;command&quot;" alwaysStopAt="true" />
+  </template>
+</templateSet>
