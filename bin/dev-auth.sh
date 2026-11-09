@@ -5,7 +5,6 @@
 #   github     gh CLI on github.com (personal + printix org) and tungstencloud.ghe.com (Tungsten Cloud)
 #   jira       Atlassian CLI (acli) on tungstenautomation.atlassian.net
 #   bitbucket  SSH for git, plus an optional API token for REST calls (bitbucket.org/tom-conley)
-#   azure      az CLI + azure-devops extension, and SSH to ssh.dev.azure.com
 #
 # SSH keys themselves come from the vault (see bin/ssh-setup.sh); this script only verifies them.
 # Safe to re-run: anything already authenticated is left alone.
@@ -40,12 +39,12 @@ usage() {
 Usage:
   $script [--check] [--only <list>] [-h|--help]
 
-Verify authentication for GitHub (gh), Jira (acli), Bitbucket and Azure DevOps, and log in to anything
+Verify authentication for GitHub (gh), Jira (acli) and Bitbucket, and log in to anything
 that isn't authenticated yet. Logins open a browser (OAuth) unless an API token env var is set.
 
 Options:
   -c, --check         Report status only; never start a login.
-  -o, --only <list>   Comma-separated subset of: github,jira,bitbucket,azure
+  -o, --only <list>   Comma-separated subset of: github,jira,bitbucket
   -h, --help          Show this help.
 
 Environment:
@@ -156,33 +155,6 @@ check_bitbucket() {
   fi
 }
 
-# --- Azure DevOps ---------------------------------------------------------------------------------
-check_azure() {
-  step "Azure DevOps (az)"
-  if ! command -v az >/dev/null; then bad "az not installed (brew install azure-cli)"; return; fi
-
-  if az extension show --name azure-devops >/dev/null 2>&1; then
-    ok "azure-devops extension installed"
-  elif [ -z "$check_only" ]; then
-    az extension add --name azure-devops --only-show-errors && ok "azure-devops extension installed"
-  else
-    bad "azure-devops extension missing — run: az extension add --name azure-devops"
-  fi
-
-  if az account show >/dev/null 2>&1; then
-    ok "az logged in as $(az account show --query user.name -o tsv 2>/dev/null)"
-  elif interactive; then
-    warn "az is not logged in — opening browser login"
-    # Not silenced: newer az shows an interactive subscription picker after the browser login.
-    if az login --only-show-errors; then ok "az logged in"; else bad "az login failed"; fi
-  else
-    bad "az not logged in — run: az login"
-  fi
-
-  # Azure DevOps closes the channel after auth ("shell request failed"); only a key failure is fatal.
-  ssh_check git@ssh.dev.azure.com "shell request failed|not supported"
-}
-
 main() {
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -199,7 +171,6 @@ main() {
   wanted github && check_github
   wanted jira && check_jira
   wanted bitbucket && check_bitbucket
-  wanted azure && check_azure
 
   echo
   if [ "$failures" -eq 0 ]; then

@@ -19,7 +19,7 @@ installing every repo's packages.
 | `brew` | Homebrew's installer asks for your password and RETURN; the VirtualBox and Karabiner installers ask for an admin password |
 | `vault` | the vault password (typed, never pasted into a chat) |
 | `shell` | `sudo` for `/etc/shells`, and your password for `chsh` |
-| `auth` | browser logins: GitHub, Tungsten GHE, Jira, Azure |
+| `auth` | browser logins: GitHub, Tungsten GHE, Jira, Bitbucket |
 | afterwards | approve Karabiner in System Settings → Privacy & Security; sign in to WebStorm (Settings Sync), Docker Desktop and Claude Code (`/mcp` → atlassian) |
 
 Everything else (symlinks, SSH keys, Node, Python, Claude plugins/MCPs, fonts, macOS defaults, cloning and
@@ -126,7 +126,7 @@ Each step is idempotent: a failed step is reported, the rest continue, and you r
 | `shell`         | Homebrew zsh as the login shell (sudo for `/etc/shells`)                              |
 | `base16`        | base16-shell themes                                                                   |
 | `repos`         | Clones every `vault-key/**/*.repos.txt` into `~/dev/...` and installs packages        |
-| `auth`          | Logs in to GitHub, Tungsten GHE, Jira, Bitbucket, Azure DevOps ([below](#logins-gh-jira-bitbucket-azure-devops)) |
+| `auth`          | Logs in to GitHub, Tungsten GHE, Jira, Bitbucket ([below](#logins-gh-jira-bitbucket)) |
 
 ```bash
 ./install.sh --list                 # the steps
@@ -144,7 +144,7 @@ Brewfile                 every formula, cask and tap (brew bundle)
 install.sh               orchestrator (above)
 install/                 brew.sh, node.sh, python.sh, claude.sh, osx.sh, vagrant.sh (optional, not run by install.sh)
 bin/                     on PATH in both shells (shell/env.sh)
-  dev-auth.sh            check / log in to gh, acli (Jira), Bitbucket, az (Azure DevOps)
+  dev-auth.sh            check / log in to gh, acli (Jira), Bitbucket
   vault                  encrypt/decrypt vault/ <-> vault-key/
   symlink.sh             create/restore symlinks (*.symlink, vim, karabiner, vscode, --file lists)
   repo.sh                clone repo lists, install the right Node + package manager per repo
@@ -195,18 +195,18 @@ What's in `vault-key/`:
 | `symlinks.txt`                       | `source \| target` pairs linked by the `symlinks` step (full target paths) |
 | `ssh-keys.txt`                       | key names (in `~/.ssh`) to load into the agent, one per line             |
 | `config`                             | `~/.ssh/config` — one Host block per code host                           |
-| `main` (key), `gotomconley/`, `kofax/`, `tungsten-cloud/`, `azure-devops/` | SSH keys, `.env` files, repo lists per org |
+| `personal/`, `tungsten/`             | one folder per root: `<env>.env`, `<env>.repos.txt`, `<env>.gitconfig`, `ssh/<profile>` keys (linked as `~/.ssh/<root>-<profile>`) |
 | `npmrc`                              | `~/.npmrc`: auth for Printix Azure Artifacts, GitHub Packages, Tungsten GHE; no default registry |
-| `**/<env>.npmrc`                     | org npm/pnpm layer for that env, e.g. `tungsten-cloud/tungsten-cloud.npmrc` → the mirror |
-| `tungsten-cloud/tungsten-ca-chain.pem` | `~/.certs/` — CA chain for the Tungsten Artifactory npm mirror         |
-| `tungsten-cloud/gitconfig`, `kofax/gitconfig` | work git identities, included for repos under `~/dev/tungsten-cloud/` and `~/dev/printix/` |
+| `**/<env>.npmrc`                     | org npm/pnpm layer for that env, e.g. `tungsten/tungsten-cloud.npmrc` → the mirror |
+| `tungsten/tungsten-ca-chain.pem`     | `~/.certs/` — CA chain for the Tungsten Artifactory npm mirror           |
+| `tungsten/*.gitconfig`               | work git identities (+ printix SSH key), included for repos under `~/dev/tungsten/tungsten-cloud/` and `~/dev/tungsten/printix/` |
 | `*.repos.txt`                        | `<ssh-url> <parent-dir>` lines cloned by the `repos` step                |
 | `workrc`                             | `~/.workrc` — the default work environment outside mapped folders (`workenv <name>` changes it) |
 | `workenv-dirs.txt`                   | folder → work environment mapping (`workenv --dirs`)                     |
 | `install.sh`                         | private extras for the `vault-install` step                              |
 | `claude/settings.json`               | `~/.claude/settings.json`: personal Claude Code defaults                  |
 
-## Logins: gh, Jira, Bitbucket, Azure DevOps
+## Logins: gh, Jira, Bitbucket
 
 ```bash
 dev-auth.sh            # check everything; opens a browser login for anything that isn't authenticated
@@ -216,23 +216,22 @@ dev-auth.sh --only github,jira
 
 | Service | Tool | Auth |
 | --- | --- | --- |
-| GitHub (`tommyc38`, printix org) | `gh` | `gh auth login --hostname github.com --git-protocol ssh --web` |
-| Tungsten Cloud GHE | `gh` | same, `--hostname tungstencloud.ghe.com` (SSH user is `tungstencloud`, not `git`) |
+| GitHub (`tommyc38`: personal + printix org) | `gh` | `gh auth login --hostname github.com --git-protocol ssh --web` |
+| Tungsten Cloud GHE (SSO `tom.conley@kofaxcloud.com` → `tom-conley`) | `gh` | same, `--hostname tungstencloud.ghe.com` (SSH user is `tungstencloud`, not `git`) |
 | Jira (`tungstenautomation.atlassian.net`) | `acli` (Atlassian's official CLI) | `acli jira auth login --web`, or set `JIRA_API_TOKEN` (+ `JIRA_EMAIL`) for a token login |
 | Bitbucket (`tom-conley`) | git over SSH via `ssh.bitbucket.org` (Atlassian moved SSH off `bitbucket.org` in 2026; `~/.ssh/config` routes old `git@bitbucket.org:` remotes there) | Atlassian has no official Bitbucket CLI. For REST/API use, put `BITBUCKET_EMAIL` and `BITBUCKET_API_TOKEN` (an [Atlassian API token](https://id.atlassian.com/manage-profile/security/api-tokens) with Bitbucket scopes) in a `vault-key/*.env`; `dev-auth.sh` verifies it |
-| Azure DevOps (kofaxcloud) | `az` + `azure-devops` extension | `az login`; the extension is installed automatically |
 
 `gh` and `acli` keep their tokens in the macOS keychain, so they're per machine and nothing goes into the vault.
 API tokens you choose to keep (Jira/Bitbucket) belong in a `vault-key/*.env` file, loaded with `workenv`.
 
 ## Work environments (tokens, API keys)
 
-Each org's secrets live in its own `vault-key/**/<name>.env` (`printix`, `tungsten-cloud`, `gotomconley`).
+Each org's secrets live in its own `vault-key/**/<name>.env` (`personal`, `printix`, `tungsten-cloud`).
 Shells load **one** of them, chosen by folder:
 
 | You're in | Loaded env |
 | --- | --- |
-| a folder listed in `vault-key/workenv-dirs.txt` (longest match wins) | that folder's env, e.g. `~/dev/printix` → `printix` |
+| a folder listed in `vault-key/workenv-dirs.txt` (longest match wins) | that folder's env, e.g. `~/dev/tungsten/printix` → `printix` |
 | anywhere else | the default named in `~/.workrc` |
 
 - It switches automatically on every `cd`, in zsh and bash, and prints `workenv: old → new`. It unsets the old
@@ -240,7 +239,7 @@ Shells load **one** of them, chosen by folder:
 - WebStorm's environment harvest gets the env for the folder it reads from, so npm/pnpm run from the IDE
   get credentials too.
 - `workenv <name>` sets the default for new shells **and pins the current shell** to `<name>` (e.g. to use
-  Printix tokens from inside `~/dev/tungsten-cloud`). `workenv --auto` unpins it.
+  Printix tokens from inside `~/dev/tungsten/tungsten-cloud`). `workenv --auto` unpins it.
 - `workenv --env` shows the current one, `--dirs` the folder mapping, and `--list` every env.
 - New folder or org: add a line to `vault-key/workenv-dirs.txt` (and a `.env` if needed), then `vault -e`.
 
@@ -270,16 +269,23 @@ can't reach the mirror). So each shell's npm/pnpm user config is built from laye
 - **Same machine, other folders:** `~/.config/dotfiles/workenv-dirs.txt` adds or overrides folder → env
   mappings just for that computer, and `~/.config/dotfiles/local.sh` holds any other machine-only shell setting.
 
-Your default environment outside mapped folders is `gotomconley` (personal). `workenv <name>` changes it.
+Your default environment outside mapped folders is `personal`. `workenv <name>` changes it.
 
 ## Projects
 
 | Org | Lives in | List |
 | --- | --- | --- |
-| Personal / old projects | `~/dev/old_projects`, `~/dotfiles` | `vault-key/main.repos.txt` |
-| gotomconley (Bitbucket) | `~/dev/gotomconley` | `vault-key/main.repos.txt` |
-| Printix + Tungsten Automation PM (github.com) | `~/dev/printix` | `vault-key/kofax/kofax.repos.txt` |
-| Tungsten Cloud (GHE) + Azure DevOps | `~/dev/tungsten-cloud` | `vault-key/tungsten-cloud/tungsten-cloud.repos.txt` |
+Two roots — **personal** (everything I own) and **tungsten** (work) — each grouped by brand/org, not by git host.
+
+| Root | Org / brand | Lives in | List | Env |
+| --- | --- | --- | --- | --- |
+| personal | dotfiles | `~/dotfiles` | `vault-key/personal/personal.repos.txt` | `personal` |
+| personal | AWS platform (bootstrap, shared infra) | `~/dev/personal/platform` | 〃 | 〃 |
+| personal | shared libraries (`@gotomconley`) | `~/dev/personal/libs` | 〃 | 〃 |
+| personal | gotomconley, umbrelo, vidtack | `~/dev/personal/<brand>` | 〃 | 〃 |
+| personal | retired projects | `~/dev/personal/archive` | 〃 | 〃 |
+| tungsten | Printix + Tungsten Automation PM (github.com, `tommyc38`) | `~/dev/tungsten/printix` | `vault-key/tungsten/printix.repos.txt` | `printix` |
+| tungsten | Tungsten Cloud (GHE) | `~/dev/tungsten/tungsten-cloud` | `vault-key/tungsten/tungsten-cloud.repos.txt` | `tungsten-cloud` |
 
 `repo.sh` skips anything already cloned. It compares remotes loosely, so `user@host:` vs `host:` or `%20` vs a
 space still count as the same repo. With `--npm-install` it installs the repo's `.nvmrc` Node and its package

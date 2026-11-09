@@ -1,7 +1,7 @@
 # Folder-based work environments, shared by zsh and bash (must stay valid in both, incl. bash 3.2).
 #
 # Which environment a shell has loaded depends on where it is:
-#   1. the longest directory in a workenv-dirs.txt that contains $PWD (e.g. ~/dev/printix -> printix).
+#   1. the longest directory in a workenv-dirs.txt that contains $PWD (e.g. ~/dev/tungsten/printix -> printix).
 #      Two mapping files are read: vault-key/workenv-dirs.txt (synced) and the machine-local
 #      ~/.config/dotfiles/workenv-dirs.txt (this computer only; wins a tie).
 #   2. otherwise the default named in ~/.workrc                (set with `workenv <name>`)

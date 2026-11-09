@@ -437,7 +437,7 @@ validate_repos() {
             
             # Check if ~/dev directory exists (common repo location)
             if [ -d "$HOME/dev" ]; then
-                local cloned_repos=$(find "$HOME/dev" -maxdepth 3 -name ".git" -type d 2>/dev/null | wc -l | tr -d ' ')
+                local cloned_repos=$(find "$HOME/dev" -maxdepth 4 -name ".git" -type d 2>/dev/null | wc -l | tr -d ' ')
                 if [ "$cloned_repos" -gt 0 ]; then
                     print_check "pass" "Found $cloned_repos cloned repositories in ~/dev"
                 else
