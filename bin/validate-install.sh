@@ -405,25 +405,18 @@ validate_claude() {
 }
 
 validate_npm() {
-    print_header "npm / pnpm registries (machine → ~/.npmrc → org → repo)"
-    local machine="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/npmrc" code
-    if grep -qE '^[[:space:]]*registry[[:space:]]*=' "$HOME/.npmrc" 2>/dev/null; then
-        print_check "warn" "~/.npmrc sets a default registry for every machine (dev:setup in mirror mode?). Move it to $machine on machines that need it, and re-run dev:setup with TNG_SETUP_REGISTRY=public"
-    else
-        print_check "pass" "~/.npmrc has credentials only (no machine-specific registry)"
-    fi
-    code="$(curl -s -o /dev/null -m 10 -w '%{http_code}' https://registry.npmjs.org/-/ping 2>/dev/null)"
-    if [ -f "$machine" ]; then
-        print_check "pass" "Machine npm defaults: ${machine/#$HOME/~} ($(grep -E '^[[:space:]]*registry' "$machine" | tail -1 || echo 'no registry line'))"
-    elif [ "$code" = 200 ]; then
-        print_check "pass" "Public npm reachable; no machine npm defaults needed"
-    else
-        print_check "warn" "Public npm unreachable here (HTTP ${code:-none}) and no ${machine/#$HOME/~}: unscoped installs outside org folders will fail. Put 'registry=<mirror>' there."
-    fi
-    local f
-    for f in $(find "$DOTFILES_DIR/vault-key" -path '*/vault_backups' -prune -o -name '*.npmrc' -type f -print 2>/dev/null); do
-        print_check "pass" "Org npm config: ${f#$DOTFILES_DIR/} (env $(basename "$f" .npmrc))"
-    done
+    print_header "npm / pnpm registries (env .npmrc per folder → repo .npmrc wins; workenv --doctor)"
+    # bin/workenv-doctor.sh does the checking (every mapped folder and repo); mirror its ✓/⚠/✗ lines here.
+    local line folder=""
+    while IFS= read -r line; do
+        case "$line" in
+            "  ✓ "*) print_check "pass" "${folder}${line#  ✓ }" ;;
+            "  ⚠ "*) print_check "warn" "${folder}${line#  ⚠ }" ;;
+            "  ✗ "*) print_check "fail" "${folder}${line#  ✗ }" ;;
+            *" → "*) folder="[${line}] " ;;
+            Leftovers) folder="[leftovers] " ;;
+        esac
+    done < <(bash "$DOTFILES_DIR/bin/workenv-doctor.sh" 2>&1)
 }
 
 validate_repos() {

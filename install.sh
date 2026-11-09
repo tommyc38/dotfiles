@@ -196,18 +196,17 @@ load_npm_env() {
   _workenv_auto   # install.sh runs from $DOTFILES, so this picks the env for ~/dotfiles
 }
 
-# Machines differ: some can reach public npm, some (corporate filters) can only reach a mirror. Say which.
+# Machines differ: some can reach public npm, some (corporate filters) only a mirror. workenv picks each
+# env's default registry from its "@registry-candidates" line by probing them; say what it chose here.
 npm_network_hint() {
-  local local_npmrc="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/npmrc"
-  [ -f "$local_npmrc" ] && { echo "Machine npm defaults: ${local_npmrc/#$HOME/~}"; return 0; }
-  local code
-  code="$(curl -s -o /dev/null -m 10 -w '%{http_code}' https://registry.npmjs.org/-/ping 2>/dev/null)"
-  if [ "$code" != 200 ]; then
-    echo "⚠ public npm isn't reachable from this machine (HTTP ${code:-none}) and there's no ${local_npmrc/#$HOME/~}."
-    echo "  If this machine must use a mirror, put its registry there, e.g.:"
-    echo "    mkdir -p ${local_npmrc%/*/*}/dotfiles && echo 'registry=https://<mirror>/' > ${local_npmrc/#$HOME/~}"
-    echo "  then re-run: ./install.sh --only node"
-  fi
+  echo "npm/pnpm for env ${WORKENV_NAME:-none}: ${WORKENV_NPM_REGISTRY:-npm default} (${WORKENV_NPM_REGISTRY_WHY:-no env .npmrc})"
+  case "${WORKENV_NPM_REGISTRY_WHY:-}" in
+    *"no candidate reachable"*)
+      echo "⚠ none of the env's registry candidates answer from this network. Connect the VPN, or set"
+      echo "  DOTFILES_NPM_REGISTRY=<url> in ~/.config/dotfiles/local.sh, then re-run: ./install.sh --only node" ;;
+  esac
+  [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/npmrc" ] && echo "⚠ ~/.config/dotfiles/npmrc is no longer read — move its registry to DOTFILES_NPM_REGISTRY in local.sh"
+  return 0
 }
 
 step_node() { load_npm_env; npm_network_hint; bash "$DOTFILES/install/node.sh"; }

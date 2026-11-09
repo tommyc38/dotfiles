@@ -106,7 +106,7 @@ function update_and_load_workrc () {
       # Pin this shell: folder-based switching (shell/workenv-auto.sh) leaves it alone until `workenv --auto`.
       export WORKENV_NAME="$env" WORKENV_FILE="$new_env_file" WORKENV_PINNED=1
       WORKENV_LOADED=1
-      # Rebuild npm/pnpm's user config for this env (machine + ~/.npmrc + <env>.npmrc layers).
+      # Rebuild npm/pnpm's user config for this env (<env>.npmrc + a default registry for this network).
       command -v _workenv_npmrc >/dev/null 2>&1 && _workenv_npmrc "$new_env_file" "$env"
       echo "Now using environment: $env (also the default for new shells outside mapped folders)"
       echo "This shell is pinned to it; 'workenv --auto' goes back to following folders."
@@ -180,6 +180,7 @@ function usage() {
   cat <<EOF
 Usage:
   workenv [-h|--help] [-e|--env] [-l|--list] [-d|--dirs] [-a|--auto] [environment]
+  workenv --registry <auto|public|mirror|url> | --refresh | --doctor
 
 Description:
   Each org's tokens and API keys live in one vault-key/**/<name>.env file. Shells load exactly one of
@@ -201,16 +202,27 @@ Options:
   -e, --env     Show this shell's env (and the default, if different).
   -l, --list    List the available envs (vault-key/**/*.env).
   -d, --dirs    Show the folder -> env mapping.
-  -a, --auto    Unpin this shell and follow folders again.
+  -a, --auto    Unpin this shell and follow folders again (also clears --registry).
   -h, --help    Show this help.
+
+npm / pnpm:
+  Each env's <name>.npmrc becomes npm/pnpm's user config (instead of ~/.npmrc) with a default registry
+  picked for the current network: the first reachable URL on its "@registry-candidates" line. A repo's
+  own .npmrc still wins, key by key.
+  --registry <x>  This shell only: public, mirror (the env's first non-public candidate), a URL, or auto
+                  to go back to detection. For every machine-wide default, set DOTFILES_NPM_REGISTRY
+                  (same values) in ~/.config/dotfiles/local.sh.
+  --refresh       Forget the cached reachability (after switching VPN/network) and pick again.
+  --doctor        Check every repo in the mapped folders: \${VAR}s its .npmrc needs that its env doesn't
+                  export, registries with no credentials, unreachable defaults.
 
 Files:
   vault-key/**/<name>.env      export NAME=value lines (keep them plain exports so they can be unloaded)
-  vault-key/**/<name>.npmrc    optional npm/pnpm config for that env (registry, scopes, auth); layered
-                               on top of ~/.config/dotfiles/npmrc (this machine) and ~/.npmrc
+  vault-key/**/<name>.npmrc    npm/pnpm config for that env: scopes, \${VAR} credentials, and a
+                               "; @registry-candidates <url> ..." line (see npm / pnpm above)
   vault-key/workenv-dirs.txt   "<directory> <name>" lines; \$HOME and ~ are expanded
   ~/.config/dotfiles/          this machine only (never synced): workenv-dirs.txt (extra/overriding
-                               folder mappings), npmrc (machine npm defaults), local.sh (anything else)
+                               folder mappings), local.sh (anything else, e.g. DOTFILES_NPM_REGISTRY)
   ~/.workrc                    "source <path to default .env>" (symlinked from vault-key/workrc)
 
   After editing any of them: vault -e, then commit vault/.
@@ -219,6 +231,9 @@ Examples:
   workenv --dirs              # which folder uses which env
   workenv printix             # Printix tokens here (pinned) and as the default for new shells
   workenv --auto              # back to folder-based
+  workenv --registry public   # public npm in this shell, e.g. to reproduce CI while on VPN
+  workenv --refresh           # just connected/disconnected the VPN
+  workenv --doctor            # will every repo find its registries and tokens?
   workenv --env
 EOF
 }
@@ -233,8 +248,12 @@ function main() {
   local env=""
   local current_env_file=""
   local current_env=""
+  local registry_option=""
+  local registry_value=""
+  local refresh_option=""
+  local doctor_option=""
   local short="helad"
-  local long="help,env,list,auto,dirs"
+  local long="help,env,list,auto,dirs,registry:,refresh,doctor"
   local options
 
   if [ "$(uname)" = "Darwin" ]; then
@@ -264,6 +283,9 @@ function main() {
       -l|--list) list_option="true"; shift;;
       -a|--auto) auto_option="true"; shift;;
       -d|--dirs) dirs_option="true"; shift;;
+      --registry) registry_option="true"; registry_value="$2"; shift 2;;
+      --refresh) refresh_option="true"; shift;;
+      --doctor) doctor_option="true"; shift;;
       --) shift;;
       *)
         env="$1"
@@ -281,8 +303,25 @@ function main() {
     usage
   elif [ -n "$list_option" ]; then
     list_environments
+  elif [ -n "$doctor_option" ]; then
+    bash "$DOTFILES/bin/workenv-doctor.sh"
+  elif [ -n "$registry_option" ] || [ -n "$refresh_option" ]; then
+    if [ -n "$registry_option" ]; then
+      case "$registry_value" in
+        auto|"") unset WORKENV_REGISTRY ;;
+        public|mirror|http://*|https://*) WORKENV_REGISTRY="$registry_value" ;;
+        *) echo "Unknown registry '$registry_value': use auto, public, mirror or a URL."; return 1 ;;
+      esac
+    fi
+    [ -n "$refresh_option" ] && rm -rf "${DOTFILES_REACH_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles/npm-reach}"
+    if command -v _workenv_npmrc >/dev/null 2>&1; then
+      _workenv_npmrc "${WORKENV_FILE:-}" "${WORKENV_NAME:-}"
+      echo "npm/pnpm default registry for ${WORKENV_NAME:-none}: ${WORKENV_NPM_REGISTRY:-npm default} (${WORKENV_NPM_REGISTRY_WHY:-no ${WORKENV_NAME:-env} .npmrc})"
+    else
+      echo "Folder-based switching isn't loaded in this shell (shell/workenv-auto.sh)."
+    fi
   elif [ -n "$auto_option" ]; then
-    unset WORKENV_PINNED
+    unset WORKENV_PINNED WORKENV_REGISTRY
     if command -v _workenv_auto >/dev/null 2>&1; then
       _workenv_auto
       echo "Following folders again: ${WORKENV_NAME:-none} for $PWD"
@@ -303,7 +342,7 @@ function main() {
       echo "$WORKENV_NAME"
       if [ -n "${WORKENV_PINNED:-}" ]; then echo "(pinned — 'workenv --auto' to follow folders)" >&2; fi
       if [ "$WORKENV_NAME" != "$current_env" ]; then echo "(default for new shells: ${current_env:-none})" >&2; fi
-      echo "(npm/pnpm user config: ${npm_config_userconfig:-~/.npmrc}; default registry: $(npm config get registry 2>/dev/null))" >&2
+      echo "(npm/pnpm user config: ${npm_config_userconfig:-~/.npmrc}; default registry: ${WORKENV_NPM_REGISTRY:-npm default} — ${WORKENV_NPM_REGISTRY_WHY:-no env .npmrc})" >&2
     elif [ -e "$current_env_file" ]; then
       echo "$current_env"
     else
