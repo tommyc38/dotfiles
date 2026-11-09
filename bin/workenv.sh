@@ -174,65 +174,46 @@ function list_environments() {
 
 # Show the script usage.
 function usage() {
-echo "
+  cat <<EOF
 Usage:
-  . $script [-h|--help] [-e|--env] [-l|--list] [environment]
+  workenv [-h|--help] [-e|--env] [-l|--list] [-d|--dirs] [-a|--auto] [environment]
 
 Description:
-  If you work on multiple projects, you often need to load global project variables (e.g. NPM_REGISTRY, NPM_TOKEN,
-  etc.). This script simplifies the process of switching between project environments. Because scripts are ran in a
-  child process, you can't run this script without a \".\" before calling the script (e.g. . $script [options] args).
-  It's recommended that you use a shell function (e.g. .bashrc, .zshrc, etc.) as a wrapper to make it easier. Moreover,
-  this script also assumes you source a ~/.workrc file from within your shell configuration (e.g. .bashrc, zshrc) to
-  load your project environment. See example for more details.
+  Each org's tokens and API keys live in one vault-key/**/<name>.env file. Shells load exactly one of
+  them, chosen by folder (shell/workenv-auto.sh), and switch on every cd in zsh and bash:
 
-Args:
-  environment   The name of the environment file without the .env extension.
+    - inside a folder listed in vault-key/workenv-dirs.txt (longest match wins) -> that folder's env
+    - anywhere else -> the default named in ~/.workrc
+
+  Switching unsets the previous env's exported variables before loading the next one.
+
+  workenv <name> sets the ~/.workrc default AND pins the current shell to <name>, so it stops
+  following folders (e.g. to use one org's tokens inside another org's folder) until 'workenv --auto'.
+
+  'workenv' is a shell function that sources this script, because a child process can't change the
+  calling shell's environment.
 
 Options:
-  -h, --help    Show this help message and exit.
-  -e, --env     Show the currently loaded environment name.
-  -l, --list    List all available environments in \$DOTFILES/vault-key directory.
-  -d, --dirs    Show the folder → environment mapping (vault-key/workenv-dirs.txt).
+  environment   Env name (the .env file name without the extension): set default + pin this shell.
+  -e, --env     Show this shell's env (and the default, if different).
+  -l, --list    List the available envs (vault-key/**/*.env).
+  -d, --dirs    Show the folder -> env mapping.
   -a, --auto    Unpin this shell and follow folders again.
+  -h, --help    Show this help.
 
-Folder-based switching:
-  Shells load the environment for the folder they're in (vault-key/workenv-dirs.txt, longest match),
-  and switch on every cd; elsewhere they use the default in ~/.workrc. 'workenv <name>' sets that
-  default AND pins the current shell to <name>.
+Files:
+  vault-key/**/<name>.env      export NAME=value lines (keep them plain exports so they can be unloaded)
+  vault-key/workenv-dirs.txt   "<directory> <name>" lines; \$HOME and ~ are expanded
+  ~/.workrc                    "source <path to default .env>" (symlinked from vault-key/workrc)
 
-Example Files:
-  ~/dotfiles/vault-key/org_one/org_one.env:
-    export NPM_REGISTRY='registry'
-    export NPM_TOKEN='token'
+  After editing any of them: vault -e, then commit vault/.
 
-  ~/dotfiles/vault-key/org_two/org_two.env:
-    export NPM_REGISTRY='org_two_registry'
-    export NPM_TOKEN='org_two_token'
-
-  ~/some/path/org/org.env:
-    export NPM_REGISTRY='org_registry'
-    export NPM_TOKEN='org_token'
-
-  ~/.zshrc OR ~/.bashrc:
-    source ~/.workrc
-    workenv() {
-      . $script \"\$@\"
-    }
-
-  ~/.workrc:
-    source ~/dotfiles/env/org_one.env
-
-Example Usage:
-  workenv --list                            # List all available environments.
-  workenv org_two                           # Switch to org_two environment.
-  workenv --env                             # Show current environment name.
-  workenv --help                            # Show the help menu.
-
-  ** The .workrc file must contain only one source command but can have commented lines (e.g. # comment).  Moreover,
-  this file must be in the home directory and the source command will be updated to the new environment_name.env file
-  when switching environments. Lastly, you can use the following wildcards when defining the sourced file path: ~,
-  \$DOTFILES, \$HOME."
+Examples:
+  workenv --dirs              # which folder uses which env
+  workenv printix             # Printix tokens here (pinned) and as the default for new shells
+  workenv --auto              # back to folder-based
+  workenv --env
+EOF
 }
 
 # Update the shell environment with a new work env file.
@@ -313,8 +294,8 @@ function main() {
   elif [ -n "$env_option" ]; then
     if [ -n "${WORKENV_NAME:-}" ]; then
       echo "$WORKENV_NAME"
-      [ -n "${WORKENV_PINNED:-}" ] && echo "(pinned — 'workenv --auto' to follow folders)" >&2
-      [ "$WORKENV_NAME" != "$current_env" ] && echo "(default for new shells: ${current_env:-none})" >&2
+      if [ -n "${WORKENV_PINNED:-}" ]; then echo "(pinned — 'workenv --auto' to follow folders)" >&2; fi
+      if [ "$WORKENV_NAME" != "$current_env" ]; then echo "(default for new shells: ${current_env:-none})" >&2; fi
     elif [ -e "$current_env_file" ]; then
       echo "$current_env"
     else

@@ -50,16 +50,17 @@ Never run it with `sudo`. It asks for your password when it needs it: the Homebr
 Brewfile                 every formula, cask and tap (brew bundle)
 install.sh               orchestrator (above)
 install/                 brew.sh, node.sh, python.sh, osx.sh, vagrant.sh (optional, not run by install.sh)
-bin/                     on PATH via zshrc
+bin/                     on PATH in both shells (shell/env.sh)
   dev-auth.sh            check / log in to gh, acli (Jira), Bitbucket, az (Azure DevOps)
   vault                  encrypt/decrypt vault/ <-> vault-key/
   symlink.sh             create/restore symlinks (*.symlink, vim, karabiner, vscode, --file lists)
   repo.sh                clone repo lists, install the right Node + package manager per repo
   ssh-setup.sh           load SSH keys into the agent/keychain
-  workenv.sh             switch work environments (`workenv <name>`)
+  workenv.sh             work environments: show/pin/unpin (`workenv --help`); folder switching is shell/workenv-auto.sh
   jetbrains-backup.sh    snapshot WebStorm settings into webstorm/settings/
   preflight.sh, validate-install.sh, fonts.sh, e
 shell/                   shared by zsh AND bash: env.sh (PATH, Homebrew, node, JAVA_HOME, ...),
+                         workenv-auto.sh (folder-based work environments),
                          git.sh / tmux.sh / functions.sh (aliases + helpers)
 zsh/                     zshrc.symlink → ~/.zshrc, plus zsh-only *.zsh (options, prompt, colours)
 bash/                    bash_profile.symlink / bashrc.symlink → ~/.bash_profile, ~/.bashrc
@@ -106,7 +107,8 @@ What's in `vault-key/`:
 | `tungsten-cloud/tungsten-ca-chain.pem` | `~/.certs/` — CA chain for the Tungsten Artifactory npm mirror         |
 | `tungsten-cloud/gitconfig`, `kofax/gitconfig` | work git identities, included for repos under `~/dev/tungsten-cloud/` and `~/dev/printix/` |
 | `*.repos.txt`                        | `<ssh-url> <parent-dir>` lines cloned by the `repos` step                |
-| `workrc`                             | `~/.workrc` — which `.env` is active (managed by `workenv`)              |
+| `workrc`                             | `~/.workrc` — the default work environment outside mapped folders (`workenv <name>` changes it) |
+| `workenv-dirs.txt`                   | folder → work environment mapping (`workenv --dirs`)                     |
 | `install.sh`                         | private extras for the `vault-install` step                              |
 
 ## Logins: gh, Jira, Bitbucket, Azure DevOps
@@ -197,8 +199,9 @@ always moves it to the **end** of `~/.zshrc`, so keep it last and add nothing af
 - The Tungsten `dev:setup` block lives in `~/.zshrc`; bash evaluates it from there, so both shells get
   the npm mirror and CA chain. If you ever run `dev:setup` *from* bash, it appends its own copy to
   `~/.bashrc` instead. That's harmless; delete one of the two copies.
-- IntelliJ sources `~/.zshrc` with `INTELLIJ_ENVIRONMENT_READER` set to harvest PATH, `JAVA_HOME` and
-  node. Anything interactive or slow is skipped in that case.
+- IntelliJ sources `~/.zshrc` with `INTELLIJ_ENVIRONMENT_READER` set to harvest PATH, `JAVA_HOME`, node,
+  the Tungsten npm settings and the work environment for the folder it reads from. Anything interactive
+  or slow is skipped in that case.
 - nvm loads with `--no-use`, and the default Node goes on PATH directly (saves ~1.5s per shell). On `cd`, a
   directory's `.nvmrc` version is switched to. If it isn't installed, you get a hint instead of an
   automatic source build.
@@ -213,7 +216,8 @@ always moves it to the **end** of `~/.zshrc`, so keep it last and add nothing af
 | GHE clone fails with `git@` | GHE uses `tungstencloud@tungstencloud.ghe.com:Org/repo.git` |
 | Tungsten `pnpm install` TLS errors | `~/.certs/tungsten-ca-chain.pem` missing → re-run the `symlinks` step, or `pnpm dev:setup` |
 | Brew refuses a tap formula | `brew trust <tap>`; the `brew` step trusts everything in `TRUSTED_TAPS` |
-| Undo the symlinks | `bin/symlink.sh --restore --include-vim --include-karabiner --include-editors` |
+| Wrong tokens / 401 from a registry | `workenv --env` (is this shell pinned?), `workenv --dirs`; `workenv --auto` to follow folders again |
+| Undo the symlinks | `bin/symlink.sh --restore` (`~/.gitconfig` is a local file — just remove its `[include]`) |
 
 ## TODO
 
