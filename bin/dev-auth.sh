@@ -5,6 +5,7 @@
 #   github     gh CLI on github.com (personal + printix org) and tungstencloud.ghe.com (Tungsten Cloud)
 #   jira       Atlassian CLI (acli) on tungstenautomation.atlassian.net
 #   bitbucket  SSH for git, plus an optional API token for REST calls (bitbucket.org/tom-conley)
+#   aws        AWS CLI SSO session for the personal AWS org (vault-key/personal/aws-config)
 #
 # SSH keys themselves come from the vault (see bin/ssh-setup.sh); this script only verifies them.
 # Safe to re-run: anything already authenticated is left alone.
@@ -39,12 +40,12 @@ usage() {
 Usage:
   $script [--check] [--only <list>] [-h|--help]
 
-Verify authentication for GitHub (gh), Jira (acli) and Bitbucket, and log in to anything
+Verify authentication for GitHub (gh), Jira (acli), Bitbucket and AWS SSO, and log in to anything
 that isn't authenticated yet. Logins open a browser (OAuth) unless an API token env var is set.
 
 Options:
   -c, --check         Report status only; never start a login.
-  -o, --only <list>   Comma-separated subset of: github,jira,bitbucket
+  -o, --only <list>   Comma-separated subset of: github,jira,bitbucket,aws
   -h, --help          Show this help.
 
 Environment:
@@ -155,6 +156,24 @@ check_bitbucket() {
   fi
 }
 
+# --- AWS (personal org, IAM Identity Center) ------------------------------------------------------
+check_aws() {
+  step "AWS SSO (personal org)"
+  if ! command -v aws >/dev/null; then bad "aws not installed (brew install awscli)"; return; fi
+  # Use the personal profiles even when run from a Tungsten folder.
+  local config="$DOTFILES_ROOT/vault-key/personal/aws-config" arn
+  if [ ! -f "$config" ]; then warn "no vault-key/personal/aws-config (run the vault step)"; return; fi
+  arn="$(AWS_CONFIG_FILE="$config" aws sts get-caller-identity --profile gotomconley-sandbox --query Arn --output text 2>/dev/null)"
+  if [ -n "$arn" ]; then
+    ok "SSO session active (${arn##*/} via gotomconley-sandbox)"
+  elif interactive; then
+    warn "no active SSO session — opening the browser login"
+    if AWS_CONFIG_FILE="$config" aws sso login --sso-session personal; then ok "AWS SSO logged in"; else bad "aws sso login failed"; fi
+  else
+    bad "no active SSO session — run: aws sso login --sso-session personal"
+  fi
+}
+
 main() {
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -167,10 +186,12 @@ main() {
   done
 
   DOTFILES_BIN="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  DOTFILES_ROOT="$(cd "$DOTFILES_BIN/.." && pwd)"
 
   wanted github && check_github
   wanted jira && check_jira
   wanted bitbucket && check_bitbucket
+  wanted aws && check_aws
 
   echo
   if [ "$failures" -eq 0 ]; then
