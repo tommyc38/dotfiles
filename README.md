@@ -196,7 +196,8 @@ What's in `vault-key/`:
 | `ssh-keys.txt`                       | key names (in `~/.ssh`) to load into the agent, one per line             |
 | `config`                             | `~/.ssh/config` — one Host block per code host                           |
 | `main` (key), `gotomconley/`, `kofax/`, `tungsten-cloud/`, `azure-devops/` | SSH keys, `.env` files, repo lists per org |
-| `npmrc`                              | `~/.npmrc` — auth for Printix Azure Artifacts, GitHub Packages, Tungsten GHE |
+| `npmrc`                              | `~/.npmrc`: auth for Printix Azure Artifacts, GitHub Packages, Tungsten GHE; no default registry |
+| `**/<env>.npmrc`                     | org npm/pnpm layer for that env, e.g. `tungsten-cloud/tungsten-cloud.npmrc` → the mirror |
 | `tungsten-cloud/tungsten-ca-chain.pem` | `~/.certs/` — CA chain for the Tungsten Artifactory npm mirror         |
 | `tungsten-cloud/gitconfig`, `kofax/gitconfig` | work git identities, included for repos under `~/dev/tungsten-cloud/` and `~/dev/printix/` |
 | `*.repos.txt`                        | `<ssh-url> <parent-dir>` lines cloned by the `repos` step                |
@@ -218,7 +219,7 @@ dev-auth.sh --only github,jira
 | GitHub (`tommyc38`, printix org) | `gh` | `gh auth login --hostname github.com --git-protocol ssh --web` |
 | Tungsten Cloud GHE | `gh` | same, `--hostname tungstencloud.ghe.com` (SSH user is `tungstencloud`, not `git`) |
 | Jira (`tungstenautomation.atlassian.net`) | `acli` (Atlassian's official CLI) | `acli jira auth login --web`, or set `JIRA_API_TOKEN` (+ `JIRA_EMAIL`) for a token login |
-| Bitbucket (`tom-conley`) | git over SSH | Atlassian has no official Bitbucket CLI. For REST/API use, put `BITBUCKET_EMAIL` and `BITBUCKET_API_TOKEN` (an [Atlassian API token](https://id.atlassian.com/manage-profile/security/api-tokens) with Bitbucket scopes) in a `vault-key/*.env`; `dev-auth.sh` verifies it |
+| Bitbucket (`tom-conley`) | git over SSH via `ssh.bitbucket.org` (Atlassian moved SSH off `bitbucket.org` in 2026; `~/.ssh/config` routes old `git@bitbucket.org:` remotes there) | Atlassian has no official Bitbucket CLI. For REST/API use, put `BITBUCKET_EMAIL` and `BITBUCKET_API_TOKEN` (an [Atlassian API token](https://id.atlassian.com/manage-profile/security/api-tokens) with Bitbucket scopes) in a `vault-key/*.env`; `dev-auth.sh` verifies it |
 | Azure DevOps (kofaxcloud) | `az` + `azure-devops` extension | `az login`; the extension is installed automatically |
 
 `gh` and `acli` keep their tokens in the macOS keychain, so they're per machine and nothing goes into the vault.
@@ -243,11 +244,33 @@ Shells load **one** of them, chosen by folder:
 - `workenv --env` shows the current one, `--dirs` the folder mapping, and `--list` every env.
 - New folder or org: add a line to `vault-key/workenv-dirs.txt` (and a `.env` if needed), then `vault -e`.
 
-**npm/pnpm credentials.** Repo `.npmrc` files map package scopes to registries only, with no credentials.
-pnpm 11 ignores `${VAR}` credentials in a repo `.npmrc`; npm still expands them. Credentials go in `~/.npmrc`
-(= `vault-key/npmrc`), either written in directly or as `${VAR}` from the loaded env. Repos that still put
-`${NPM_TOKEN}` in their own `.npmrc` (npm) now get the right org's `NPM_TOKEN` automatically, because the
-env follows the folder.
+### npm / pnpm registries: machine → base → org → repo
+
+Which registry works depends on two things: the **org** (Tungsten uses an Artifactory mirror; Printix repos
+name their own registries) and the **machine** (a corporate network may block public npm, while a home Mac
+can't reach the mirror). So each shell's npm/pnpm user config is built from layers, later ones winning:
+
+| Layer | File | Synced? | For |
+| --- | --- | --- | --- |
+| machine | `~/.config/dotfiles/npmrc` | ❌ this computer only | its network: e.g. `registry=<mirror>` where public npm is blocked |
+| base | `~/.npmrc` (= `vault-key/npmrc`) | ✅ | credentials for every registry, **no** default `registry=` |
+| org | `vault-key/**/<env>.npmrc` next to `<env>.env` | ✅ | the org's default registry, scopes, extra auth (e.g. `tungsten-cloud.npmrc` → the mirror) |
+| repo | the repo's own `.npmrc` | (the repo) | untouched, and it always wins, so repos behave as they do for teammates |
+
+- `workenv` writes the combined file to `~/.cache/dotfiles/npmrc/<env>` (mode 600) and exports
+  `npm_config_userconfig`, which both npm and pnpm honour. `COREPACK_NPM_REGISTRY` follows the effective
+  registry, so Corepack's pnpm comes from the same place. With no machine or org file, it's just `~/.npmrc`.
+- **`${VAR}` tokens:** npm expands them in a repo's `.npmrc` (the env supplies the right org's value); pnpm
+  11 ignores them there, but expands them in the layered user config. So a pnpm repo's auth line goes in
+  the org's `.npmrc`.
+- **Edit the layer files, not the result:** `npm config set` and `npm login` write to the generated file,
+  which is rebuilt on the next switch.
+- **A new machine** that can't reach public npm: `install.sh` (the `node` step) and `validate-install.sh`
+  tell you to create `~/.config/dotfiles/npmrc` with `registry=<mirror>`.
+- **Same machine, other folders:** `~/.config/dotfiles/workenv-dirs.txt` adds or overrides folder → env
+  mappings just for that computer, and `~/.config/dotfiles/local.sh` holds any other machine-only shell setting.
+
+Your default environment outside mapped folders is `gotomconley` (personal). `workenv <name>` changes it.
 
 ## Projects
 
@@ -264,10 +287,13 @@ manager (pnpm/yarn/npm, from the lockfile). After you start working in a new rep
 and run `vault -e`. Preview with `repo.sh --dry-run --file <list> -D ~/dev`.
 
 **Tungsten Cloud repos** have their own setup, `pnpm dev:setup` (`tools/dev/setup.sh`, check with
-`pnpm dev:doctor`). The vault already supplies the GHE token in `~/.npmrc` and the CA chain, and
-`zsh/zshrc.symlink` carries the `# >>> tng dev:setup >>>` block. So on a new machine, `dev:setup` mostly adds
-the AWS CodeArtifact profile that the Java backends need. `dev:setup` rewrites that block in place and
-always moves it to the **end** of `~/.zshrc`, so keep it last and add nothing after it.
+`pnpm dev:doctor`). It's the team's script, and these dotfiles adapt to it rather than change it. The vault
+already supplies the GHE token (in `~/.npmrc`) and the CA chain, and the mirror comes from
+`tungsten-cloud.npmrc`. So on a new machine, `dev:setup` mostly adds the AWS CodeArtifact profile that the
+Java backends need. Run it as **`TNG_SETUP_REGISTRY=public pnpm dev:setup`**: otherwise it writes a
+`registry=<mirror>` line into the shared `~/.npmrc`, which would follow you to machines that can't reach
+the mirror. `validate-install.sh` warns if that line appears. It also keeps a marked block at the **end** of
+`~/.zshrc` (`NODE_EXTRA_CA_CERTS`), so keep that block last and add nothing after it.
 
 ## Apps & IDE settings
 
@@ -312,9 +338,9 @@ reminds you.
 **Never synced** (machine state): `~/.claude.json`, `~/.claude/projects/`, `history.jsonl`, `sessions/`,
 `file-history/`, and credentials (in the macOS keychain).
 
-**`npx` MCP servers and the Tungsten mirror.** `~/.npmrc` sends all npm traffic through the Tungsten Artifactory
-mirror (the `dev:setup` block). So `playwright` and the Nx plugin's `nx-mcp`, which start via `npx …@latest`, need
-the VPN, and they fail if the mirror can't serve a package. `claude mcp list` shows their health.
+**`npx` MCP servers** (`playwright`, the Nx plugin's `nx-mcp`) download through whatever registry the folder
+you start Claude in resolves to (see "npm / pnpm registries"). On a machine whose default is the mirror,
+they need the VPN and fail if the mirror can't serve a package. `claude mcp list` shows their health.
 
 ## Shell notes
 
@@ -324,8 +350,8 @@ the VPN, and they fail if the mirror can't serve a package. `claude mcp list` sh
   They also both load `workenv`, SSH keys, nvm with `.nvmrc` switching on `cd`, and pyenv. Put new shared
   things in `shell/` and shell-specific things in `zsh/` or `bash/`.
 - The Tungsten `dev:setup` block lives in `~/.zshrc`; bash evaluates it from there, so both shells get
-  the npm mirror and CA chain. If you ever run `dev:setup` *from* bash, it appends its own copy to
-  `~/.bashrc` instead. That's harmless; delete one of the two copies.
+  the CA chain. If you ever run `dev:setup` *from* bash, it appends its own copy to `~/.bashrc` instead.
+  That's harmless; delete one of the two copies. Registries aren't set there; see "npm / pnpm registries".
 - IntelliJ sources `~/.zshrc` with `INTELLIJ_ENVIRONMENT_READER` set to harvest PATH, `JAVA_HOME`, node,
   the Tungsten npm settings and the work environment for the folder it reads from. Anything interactive
   or slow is skipped in that case.
@@ -344,6 +370,7 @@ the VPN, and they fail if the mirror can't serve a package. `claude mcp list` sh
 | Tungsten `pnpm install` TLS errors | `~/.certs/tungsten-ca-chain.pem` missing → re-run the `symlinks` step, or `pnpm dev:setup` |
 | Brew refuses a tap formula | `brew trust <tap>`; the `brew` step trusts everything in `TRUSTED_TAPS` |
 | Wrong tokens / 401 from a registry | `workenv --env` (is this shell pinned?), `workenv --dirs`; `workenv --auto` to follow folders again |
+| npm/pnpm hits the wrong registry, or can't reach one | `workenv --env` shows the user config + default registry; check the layers (`~/.config/dotfiles/npmrc`, `~/.npmrc`, `<env>.npmrc`) and the repo's `.npmrc` |
 | Undo the symlinks | `bin/symlink.sh --restore` (`~/.gitconfig` is a local file — just remove its `[include]`) |
 
 ## TODO

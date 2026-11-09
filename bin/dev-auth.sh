@@ -136,8 +136,9 @@ check_jira() {
 
 # --- Bitbucket ------------------------------------------------------------------------------------
 check_bitbucket() {
-  step "Bitbucket (bitbucket.org)"
-  ssh_check git@bitbucket.org "you can use git"
+  step "Bitbucket (ssh.bitbucket.org)"
+  # Bitbucket Cloud's SSH host (bitbucket.org itself is HTTPS-only after Atlassian's 2026 cutoff).
+  ssh_check git@ssh.bitbucket.org "you can use git"
 
   if [ -n "${BITBUCKET_EMAIL:-}" ] && [ -n "${BITBUCKET_API_TOKEN:-}" ]; then
     local status

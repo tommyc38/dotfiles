@@ -186,7 +186,31 @@ step_symlinks() {
 }
 
 step_ssh() { bash "$DOTFILES/bin/ssh-setup.sh"; }
-step_node() { bash "$DOTFILES/install/node.sh"; }
+
+# Give npm/pnpm the environment a shell in ~/dotfiles would have: the work env + layered npm user config
+# (shell/workenv-auto.sh) and the Tungsten CA when it's present (needed to reach the Artifactory mirror).
+load_npm_env() {
+  [ -f "$HOME/.certs/tungsten-ca-chain.pem" ] && export NODE_EXTRA_CA_CERTS="$HOME/.certs/tungsten-ca-chain.pem"
+  # shellcheck disable=SC1091
+  . "$DOTFILES/shell/workenv-auto.sh"
+  _workenv_auto   # install.sh runs from $DOTFILES, so this picks the env for ~/dotfiles
+}
+
+# Machines differ: some can reach public npm, some (corporate filters) can only reach a mirror. Say which.
+npm_network_hint() {
+  local local_npmrc="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/npmrc"
+  [ -f "$local_npmrc" ] && { echo "Machine npm defaults: ${local_npmrc/#$HOME/~}"; return 0; }
+  local code
+  code="$(curl -s -o /dev/null -m 10 -w '%{http_code}' https://registry.npmjs.org/-/ping 2>/dev/null)"
+  if [ "$code" != 200 ]; then
+    echo "⚠ public npm isn't reachable from this machine (HTTP ${code:-none}) and there's no ${local_npmrc/#$HOME/~}."
+    echo "  If this machine must use a mirror, put its registry there, e.g.:"
+    echo "    mkdir -p ${local_npmrc%/*/*}/dotfiles && echo 'registry=https://<mirror>/' > ${local_npmrc/#$HOME/~}"
+    echo "  then re-run: ./install.sh --only node"
+  fi
+}
+
+step_node() { load_npm_env; npm_network_hint; bash "$DOTFILES/install/node.sh"; }
 step_python() { bash "$DOTFILES/install/python.sh"; }
 
 step_vault_install() {
@@ -197,7 +221,7 @@ step_vault_install() {
   fi
 }
 
-step_claude() { bash "$DOTFILES/install/claude.sh"; }
+step_claude() { load_npm_env; bash "$DOTFILES/install/claude.sh"; }
 
 step_fonts() {
   bash "$DOTFILES/bin/fonts.sh" --google-fonts-light --nerd-fonts-light --powerline-fonts-light
@@ -232,10 +256,8 @@ step_base16() {
 step_repos() {
   # repo.sh needs nvm and the SSH keys/agent from the earlier steps.
   local repos_file rc=0
-  # Give package installs the npm env a login shell gets: the Tungsten Artifactory mirror and CA chain
-  # (the `tng dev:setup` block in zsh/zshrc.symlink; ~/.npmrc and the cert come from the vault).
-  eval "$(sed -n '/^# >>> tng dev:setup >>>$/,/^# <<< tng dev:setup <<<$/p' "$DOTFILES/zsh/zshrc.symlink")"
-  [ -f "${NODE_EXTRA_CA_CERTS:-}" ] || unset NODE_EXTRA_CA_CERTS
+  # repo.sh switches the work env + npm config per repo folder, exactly like cd-ing into it in a shell.
+  load_npm_env
   while IFS= read -r -d '' repos_file; do
     echo "Processing repositories from ${repos_file#"$DOTFILES"/}..."
     bash "$DOTFILES/bin/repo.sh" --file "$repos_file" --default-directory "$HOME/dev" --npm-install || rc=1
