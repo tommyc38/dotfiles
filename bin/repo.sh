@@ -29,6 +29,13 @@ source_file=
 npm_install=
 clone_failures=0
 
+# Per-folder work environments + layered npm config (shell/workenv-auto.sh): each repo installs with the
+# tokens and registry its folder maps to, exactly as if you'd cd'd into it in a shell.
+DOTFILES="${DOTFILES:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+# shellcheck disable=SC1091
+[ -f "$DOTFILES/shell/workenv-auto.sh" ] && . "$DOTFILES/shell/workenv-auto.sh"
+[ -f "$HOME/.certs/tungsten-ca-chain.pem" ] && export NODE_EXTRA_CA_CERTS="$HOME/.certs/tungsten-ca-chain.pem"
+
 # nvm is a shell function, so it has to be sourced (only needed with --npm-install).
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 # shellcheck disable=SC1091
@@ -46,6 +53,8 @@ function normalize_git_url() {
   url="${url#*@}"
   url="${url%/}"
   url="${url%.git}"
+  # Bitbucket Cloud moved Git-over-SSH to ssh.bitbucket.org (2026); both spellings are the same repo.
+  url="${url/#ssh.bitbucket.org/bitbucket.org}"
   echo "${url/://}" | tr '[:upper:]' '[:lower:]'
 }
 
@@ -166,6 +175,8 @@ function npm_install() {
   if [ -z "$dry_run" ]; then
     echo "    Running: $install_command"
     cd "$directory" || return 1
+    command -v _workenv_auto >/dev/null 2>&1 && _workenv_auto
+    echo "    Work env: ${WORKENV_NAME:-none}; npm user config: ${npm_config_userconfig:-~/.npmrc}"
     
     if $install_command; then
       echo "    ✓ Packages installed successfully"

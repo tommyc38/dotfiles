@@ -105,6 +105,9 @@ function update_and_load_workrc () {
       source "$new_env_file"
       # Pin this shell: folder-based switching (shell/workenv-auto.sh) leaves it alone until `workenv --auto`.
       export WORKENV_NAME="$env" WORKENV_FILE="$new_env_file" WORKENV_PINNED=1
+      WORKENV_LOADED=1
+      # Rebuild npm/pnpm's user config for this env (machine + ~/.npmrc + <env>.npmrc layers).
+      command -v _workenv_npmrc >/dev/null 2>&1 && _workenv_npmrc "$new_env_file" "$env"
       echo "Now using environment: $env (also the default for new shells outside mapped folders)"
       echo "This shell is pinned to it; 'workenv --auto' goes back to following folders."
     else
@@ -203,7 +206,11 @@ Options:
 
 Files:
   vault-key/**/<name>.env      export NAME=value lines (keep them plain exports so they can be unloaded)
+  vault-key/**/<name>.npmrc    optional npm/pnpm config for that env (registry, scopes, auth); layered
+                               on top of ~/.config/dotfiles/npmrc (this machine) and ~/.npmrc
   vault-key/workenv-dirs.txt   "<directory> <name>" lines; \$HOME and ~ are expanded
+  ~/.config/dotfiles/          this machine only (never synced): workenv-dirs.txt (extra/overriding
+                               folder mappings), npmrc (machine npm defaults), local.sh (anything else)
   ~/.workrc                    "source <path to default .env>" (symlinked from vault-key/workrc)
 
   After editing any of them: vault -e, then commit vault/.
@@ -296,6 +303,7 @@ function main() {
       echo "$WORKENV_NAME"
       if [ -n "${WORKENV_PINNED:-}" ]; then echo "(pinned — 'workenv --auto' to follow folders)" >&2; fi
       if [ "$WORKENV_NAME" != "$current_env" ]; then echo "(default for new shells: ${current_env:-none})" >&2; fi
+      echo "(npm/pnpm user config: ${npm_config_userconfig:-~/.npmrc}; default registry: $(npm config get registry 2>/dev/null))" >&2
     elif [ -e "$current_env_file" ]; then
       echo "$current_env"
     else

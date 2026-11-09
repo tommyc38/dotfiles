@@ -89,3 +89,9 @@ dotfiles_load_tng_block() {
   block="$(sed -n '/^# >>> tng dev:setup >>>$/,/^# <<< tng dev:setup <<<$/p' "$DOTFILES/zsh/zshrc.symlink" 2>/dev/null)"
   [ -n "$block" ] && eval "$block"
 }
+
+# --- This machine only ----------------------------------------------------------------------------
+# ~/.config/dotfiles/ is never synced. local.sh is for settings that differ per computer (paths,
+# corporate proxies, extra PATH entries, ...). Its siblings: npmrc (machine npm/pnpm defaults, see
+# shell/workenv-auto.sh) and workenv-dirs.txt (folder → work environment for this machine).
+[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/local.sh" ] && . "${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/local.sh"
