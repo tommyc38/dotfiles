@@ -128,16 +128,30 @@ dev-auth.sh --only github,jira
 `gh` and `acli` keep their tokens in the macOS keychain, so they're per machine and nothing goes into the vault.
 API tokens you choose to keep (Jira/Bitbucket) belong in a `vault-key/*.env` file, loaded with `workenv`.
 
-## Work environments
+## Work environments (tokens, API keys)
 
-`workenv` sources one `vault-key/**/<name>.env` at a time (npm tokens, API keys, ...) and remembers the
-choice in `~/.workrc`:
+Each org's secrets live in its own `vault-key/**/<name>.env` (`printix`, `tungsten-cloud`, `gotomconley`, `main`).
+Shells load **one** of them, chosen by folder:
 
-```bash
-workenv --list
-workenv tungsten-cloud
-workenv --env          # current
-```
+| You're in | Loaded env |
+| --- | --- |
+| a folder listed in `vault-key/workenv-dirs.txt` (longest match wins) | that folder's env, e.g. `~/dev/printix` → `printix` |
+| anywhere else | the default named in `~/.workrc` |
+
+- It switches automatically on every `cd`, in zsh and bash, and prints `workenv: old → new`. It unsets the old
+  env's variables before loading the new one, so tokens never leak across orgs.
+- WebStorm's environment harvest gets the env for the folder it reads from, so npm/pnpm run from the IDE
+  get credentials too.
+- `workenv <name>` sets the default for new shells **and pins the current shell** to `<name>` (e.g. to use
+  Printix tokens from inside `~/dev/tungsten-cloud`). `workenv --auto` unpins it.
+- `workenv --env` shows the current one, `--dirs` the folder mapping, and `--list` every env.
+- New folder or org: add a line to `vault-key/workenv-dirs.txt` (and a `.env` if needed), then `vault -e`.
+
+**npm/pnpm credentials.** Repo `.npmrc` files map package scopes to registries only, with no credentials.
+pnpm 11 ignores `${VAR}` credentials in a repo `.npmrc`; npm still expands them. Credentials go in `~/.npmrc`
+(= `vault-key/npmrc`), either written in directly or as `${VAR}` from the loaded env. Repos that still put
+`${NPM_TOKEN}` in their own `.npmrc` (npm) now get the right org's `NPM_TOKEN` automatically, because the
+env follows the folder.
 
 ## Projects
 

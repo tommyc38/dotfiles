@@ -28,8 +28,9 @@ function remove_current_env() {
    local line
    local variable_name=""
    local current_env_file=""
-   current_env_file="$(get_current_env_file)"
-   if [ -n "$current_env_file" ]; then
+   # Whatever THIS shell loaded (folder-based switching may differ from the ~/.workrc default).
+   current_env_file="${WORKENV_FILE:-$(get_current_env_file)}"
+   if [ -n "$current_env_file" ] && [ -f "$current_env_file" ]; then
      while IFS= read -r line; do
        if [[ $line == export* ]]; then
          variable_name=${line#export }
@@ -100,8 +101,12 @@ function update_and_load_workrc () {
       fi
       rm -f "$tmp"
       
-      source "$workrc"
-      echo "Now using environment: $env"
+      # shellcheck disable=SC1090
+      source "$new_env_file"
+      # Pin this shell: folder-based switching (shell/workenv-auto.sh) leaves it alone until `workenv --auto`.
+      export WORKENV_NAME="$env" WORKENV_FILE="$new_env_file" WORKENV_PINNED=1
+      echo "Now using environment: $env (also the default for new shells outside mapped folders)"
+      echo "This shell is pinned to it; 'workenv --auto' goes back to following folders."
     else
       echo "Couldn't find environment: $env"
       echo "Use 'workenv --list' to see available environments"
@@ -188,6 +193,13 @@ Options:
   -h, --help    Show this help message and exit.
   -e, --env     Show the currently loaded environment name.
   -l, --list    List all available environments in \$DOTFILES/vault-key directory.
+  -d, --dirs    Show the folder → environment mapping (vault-key/workenv-dirs.txt).
+  -a, --auto    Unpin this shell and follow folders again.
+
+Folder-based switching:
+  Shells load the environment for the folder they're in (vault-key/workenv-dirs.txt, longest match),
+  and switch on every cd; elsewhere they use the default in ~/.workrc. 'workenv <name>' sets that
+  default AND pins the current shell to <name>.
 
 Example Files:
   ~/dotfiles/vault-key/org_one/org_one.env:
@@ -228,11 +240,13 @@ function main() {
   local env_option=""
   local help_option=""
   local list_option=""
+  local auto_option=""
+  local dirs_option=""
   local env=""
   local current_env_file=""
   local current_env=""
-  local short="hel"
-  local long="help,env,list"
+  local short="helad"
+  local long="help,env,list,auto,dirs"
   local options
 
   if [ "$(uname)" = "Darwin" ]; then
@@ -260,6 +274,8 @@ function main() {
       -e|--env) env_option="true"; shift;;
       -h|--help) help_option="true"; shift;;
       -l|--list) list_option="true"; shift;;
+      -a|--auto) auto_option="true"; shift;;
+      -d|--dirs) dirs_option="true"; shift;;
       --) shift;;
       *)
         env="$1"
@@ -277,8 +293,29 @@ function main() {
     usage
   elif [ -n "$list_option" ]; then
     list_environments
+  elif [ -n "$auto_option" ]; then
+    unset WORKENV_PINNED
+    if command -v _workenv_auto >/dev/null 2>&1; then
+      _workenv_auto
+      echo "Following folders again: ${WORKENV_NAME:-none} for $PWD"
+    else
+      echo "Folder-based switching isn't loaded in this shell (shell/workenv-auto.sh)."
+    fi
+  elif [ -n "$dirs_option" ]; then
+    local dirs_file="${WORKENV_DIRS_FILE:-$DOTFILES/vault-key/workenv-dirs.txt}"
+    if [ -f "$dirs_file" ]; then
+      echo "Folder → environment (${dirs_file/#$HOME/~}):"
+      grep -v -E '^\s*(#|$)' "$dirs_file" | sed 's/^/  /'
+      echo "  (anywhere else)     ${current_env:-none}   ← default from ~/.workrc"
+    else
+      echo "No folder mapping: ${dirs_file/#$HOME/~} doesn't exist."
+    fi
   elif [ -n "$env_option" ]; then
-    if [ -e "$current_env_file" ]; then
+    if [ -n "${WORKENV_NAME:-}" ]; then
+      echo "$WORKENV_NAME"
+      [ -n "${WORKENV_PINNED:-}" ] && echo "(pinned — 'workenv --auto' to follow folders)" >&2
+      [ "$WORKENV_NAME" != "$current_env" ] && echo "(default for new shells: ${current_env:-none})" >&2
+    elif [ -e "$current_env_file" ]; then
       echo "$current_env"
     else
       echo "Please ensure you have a ~/.workrc and the source command points to an existing .env file! See --help."
@@ -286,7 +323,7 @@ function main() {
   elif [ -z "$env" ]; then
     echo "No environment defined! Use 'workenv --list' to see available environments."
   else
-    if [ "$env" = "$current_env" ]; then
+    if [ "$env" = "$current_env" ] && [ "$env" = "${WORKENV_NAME:-$current_env}" ] && [ -n "${WORKENV_PINNED:-}" ]; then
       echo "Already using $env"
     else
       remove_current_env

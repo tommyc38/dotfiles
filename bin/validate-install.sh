@@ -354,6 +354,26 @@ validate_auth() {
     done < <(NO_COLOR=1 bash "$SCRIPT_DIR/dev-auth.sh" --check 2>&1 </dev/null | cat)
 }
 
+validate_workenv_dirs() {
+    print_header "Folder-based work environments (vault-key/workenv-dirs.txt)"
+    local map="$DOTFILES_DIR/vault-key/workenv-dirs.txt" dir name expanded
+    if [ ! -f "$map" ]; then
+        print_check "warn" "No folder mapping; every shell uses the ~/.workrc default"
+        return
+    fi
+    while read -r dir name || [ -n "$dir" ]; do
+        case "$dir" in ""|\#*) continue ;; esac
+        expanded="${dir/#\$HOME/$HOME}"; expanded="${expanded/#\~/$HOME}"
+        if [ -z "$(find "$DOTFILES_DIR/vault-key" -maxdepth 3 -path '*/vault_backups' -prune -o -type f -name "$name.env" -print 2>/dev/null | head -1)" ]; then
+            print_check "fail" "$dir → $name: no vault-key/**/$name.env"
+        elif [ ! -d "$expanded" ]; then
+            print_check "warn" "$dir → $name: folder doesn't exist (yet)"
+        else
+            print_check "pass" "$dir → $name"
+        fi
+    done < "$map"
+}
+
 validate_repos() {
     print_header "Repository Cloning"
     
@@ -430,6 +450,7 @@ main() {
     validate_shell
     validate_vim
     validate_workenv
+    validate_workenv_dirs
     validate_repos
     validate_auth
     

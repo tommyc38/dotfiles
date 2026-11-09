@@ -12,6 +12,11 @@ export DOTFILES=$HOME/dotfiles
 export ZSH=$DOTFILES/zsh
 source "$DOTFILES/shell/env.sh"
 
+# Work environment (tokens, API keys) for the folder we start in — also for IntelliJ's env reader, so
+# npm/pnpm run from the IDE get the same credentials as the terminal. See shell/workenv-auto.sh.
+source "$DOTFILES/shell/workenv-auto.sh"
+_workenv_auto
+
 if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
   # --- SSH keys -----------------------------------------------------------------------------------
   # macOS's launchd agent is shared by every shell, so this only does work after a reboot/login, and
@@ -22,12 +27,9 @@ if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
 
   # --- Aliases, functions, zsh options/prompt -----------------------------------------------------
   for config in $DOTFILES/shell/*.sh(N) $ZSH/**/*.zsh(N); do
-    [[ "$config" == */env.sh ]] || source $config
+    [[ "$config" == */env.sh || "$config" == */workenv-auto.sh ]] || source $config
   done
   unset config
-
-  # --- Work environments (vault-key/**/*.env) — see `workenv --help` ------------------------------
-  [[ -f ~/.workrc ]] && source $HOME/.workrc
 fi
 workenv() {
   . "$DOTFILES/bin/workenv.sh" "$@"
@@ -40,6 +42,7 @@ alias info='info --vi-keys'
 
 if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
   autoload -U compinit add-zsh-hook
+  add-zsh-hook chpwd _workenv_auto   # switch work environment by folder on cd
   # Full security audit at most once a day; otherwise reuse the cached dump (-C). The glob qualifier
   # needs extendedglob, and touch makes "once a day" hold even when compinit doesn't rewrite the dump.
   () {

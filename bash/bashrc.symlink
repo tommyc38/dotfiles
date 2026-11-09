@@ -16,6 +16,10 @@ export BASHRC_SOURCED=1
 # Tungsten Cloud npm mirror + CA chain: `pnpm dev:setup` writes them into ~/.zshrc only.
 dotfiles_load_tng_block
 
+# Work environment (tokens, API keys) for the folder we start in. See shell/workenv-auto.sh.
+source "$DOTFILES/shell/workenv-auto.sh"
+_workenv_auto
+
 if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
   # --- SSH keys (the launchd agent is shared by every shell; only does work after a reboot) -------
   if [[ -d "$DOTFILES/vault-key" ]] && ! ssh-add -l >/dev/null 2>&1; then
@@ -24,12 +28,9 @@ if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
 
   # --- Shared aliases + functions (git, tmux, helpers) --------------------------------------------
   for config in "$DOTFILES"/shell/*.sh; do
-    [[ "$config" == */env.sh ]] || source "$config"
+    [[ "$config" == */env.sh || "$config" == */workenv-auto.sh ]] || source "$config"
   done
   unset config
-
-  # --- Work environments (vault-key/**/*.env) — see `workenv --help` ------------------------------
-  [[ -f ~/.workrc ]] && source "$HOME/.workrc"
 fi
 workenv() {
   . "$DOTFILES/bin/workenv.sh" "$@"
@@ -64,16 +65,19 @@ if [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
     \. "$NVM_DIR/nvm.sh" --no-use
     [[ -s "$NVM_DIR/bash_completion" ]] && \. "$NVM_DIR/bash_completion"
     [[ -n "$DOTFILES_NVM_DEFAULT_BIN" ]] || nvm use --silent default >/dev/null 2>&1
-    # bash has no chpwd hook: run load-nvmrc (shell/functions.sh) from PROMPT_COMMAND when $PWD changes.
-    _dotfiles_chpwd() {
-      if [[ "$PWD" != "${_DOTFILES_LAST_PWD:-}" ]]; then
-        _DOTFILES_LAST_PWD="$PWD"
-        load-nvmrc
-      fi
-    }
-    _DOTFILES_LAST_PWD="$PWD"   # like zsh's chpwd: not on startup, only after a cd
-    [[ "$PROMPT_COMMAND" == *_dotfiles_chpwd* ]] || PROMPT_COMMAND="_dotfiles_chpwd${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
   fi
+
+  # bash has no chpwd hook: from PROMPT_COMMAND, when $PWD changed, switch the work environment by
+  # folder and the node version by .nvmrc (zsh does the same with add-zsh-hook chpwd).
+  _dotfiles_chpwd() {
+    if [[ "$PWD" != "${_DOTFILES_LAST_PWD:-}" ]]; then
+      _DOTFILES_LAST_PWD="$PWD"
+      _workenv_auto
+      command -v nvm >/dev/null 2>&1 && load-nvmrc
+    fi
+  }
+  _DOTFILES_LAST_PWD="$PWD"   # like zsh's chpwd: not on startup, only after a cd
+  [[ "$PROMPT_COMMAND" == *_dotfiles_chpwd* ]] || PROMPT_COMMAND="_dotfiles_chpwd${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
 
   # --- pyenv --------------------------------------------------------------------------------------
   if command -v pyenv >/dev/null; then
