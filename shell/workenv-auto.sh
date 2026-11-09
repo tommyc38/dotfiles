@@ -121,8 +121,32 @@ _workenv_npmrc() {
   fi
 }
 
+# Default AWS_PROFILE for this folder: longest match in $WORKENV_AWS_MAP ("<directory> <profile>" lines).
+# Runs on every cd, independently of the env. A profile you (or a tool) exported yourself is left alone
+# until you unset it; leaving the mapped folders unsets only a profile this function set.
+WORKENV_AWS_MAP="${WORKENV_AWS_MAP:-$DOTFILES/vault-key/personal/aws-profiles.txt}"
+_workenv_aws_profile() {
+  local here="$PWD/" dir profile rest best_dir="" best=""
+  [ -f "$WORKENV_AWS_MAP" ] || return 0
+  if [ -n "${AWS_PROFILE:-}" ] && [ "$AWS_PROFILE" != "${DOTFILES_AWS_PROFILE:-}" ]; then return 0; fi
+  while read -r dir profile rest || [ -n "$dir" ]; do
+    case "$dir" in ""|\#*) continue ;; esac
+    dir="$(_workenv_expand "$dir")"
+    dir="${dir%/}"
+    case "$here" in
+      "$dir"/*) [ ${#dir} -ge ${#best_dir} ] && { best_dir="$dir"; best="$profile"; } ;;
+    esac
+  done < "$WORKENV_AWS_MAP"
+  if [ -n "$best" ]; then
+    export AWS_PROFILE="$best" DOTFILES_AWS_PROFILE="$best"
+  elif [ -n "${DOTFILES_AWS_PROFILE:-}" ]; then
+    unset AWS_PROFILE DOTFILES_AWS_PROFILE
+  fi
+}
+
 # Load the environment this directory calls for (no-op when it's already loaded or the shell is pinned).
 _workenv_auto() {
+  _workenv_aws_profile
   [ -n "${WORKENV_PINNED:-}" ] && return 0
   local name file previous="${WORKENV_NAME:-}"
   name="$(_workenv_name_for_dir "$PWD")"

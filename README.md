@@ -200,6 +200,7 @@ What's in `vault-key/`:
 | `**/<env>.npmrc`                     | org npm/pnpm layer for that env, e.g. `tungsten/tungsten-cloud.npmrc` → the mirror |
 | `tungsten/tungsten-ca-chain.pem`     | `~/.certs/` — CA chain for the Tungsten Artifactory npm mirror           |
 | `tungsten/*.gitconfig`               | work git identities (+ printix SSH key), included for repos under `~/dev/tungsten/tungsten-cloud/` and `~/dev/tungsten/printix/` |
+| `personal/aws-config`, `personal/aws-profiles.txt`, `personal/aws-accounts.md` | AWS SSO profiles (`AWS_CONFIG_FILE`, personal env only), folder → default `AWS_PROFILE`, and the account inventory |
 | `*.repos.txt`                        | `<ssh-url> <parent-dir>` lines cloned by the `repos` step                |
 | `workrc`                             | `~/.workrc` — the default work environment outside mapped folders (`workenv <name>` changes it) |
 | `workenv-dirs.txt`                   | folder → work environment mapping (`workenv --dirs`)                     |
@@ -218,6 +219,7 @@ dev-auth.sh --only github,jira
 | --- | --- | --- |
 | GitHub (`tommyc38`: personal + printix org) | `gh` | `gh auth login --hostname github.com --git-protocol ssh --web` |
 | Tungsten Cloud GHE (SSO `tom.conley@kofaxcloud.com` → `tom-conley`) | `gh` | same, `--hostname tungstencloud.ghe.com` (SSH user is `tungstencloud`, not `git`) |
+| AWS, personal org ([below](#aws-accounts)) | `aws` (SSO via IAM Identity Center ← Google Workspace) | `aws sso login --sso-session personal`, once for all accounts; `dev-auth.sh` checks it |
 | Jira (`tungstenautomation.atlassian.net`) | `acli` (Atlassian's official CLI) | `acli jira auth login --web`, or set `JIRA_API_TOKEN` (+ `JIRA_EMAIL`) for a token login |
 | Bitbucket (`tom-conley`) | git over SSH via `ssh.bitbucket.org` (Atlassian moved SSH off `bitbucket.org` in 2026; `~/.ssh/config` routes old `git@bitbucket.org:` remotes there) | Atlassian has no official Bitbucket CLI. For REST/API use, put `BITBUCKET_EMAIL` and `BITBUCKET_API_TOKEN` (an [Atlassian API token](https://id.atlassian.com/manage-profile/security/api-tokens) with Bitbucket scopes) in a `vault-key/*.env`; `dev-auth.sh` verifies it |
 
@@ -270,6 +272,21 @@ can't reach the mirror). So each shell's npm/pnpm user config is built from laye
   mappings just for that computer, and `~/.config/dotfiles/local.sh` holds any other machine-only shell setting.
 
 Your default environment outside mapped folders is `personal`. `workenv <name>` changes it.
+
+## AWS accounts
+
+The personal AWS Organization has one account per brand per environment (sandbox / dev / prod), plus a
+management and a network account. Sign-in is IAM Identity Center, with Google Workspace as the identity
+source; workloads run in **us-west-2**. Account IDs, the portal URL and each account's current state are
+kept in the vault: **`vault-key/personal/aws-accounts.md`**.
+
+- Each account has a profile with the same name, defined in `vault-key/personal/aws-config`.
+  `personal.env` points `AWS_CONFIG_FILE` at that file, so Tungsten folders keep their own
+  `~/.aws/config`, which is where `pnpm dev:setup` writes `tng-codeartifact`.
+- `aws sso login --sso-session personal` logs in once, for every account. `dev-auth.sh` checks the login.
+- Default `AWS_PROFILE` per folder comes from `vault-key/personal/aws-profiles.txt` and covers **sandbox
+  accounts only**. Dev, prod, management and network always need an explicit `--profile`, or
+  `export AWS_PROFILE=...`. `workenv` leaves a profile you export alone until you `unset AWS_PROFILE`.
 
 ## Projects
 

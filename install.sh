@@ -34,7 +34,7 @@ describe() {
     shell)         echo "Make Homebrew zsh the login shell" ;;
     base16)        echo "Clone base16-shell themes" ;;
     repos)         echo "Clone repos from vault-key/**/*.repos.txt and install their packages" ;;
-    auth)          echo "Log in to GitHub, GHE, Jira, Bitbucket (bin/dev-auth.sh)" ;;
+    auth)          echo "Log in to GitHub, GHE, Jira, Bitbucket, AWS SSO (bin/dev-auth.sh)" ;;
   esac
 }
 
