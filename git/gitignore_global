@@ -7,3 +7,7 @@
 # Claude Code: personal per-project settings (permission approvals etc.). Claude Code adds this line to
 # git's global excludes file itself; since core.excludesfile points here, it has to live here.
 **/.claude/settings.local.json
+
+# IDE-generated MCP config (WebStorm writes .mcp.json pointing at its local MCP server, on a port that changes).
+# A repo that wants a shared .mcp.json adds it once with `git add -f`.
+.mcp.json
