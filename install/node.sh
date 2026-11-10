@@ -87,8 +87,18 @@ command -v nvm >/dev/null 2>&1 && nvm alias default node >/dev/null
 # gws = Google Workspace CLI (Gmail/Drive/Calendar/Admin). Brew's "gws" formula is an unrelated tool.
 # Its postinstall downloads the native binary, so it has to be allowed explicitly (npm 11.19+).
 if command -v nvm >/dev/null 2>&1 && nvm use default >/dev/null 2>&1; then
-  npm install -g --allow-scripts=@googleworkspace/cli @googleworkspace/cli --loglevel=error \
-    || echo "Warning: failed to install @googleworkspace/cli (gws)." >&2
+  if npm install -g --allow-scripts=@googleworkspace/cli @googleworkspace/cli --loglevel=error; then
+    # Link the native binary into ~/.local/bin (always on PATH) so gws keeps working after .nvmrc
+    # switches to a Node version that doesn't have it. Re-running this script re-points the link.
+    gws_bin="$(npm root -g)/@googleworkspace/cli/bin/gws"
+    if [ -x "$gws_bin" ]; then
+      mkdir -p "$HOME/.local/bin" && ln -sf "$gws_bin" "$HOME/.local/bin/gws"
+    else
+      echo "Warning: gws binary not found at $gws_bin; not linking it into ~/.local/bin." >&2
+    fi
+  else
+    echo "Warning: failed to install @googleworkspace/cli (gws)." >&2
+  fi
 fi
 
 echo "Node Install Done."
