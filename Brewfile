@@ -59,6 +59,8 @@ brew "openssl@3"
 brew "gh"                  # GitHub + Tungsten Cloud GHE (bin/dev-auth.sh logs both in)
 brew "atlassian/acli/acli" # Atlassian CLI: Jira / Confluence (bin/dev-auth.sh)
 brew "awscli"              # AWS CLI v2: personal AWS org via SSO (vault-key/personal/aws-config)
+brew "gam"                 # GAM7: Google Workspace admin (users, groups, bulk ops); gws comes from npm (install/node.sh)
+cask "gcloud-cli"          # Google Cloud CLI: `gws auth setup` uses it to create the OAuth project/client
 
 # --- Languages & runtimes (Node is managed by nvm, Python by pyenv — see install/) ----------------
 brew "pyenv"
