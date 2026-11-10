@@ -83,5 +83,13 @@ done
 # New shells use the newest installed version (zshrc resolves this alias without loading nvm's slow path).
 command -v nvm >/dev/null 2>&1 && nvm alias default node >/dev/null
 
+# Global CLIs, installed once into the default Node (global npm packages are per Node version).
+# gws = Google Workspace CLI (Gmail/Drive/Calendar/Admin). Brew's "gws" formula is an unrelated tool.
+# Its postinstall downloads the native binary, so it has to be allowed explicitly (npm 11.19+).
+if command -v nvm >/dev/null 2>&1 && nvm use default >/dev/null 2>&1; then
+  npm install -g --allow-scripts=@googleworkspace/cli @googleworkspace/cli --loglevel=error \
+    || echo "Warning: failed to install @googleworkspace/cli (gws)." >&2
+fi
+
 echo "Node Install Done."
 

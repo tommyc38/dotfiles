@@ -126,7 +126,7 @@ Each step is idempotent: a failed step is reported, the rest continue, and you r
 | `shell`         | Homebrew zsh as the login shell (sudo for `/etc/shells`)                              |
 | `base16`        | base16-shell themes                                                                   |
 | `repos`         | Clones every `vault-key/**/*.repos.txt` into `~/dev/...` and installs packages        |
-| `auth`          | Logs in to GitHub, Tungsten GHE, Jira, Bitbucket ([below](#logins-gh-jira-bitbucket)) |
+| `auth`          | Logs in to GitHub, Tungsten GHE, Jira, Bitbucket ([below](#logins-gh-jira-bitbucket-google-workspace)) |
 
 ```bash
 ./install.sh --list                 # the steps
@@ -201,13 +201,14 @@ What's in `vault-key/`:
 | `tungsten/tungsten-ca-chain.pem`     | `~/.certs/` — CA chain for the Tungsten Artifactory npm mirror           |
 | `tungsten/*.gitconfig`               | work git identities (+ printix SSH key), included for repos under `~/dev/tungsten/tungsten-cloud/` and `~/dev/tungsten/printix/` |
 | `personal/aws-config`, `personal/aws-profiles.txt`, `personal/aws-accounts.md` | AWS SSO profiles (`AWS_CONFIG_FILE`, personal env only), folder → default `AWS_PROFILE`, and the account inventory |
+| `personal/google/workspace-cli-client-secret.json` | Desktop OAuth client shared by `gws` and GAM, linked to `~/.config/gws/client_secret.json` and `~/.gam/client_secrets.json` |
 | `*.repos.txt`                        | `<ssh-url> <parent-dir>` lines cloned by the `repos` step                |
 | `workrc`                             | `~/.workrc` — the default work environment outside mapped folders (`workenv <name>` changes it) |
 | `workenv-dirs.txt`                   | folder → work environment mapping (`workenv --dirs`)                     |
 | `install.sh`                         | private extras for the `vault-install` step                              |
 | `claude/settings.json`               | `~/.claude/settings.json`: personal Claude Code defaults                  |
 
-## Logins: gh, Jira, Bitbucket
+## Logins: gh, Jira, Bitbucket, Google Workspace
 
 ```bash
 dev-auth.sh            # check everything; opens a browser login for anything that isn't authenticated
@@ -222,8 +223,10 @@ dev-auth.sh --only github,jira
 | AWS, personal org ([below](#aws-accounts)) | `aws` (SSO via IAM Identity Center ← Google Workspace) | `aws sso login --sso-session personal`, once for all accounts; `dev-auth.sh` checks it |
 | Jira (`tungstenautomation.atlassian.net`) | `acli` (Atlassian's official CLI) | `acli jira auth login --web`, or set `JIRA_API_TOKEN` (+ `JIRA_EMAIL`) for a token login |
 | Bitbucket (`tom-conley`) | git over SSH via `ssh.bitbucket.org` (Atlassian moved SSH off `bitbucket.org` in 2026; `~/.ssh/config` routes old `git@bitbucket.org:` remotes there) | Atlassian has no official Bitbucket CLI. For REST/API use, put `BITBUCKET_EMAIL` and `BITBUCKET_API_TOKEN` (an [Atlassian API token](https://id.atlassian.com/manage-profile/security/api-tokens) with Bitbucket scopes) in a `vault-key/*.env`; `dev-auth.sh` verifies it |
+| Google Workspace: mail, calendar, Drive | `gws` ([Google Workspace CLI](https://github.com/googleworkspace/cli), npm; not an official Google product) | `gws auth login -s gmail,calendar,drive`. It prints a URL that you open yourself. The login is encrypted in `~/.config/gws/`, with the key in the keychain |
+| Google Workspace admin: users, groups, org units | `gam` ([GAM7](https://github.com/GAM-team/GAM), brew) | `gam oauth create` as a super admin, in a real terminal: it prompts for permissions, so `!` in Claude Code can't answer it. Saves `~/.gam/oauth2.txt`; keep that `chmod 600` |
 
-`gh` and `acli` keep their tokens in the macOS keychain, so they're per machine and nothing goes into the vault.
+`gh`, `acli`, `gws` and `gam` keep their logins on the machine (keychain or `~/.gam`), so they're per machine and nothing goes into the vault.
 API tokens you choose to keep (Jira/Bitbucket) belong in a `vault-key/*.env` file, loaded with `workenv`.
 
 ## Work environments (tokens, API keys)
